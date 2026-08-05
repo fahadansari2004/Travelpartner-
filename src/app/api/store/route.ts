@@ -38,6 +38,12 @@ export async function GET(req: Request) {
     // Map snake_case database columns back to React camelCase properties
     const mappedData = (data || []).map((item: any) => ({
       ...item,
+      name: item.name || item.customer_name || item.customerName,
+      customerName: item.customerName || item.customer_name || item.name,
+      packageOrItemName: item.packageOrItemName || item.package_name || item.packageName,
+      packageName: item.packageName || item.package_name || item.packageOrItemName,
+      message: item.message || item.notes,
+      guestsCount: item.guestsCount || item.guests || 1,
       coverImage: item.coverImage || item.cover_image,
       shortDesc: item.shortDesc || item.short_desc,
       longDesc: item.longDesc || item.long_desc,
@@ -64,8 +70,6 @@ export async function GET(req: Request) {
       iconName: item.iconName || item.icon_name,
       ctaText: item.ctaText || item.cta_text,
       displayOrder: item.displayOrder ?? item.display_order,
-      packageName: item.packageName || item.package_name,
-      customerName: item.customerName || item.customer_name,
     }));
 
     return NextResponse.json({ success: true, data: mappedData });
@@ -86,6 +90,16 @@ export async function POST(req: Request) {
       if (value.length > 0) {
         const safeRecords = value.map((item: any) => {
           const clean: any = { ...item };
+          
+          // Enquiries Column Mapping
+          if (clean.name !== undefined) { clean.customer_name = clean.name; delete clean.name; }
+          if (clean.customerName !== undefined) { clean.customer_name = clean.customerName; delete clean.customerName; }
+          if (clean.packageOrItemName !== undefined) { clean.package_name = clean.packageOrItemName; delete clean.packageOrItemName; }
+          if (clean.packageName !== undefined) { clean.package_name = clean.packageName; delete clean.packageName; }
+          if (clean.message !== undefined) { clean.notes = clean.message; delete clean.message; }
+          if (clean.guestsCount !== undefined) { clean.guests = clean.guestsCount; delete clean.guestsCount; }
+
+          // Other Tables Column Mapping
           if (clean.coverImage !== undefined) { clean.cover_image = clean.coverImage; delete clean.coverImage; }
           if (clean.shortDesc !== undefined) { clean.short_desc = clean.shortDesc; delete clean.shortDesc; }
           if (clean.longDesc !== undefined) { clean.long_desc = clean.longDesc; delete clean.longDesc; }
@@ -112,8 +126,6 @@ export async function POST(req: Request) {
           if (clean.iconName !== undefined) { clean.icon_name = clean.iconName; delete clean.iconName; }
           if (clean.ctaText !== undefined) { clean.cta_text = clean.ctaText; delete clean.ctaText; }
           if (clean.displayOrder !== undefined) { clean.display_order = clean.displayOrder; delete clean.displayOrder; }
-          if (clean.packageName !== undefined) { clean.package_name = clean.packageName; delete clean.packageName; }
-          if (clean.customerName !== undefined) { clean.customer_name = clean.customerName; delete clean.customerName; }
           return clean;
         });
 
