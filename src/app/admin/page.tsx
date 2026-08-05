@@ -621,10 +621,11 @@ export default function AdminDashboardPage() {
                             size="xs"
                             onClick={() => {
                               setTestimonials(testimonials.map(t => t.id === test.id ? { ...t, status: "Approved" } : t));
+                              setTestimonialFilter("Approved");
                             }}
                             leftIcon={<CheckCircle2 size={12} />}
                           >
-                            Approve
+                            Approve & Publish
                           </Button>
                         )}
                         {test.status !== "Rejected" && (
@@ -633,6 +634,7 @@ export default function AdminDashboardPage() {
                             size="xs"
                             onClick={() => {
                               setTestimonials(testimonials.map(t => t.id === test.id ? { ...t, status: "Rejected" } : t));
+                              setTestimonialFilter("Rejected");
                             }}
                           >
                             Reject
