@@ -161,6 +161,7 @@ export interface FooterSettings {
   phone: string;
   address: string;
   newsletterHeading: string;
+  newsletterSubtitle?: string;
   facebook?: string;
   instagram?: string;
   twitter?: string;
