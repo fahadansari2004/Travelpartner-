@@ -38,19 +38,19 @@ export async function GET(req: Request) {
     // Map snake_case database columns back to React camelCase properties
     const mappedData = (data || []).map((item: any) => ({
       ...item,
-      name: item.name || item.customer_name || item.customerName,
-      customerName: item.customerName || item.customer_name || item.name,
-      packageOrItemName: item.packageOrItemName || item.package_name || item.packageName,
-      packageName: item.packageName || item.package_name || item.packageOrItemName,
-      message: item.message || item.notes,
+      name: item.name || item.customer_name || item.customerName || "Valued Client",
+      customerName: item.customerName || item.customer_name || item.name || "Valued Client",
+      packageOrItemName: item.packageOrItemName || item.package_name || item.packageName || "Custom Booking",
+      packageName: item.packageName || item.package_name || item.packageOrItemName || "Custom Booking",
+      message: item.message || item.notes || "",
       guestsCount: item.guestsCount || item.guests || 1,
+      travelDate: item.travelDate || item.travel_date || "",
+      createdAt: item.createdAt || item.created_at || "",
       coverImage: item.coverImage || item.cover_image,
       shortDesc: item.shortDesc || item.short_desc,
       longDesc: item.longDesc || item.long_desc,
-      travelDate: item.travelDate || item.travel_date,
       discountPrice: item.discountPrice || item.discount_price,
       uploadDate: item.uploadDate || item.upload_date,
-      createdAt: item.createdAt || item.created_at,
       reviewsCount: item.reviewsCount ?? item.reviews_count,
       mapLocation: item.mapLocation || item.map_location,
       videoUrl: item.videoUrl || item.video_url,
@@ -91,15 +91,27 @@ export async function POST(req: Request) {
         const safeRecords = value.map((item: any) => {
           const clean: any = { ...item };
           
-          // Enquiries Column Mapping
-          if (clean.name !== undefined) { clean.customer_name = clean.name; delete clean.name; }
-          if (clean.customerName !== undefined) { clean.customer_name = clean.customerName; delete clean.customerName; }
-          if (clean.packageOrItemName !== undefined) { clean.package_name = clean.packageOrItemName; delete clean.packageOrItemName; }
-          if (clean.packageName !== undefined) { clean.package_name = clean.packageName; delete clean.packageName; }
-          if (clean.message !== undefined) { clean.notes = clean.message; delete clean.message; }
-          if (clean.guestsCount !== undefined) { clean.guests = clean.guestsCount; delete clean.guestsCount; }
+          if (tableName === "enquiries") {
+            if (clean.name !== undefined) { clean.customer_name = clean.name; delete clean.name; }
+            if (clean.customerName !== undefined) { clean.customer_name = clean.customerName; delete clean.customerName; }
+            if (clean.packageOrItemName !== undefined) { clean.package_name = clean.packageOrItemName; delete clean.packageOrItemName; }
+            if (clean.packageName !== undefined) { clean.package_name = clean.packageName; delete clean.packageName; }
+            if (clean.message !== undefined) { clean.notes = clean.message; delete clean.message; }
+            if (clean.guestsCount !== undefined) { clean.guests = clean.guestsCount; delete clean.guestsCount; }
+            if (clean.travelDate !== undefined) { clean.travel_date = clean.travelDate; delete clean.travelDate; }
+            if (clean.createdAt !== undefined) { clean.created_at = clean.createdAt; delete clean.createdAt; }
 
-          // Other Tables Column Mapping
+            // Safely consolidate extra transient fields into notes to avoid PostgreSQL schema errors
+            const extraParts: string[] = [];
+            if (clean.preferredTime) { extraParts.push(`Time: ${clean.preferredTime}`); delete clean.preferredTime; }
+            if (clean.totalAmount) { extraParts.push(`Total: $${clean.totalAmount}`); delete clean.totalAmount; }
+            if (extraParts.length > 0) {
+              const extraStr = extraParts.join(" | ");
+              clean.notes = clean.notes ? `${clean.notes} (${extraStr})` : extraStr;
+            }
+          }
+
+          // General Property Cleaning
           if (clean.coverImage !== undefined) { clean.cover_image = clean.coverImage; delete clean.coverImage; }
           if (clean.shortDesc !== undefined) { clean.short_desc = clean.shortDesc; delete clean.shortDesc; }
           if (clean.longDesc !== undefined) { clean.long_desc = clean.longDesc; delete clean.longDesc; }
