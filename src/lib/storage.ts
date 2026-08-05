@@ -162,6 +162,7 @@ export interface FooterSettings {
   address: string;
   newsletterHeading: string;
   newsletterSubtitle?: string;
+  copyrightText?: string;
   facebook?: string;
   instagram?: string;
   twitter?: string;
