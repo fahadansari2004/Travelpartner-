@@ -27,10 +27,10 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const key = searchParams.get("key");
-    if (!key || !supabase) return NextResponse.json({ success: false, data: [] });
+    if (!key || !supabase) return NextResponse.json({ success: false, error: "No Supabase client configured", data: [] });
 
     const tableName = tableMap[key];
-    if (!tableName) return NextResponse.json({ success: false, data: [] });
+    if (!tableName) return NextResponse.json({ success: false, error: "Invalid key", data: [] });
 
     const { data, error } = await supabase.from(tableName).select("*");
     if (error) return NextResponse.json({ success: false, error: error.message, data: [] });
@@ -101,7 +101,6 @@ export async function POST(req: Request) {
             if (clean.travelDate !== undefined) { clean.travel_date = clean.travelDate; delete clean.travelDate; }
             if (clean.createdAt !== undefined) { clean.created_at = clean.createdAt; delete clean.createdAt; }
 
-            // Safely consolidate extra transient fields into notes to avoid PostgreSQL schema errors
             const extraParts: string[] = [];
             if (clean.preferredTime) { extraParts.push(`Time: ${clean.preferredTime}`); delete clean.preferredTime; }
             if (clean.totalAmount) { extraParts.push(`Total: $${clean.totalAmount}`); delete clean.totalAmount; }
@@ -145,6 +144,7 @@ export async function POST(req: Request) {
         const { error: upsertError } = await supabase.from(tableName).upsert(safeRecords);
         if (upsertError) {
           console.error(`Supabase server upsert error for ${tableName}:`, upsertError);
+          return NextResponse.json({ success: false, error: upsertError.message });
         }
 
         // 2. Reconcile and delete missing items
