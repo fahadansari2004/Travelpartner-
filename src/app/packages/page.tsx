@@ -304,7 +304,7 @@ export default function PackagesPage() {
                 <div className="space-y-4">
                   <h4 className="text-sm font-bold uppercase tracking-wider text-amber-400">Day-by-Day Itinerary</h4>
                   <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
-                    {activePackageModal.itinerary.map((day) => (
+                    {(activePackageModal.itinerary || []).map((day) => (
                       <div key={day.day} className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-1">
                         <span className="text-xs font-bold text-amber-300">Day {day.day}: {day.title}</span>
                         <p className="text-xs text-slate-300">{day.desc}</p>
@@ -316,7 +316,7 @@ export default function PackagesPage() {
                     <div className="p-4 rounded-xl bg-white/5 border border-white/10">
                       <span className="text-xs font-bold text-emerald-400 uppercase">What&apos;s Included</span>
                       <ul className="mt-2 space-y-1 text-xs text-slate-300">
-                        {activePackageModal.included.map((inc, i) => <li key={i}>✓ {inc}</li>)}
+                        {(activePackageModal.included || []).map((inc, i) => <li key={i}>✓ {inc}</li>)}
                       </ul>
                     </div>
                     <div className="p-4 rounded-xl bg-white/5 border border-white/10">
