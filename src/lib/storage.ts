@@ -866,7 +866,12 @@ export function getStoredData<T>(key: string, defaultValue: T): T {
   if (typeof window === "undefined") return defaultValue;
   try {
     const raw = localStorage.getItem(`${STORE_KEY}_${key}`);
-    return raw ? JSON.parse(raw) : defaultValue;
+    if (!raw) return defaultValue;
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed) && parsed.length === 0 && Array.isArray(defaultValue) && defaultValue.length > 0) {
+      return defaultValue;
+    }
+    return parsed;
   } catch (err) {
     console.error(`Error reading ${key} from storage:`, err);
     return defaultValue;
@@ -894,14 +899,6 @@ function pruneOversizedStorage() {
                 }
                 if (updated.url && updated.url.startsWith("data:image") && updated.url.length > 150000) {
                   updated.url = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80";
-                }
-                if (Array.isArray(updated.images)) {
-                  updated.images = updated.images.map((img: any) => {
-                    if (img?.url && img.url.startsWith("data:image") && img.url.length > 150000) {
-                      return { ...img, url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80" };
-                    }
-                    return img;
-                  });
                 }
                 return updated;
               });
@@ -931,8 +928,19 @@ export async function syncWithSupabase<T>(key: string, value: T) {
       mediaLibrary: "media_library",
     };
     const tableName = tableMap[key];
-    if (tableName && Array.isArray(value)) {
-      await supabase.from(tableName).upsert(value as any);
+    if (tableName && Array.isArray(value) && value.length > 0) {
+      // Map items to safe database records
+      const safeRecords = value.map((item: any) => {
+        const clean: any = { ...item };
+        if (clean.coverImage && !clean.cover_image) clean.cover_image = clean.coverImage;
+        if (clean.shortDesc && !clean.short_desc) clean.short_desc = clean.shortDesc;
+        if (clean.longDesc && !clean.long_desc) clean.long_desc = clean.longDesc;
+        if (clean.travelDate && !clean.travel_date) clean.travel_date = clean.travelDate;
+        if (clean.discountPrice && !clean.discount_price) clean.discount_price = clean.discountPrice;
+        if (clean.uploadDate && !clean.upload_date) clean.upload_date = clean.uploadDate;
+        return clean;
+      });
+      await supabase.from(tableName).upsert(safeRecords);
     }
   } catch (err) {
     console.warn(`Supabase sync notice for ${key}:`, err);
@@ -970,10 +978,11 @@ export function useStoreData<T>(key: string, defaultValue: T): [T, (val: T) => v
 
   useEffect(() => {
     const handleUpdate = () => {
-      setData(getStoredData(key, defaultValue));
+      const stored = getStoredData(key, defaultValue);
+      setData(stored);
     };
 
-    // If Supabase is connected, fetch initial cloud records
+    // If Supabase is connected, fetch initial cloud records or seed if empty
     if (isSupabaseConfigured && supabase) {
       const tableMap: Record<string, string> = {
         albums: "albums",
@@ -985,12 +994,17 @@ export function useStoreData<T>(key: string, defaultValue: T): [T, (val: T) => v
       const tableName = tableMap[key];
       if (tableName) {
         supabase.from(tableName).select("*").then(({ data: cloudRecords, error }) => {
-          if (!error && cloudRecords && cloudRecords.length > 0) {
-            setData(cloudRecords as any);
-            try {
-              localStorage.setItem(`${STORE_KEY}_${key}`, JSON.stringify(cloudRecords));
-            } catch (e) {
-              // ignore
+          if (!error && cloudRecords) {
+            if (cloudRecords.length > 0) {
+              setData(cloudRecords as any);
+              try {
+                localStorage.setItem(`${STORE_KEY}_${key}`, JSON.stringify(cloudRecords));
+              } catch (e) {
+                // ignore
+              }
+            } else if (Array.isArray(defaultValue) && defaultValue.length > 0) {
+              // Seed Supabase with default initial records if cloud table is empty
+              syncWithSupabase(key, defaultValue);
             }
           }
         });

@@ -821,6 +821,197 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
+        {/* ── MODULE: PACKAGES MANAGEMENT DESK ───────────────────────────── */}
+        {activeTab === "packages" && (
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h3 className="text-xl font-bold font-[family-name:var(--font-playfair)]">Tour Packages Management</h3>
+                <p className="text-xs text-slate-400">Manage curated travel packages, pricing, discounts, and itineraries.</p>
+              </div>
+              <Button
+                variant="amber"
+                size="md"
+                leftIcon={<Plus size={16} />}
+                onClick={() => setEditingPackage({ name: "", destination: "", duration: "5 Days / 4 Nights", price: 1999, featured: true, active: true, image: "", description: "" })}
+              >
+                Create New Package
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {packages.map((pkg) => (
+                <div key={pkg.id} className="glass-card rounded-2xl p-5 border border-white/10 space-y-4 bg-slate-900/60 relative flex flex-col justify-between">
+                  <div className="space-y-3">
+                    <div className="relative aspect-video rounded-xl overflow-hidden bg-slate-950 border border-white/10">
+                      <img src={pkg.image} alt={pkg.name} className="w-full h-full object-cover" />
+                      <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10">
+                        <span className="px-2.5 py-1 rounded-full bg-slate-950/80 text-amber-400 text-[10px] font-bold">
+                          ${pkg.price} / person
+                        </span>
+                        {pkg.featured && (
+                          <span className="px-2.5 py-1 rounded-full bg-amber-500 text-slate-950 text-[10px] font-bold">
+                            ★ Featured
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-amber-400 tracking-wider block">
+                        {pkg.destination} • {pkg.duration}
+                      </span>
+                      <h4 className="text-lg font-bold font-[family-name:var(--font-playfair)] text-white">{pkg.name}</h4>
+                      <p className="text-xs text-slate-400 line-clamp-2 mt-1">{pkg.description}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-3 border-t border-white/10 gap-2">
+                    <span className="text-xs text-slate-300 font-semibold">
+                      Status: {pkg.active ? <span className="text-emerald-400">Active</span> : <span className="text-red-400">Hidden</span>}
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <Button variant="ghost" size="xs" onClick={() => setEditingPackage(pkg)}>Edit</Button>
+                      <Button variant="danger" size="xs" onClick={() => setPackages(packages.filter(p => p.id !== pkg.id))}>Delete</Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── MODULE: FLIGHTS MANAGEMENT DESK ───────────────────────────── */}
+        {activeTab === "flights" && (
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h3 className="text-xl font-bold font-[family-name:var(--font-playfair)]">Special Flight Fares & Airlines</h3>
+                <p className="text-xs text-slate-400">Manage VIP flight offers, first class deals, and routes.</p>
+              </div>
+              <Button
+                variant="amber"
+                size="md"
+                leftIcon={<Plus size={16} />}
+                onClick={() => setEditingFlight({ airlineName: "Emirates", fromCity: "New York", fromCode: "JFK", toCity: "Dubai", toCode: "DXB", farePrice: 3499, travelClass: "First Class", tripType: "Round Trip", featured: true, active: true })}
+              >
+                Add Flight Deal
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {flights.map((flt) => (
+                <div key={flt.id} className="glass-card rounded-2xl p-5 border border-white/10 space-y-3 bg-slate-900/60 flex flex-col justify-between">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-amber-400 uppercase tracking-wider">{flt.airlineName}</span>
+                      <span className="px-2.5 py-1 rounded-full bg-sky-500/20 border border-sky-500/30 text-sky-300 text-[10px] font-bold">
+                        {flt.travelClass} ({flt.tripType})
+                      </span>
+                    </div>
+                    <h4 className="text-xl font-bold font-[family-name:var(--font-playfair)] text-white">
+                      {flt.fromCity} ({flt.fromCode}) → {flt.toCity} ({flt.toCode})
+                    </h4>
+                    <p className="text-xs text-slate-400">Fare: <span className="text-amber-300 font-bold">${flt.farePrice}</span> • Duration: {flt.duration || "Direct"}</p>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-3 border-t border-white/10 gap-2">
+                    <span className="text-xs text-slate-400">Travel Date: {flt.travelDate || "Flexible"}</span>
+                    <div className="flex items-center gap-1">
+                      <Button variant="ghost" size="xs" onClick={() => setEditingFlight(flt)}>Edit</Button>
+                      <Button variant="danger" size="xs" onClick={() => setFlights(flights.filter(f => f.id !== flt.id))}>Delete</Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── MODULE: HOTELS MANAGEMENT DESK ───────────────────────────── */}
+        {activeTab === "hotels" && (
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h3 className="text-xl font-bold font-[family-name:var(--font-playfair)]">Luxury Hotels & Resorts</h3>
+                <p className="text-xs text-slate-400">Manage 5-star hotel listings, overwater villas, and rates.</p>
+              </div>
+              <Button
+                variant="amber"
+                size="md"
+                leftIcon={<Plus size={16} />}
+                onClick={() => setEditingHotel({ name: "", location: "Maldives", pricePerNight: 850, rating: 5.0, image: "", featured: true, active: true })}
+              >
+                Add Hotel Property
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {hotels.map((htl) => (
+                <div key={htl.id} className="glass-card rounded-2xl p-5 border border-white/10 space-y-3 bg-slate-900/60 flex flex-col justify-between">
+                  <div className="space-y-3">
+                    <div className="relative aspect-video rounded-xl overflow-hidden bg-slate-950 border border-white/10">
+                      <img src={htl.image} alt={htl.name} className="w-full h-full object-cover" />
+                      <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-slate-950/80 text-amber-400 text-[10px] font-bold">
+                        ${htl.pricePerNight} / night
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-amber-400 tracking-wider block">{htl.location}</span>
+                      <h4 className="text-lg font-bold font-[family-name:var(--font-playfair)] text-white">{htl.name}</h4>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-3 border-t border-white/10 gap-2">
+                    <span className="text-xs text-amber-400 font-bold">★ {htl.rating}</span>
+                    <div className="flex items-center gap-1">
+                      <Button variant="ghost" size="xs" onClick={() => setEditingHotel(htl)}>Edit</Button>
+                      <Button variant="danger" size="xs" onClick={() => setHotels(hotels.filter(h => h.id !== htl.id))}>Delete</Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── MODULE: SERVICES MANAGEMENT DESK ─────────────────────────── */}
+        {activeTab === "services" && (
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h3 className="text-xl font-bold font-[family-name:var(--font-playfair)]">Concierge Services</h3>
+                <p className="text-xs text-slate-400">Manage tailor-made travel concierge and luxury services.</p>
+              </div>
+              <Button
+                variant="amber"
+                size="md"
+                leftIcon={<Plus size={16} />}
+                onClick={() => setEditingService({ title: "", category: "Concierge", shortDesc: "", active: true })}
+              >
+                Add New Service
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {services.map((srv) => (
+                <div key={srv.id} className="glass-card rounded-2xl p-5 border border-white/10 space-y-3 bg-slate-900/60 flex flex-col justify-between">
+                  <div className="space-y-2">
+                    <span className="text-[10px] uppercase font-bold text-amber-400 tracking-wider block">{srv.category}</span>
+                    <h4 className="text-lg font-bold font-[family-name:var(--font-playfair)] text-white">{srv.title}</h4>
+                    <p className="text-xs text-slate-400 line-clamp-2">{srv.shortDesc}</p>
+                  </div>
+
+                  <div className="flex items-center justify-end pt-3 border-t border-white/10 gap-1">
+                    <Button variant="ghost" size="xs" onClick={() => setEditingService(srv)}>Edit</Button>
+                    <Button variant="danger" size="xs" onClick={() => setServices(services.filter(s => s.id !== srv.id))}>Delete</Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
       </main>
 
       {/* ── CREATE / EDIT ALBUM MODAL ────────────────────────────────────── */}
