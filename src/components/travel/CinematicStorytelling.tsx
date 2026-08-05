@@ -52,37 +52,87 @@ interface Chapter {
   number: string;
   title: string;
   videoSrc: string;
+  fallbackImage: string;
 }
 
 const CHAPTERS: Chapter[] = [
-  { id: "hero", number: "01", title: "Hero", videoSrc: "/videos/hero.mp4" },
-  { id: "about", number: "02", title: "About Us", videoSrc: "/videos/airport.mp4" },
-  { id: "services", number: "03", title: "Services", videoSrc: "/videos/takeoff.mp4" },
-  { id: "destinations", number: "04", title: "Destinations", videoSrc: "/videos/switzerland.mp4" },
-  { id: "why-us", number: "05", title: "Why Choose Us", videoSrc: "/videos/dubai.mp4" },
-  { id: "packages-section", number: "06", title: "Tour Packages", videoSrc: "/videos/paris.mp4" },
-  { id: "testimonials-section", number: "07", title: "Testimonials", videoSrc: "/videos/maldives.mp4" },
-  { id: "faq-section", number: "08", title: "FAQ & Contact", videoSrc: "/videos/ending.mp4" },
+  { 
+    id: "hero", 
+    number: "01", 
+    title: "Hero", 
+    videoSrc: "https://assets.mixkit.co/videos/preview/mixkit-top-view-of-a-beach-resort-and-the-ocean-41527-large.mp4",
+    fallbackImage: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=2000&q=85"
+  },
+  { 
+    id: "about", 
+    number: "02", 
+    title: "About Us", 
+    videoSrc: "https://assets.mixkit.co/videos/preview/mixkit-airplane-flying-over-clouds-during-sunset-41538-large.mp4",
+    fallbackImage: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=2000&q=85"
+  },
+  { 
+    id: "services", 
+    number: "03", 
+    title: "Services", 
+    videoSrc: "https://assets.mixkit.co/videos/preview/mixkit-clouds-and-blue-sky-from-the-window-of-an-airplane-41539-large.mp4",
+    fallbackImage: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=2000&q=85"
+  },
+  { 
+    id: "destinations", 
+    number: "04", 
+    title: "Destinations", 
+    videoSrc: "https://assets.mixkit.co/videos/preview/mixkit-snow-capped-mountains-under-a-blue-sky-41535-large.mp4",
+    fallbackImage: "https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?auto=format&fit=crop&w=2000&q=85"
+  },
+  { 
+    id: "why-us", 
+    number: "05", 
+    title: "Why Choose Us", 
+    videoSrc: "https://assets.mixkit.co/videos/preview/mixkit-modern-city-skyscrapers-at-sunset-41533-large.mp4",
+    fallbackImage: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=2000&q=85"
+  },
+  { 
+    id: "packages-section", 
+    number: "06", 
+    title: "Tour Packages", 
+    videoSrc: "https://assets.mixkit.co/videos/preview/mixkit-eiffel-tower-in-paris-at-sunset-41528-large.mp4",
+    fallbackImage: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=2000&q=85"
+  },
+  { 
+    id: "testimonials-section", 
+    number: "07", 
+    title: "Testimonials", 
+    videoSrc: "https://assets.mixkit.co/videos/preview/mixkit-aerial-view-of-a-tropical-island-with-white-sand-41537-large.mp4",
+    fallbackImage: "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&w=2000&q=85"
+  },
+  { 
+    id: "faq-section", 
+    number: "08", 
+    title: "FAQ & Contact", 
+    videoSrc: "https://assets.mixkit.co/videos/preview/mixkit-sunset-over-the-ocean-41534-large.mp4",
+    fallbackImage: "https://images.unsplash.com/photo-1476514525535-ce74f45814d4?auto=format&fit=crop&w=2000&q=85"
+  },
 ];
 
 /**
- * Strict Scroll-Driven Video Frame Scrubber with Mobile Viewport Safety
+ * Strict Scroll-Driven Video Frame Scrubber with Mobile Viewport & Image Fallback Safety
  */
 function FrameScrubVideo({
   videoSrc,
+  fallbackImage,
   containerRef,
-  isHero
 }: {
   videoSrc: string;
+  fallbackImage?: string;
   containerRef: React.RefObject<HTMLDivElement | null>;
-  isHero?: boolean;
 }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [videoError, setVideoError] = useState(false);
 
   useEffect(() => {
     const video = videoRef.current;
     const container = containerRef.current;
-    if (!video || !container) return;
+    if (!video || !container || videoError) return;
 
     video.pause();
 
@@ -121,18 +171,28 @@ function FrameScrubVideo({
     }, container);
 
     return () => ctx.revert();
-  }, [containerRef, videoSrc]);
+  }, [containerRef, videoSrc, videoError]);
 
   return (
-    <div className="absolute inset-0 w-full h-full overflow-hidden bg-black pointer-events-none">
-      <video
-        ref={videoRef}
-        src={videoSrc}
-        muted
-        playsInline
-        preload="auto"
-        className="w-full h-full object-cover will-change-transform"
-      />
+    <div className="absolute inset-0 w-full h-full overflow-hidden bg-slate-950 pointer-events-none">
+      {fallbackImage && (
+        <img
+          src={fallbackImage}
+          alt="Background"
+          className="absolute inset-0 w-full h-full object-cover opacity-70"
+        />
+      )}
+      {!videoError && (
+        <video
+          ref={videoRef}
+          src={videoSrc}
+          muted
+          playsInline
+          preload="auto"
+          onError={() => setVideoError(true)}
+          className="absolute inset-0 w-full h-full object-cover will-change-transform opacity-80"
+        />
+      )}
       <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/50 to-slate-950/70" />
     </div>
   );
@@ -283,7 +343,7 @@ export function CinematicStorytelling() {
         ref={heroRef}
         className="relative w-full h-screen flex flex-col items-center"
       >
-        <FrameScrubVideo videoSrc="/videos/hero.mp4" containerRef={heroRef} isHero={true} />
+        <FrameScrubVideo videoSrc={CHAPTERS[0].videoSrc} fallbackImage={CHAPTERS[0].fallbackImage} containerRef={heroRef} />
 
         <div className="relative z-10 flex-1 flex flex-col justify-center items-center text-center max-w-5xl space-y-4 sm:space-y-8 pt-20 sm:pt-24 pb-10 w-full px-2 sm:px-4">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 sm:px-5 sm:py-2 rounded-full glass border border-amber-500/40 bg-amber-500/10 text-amber-300 text-[10px] sm:text-xs font-semibold uppercase tracking-widest backdrop-blur-md shadow-lg shadow-amber-500/10 max-w-full">
@@ -339,7 +399,7 @@ export function CinematicStorytelling() {
         ref={aboutRef}
         className="relative w-full h-screen flex items-center justify-center px-4 sm:px-8 lg:px-16 overflow-hidden"
       >
-        <FrameScrubVideo videoSrc="/videos/airport.mp4" containerRef={aboutRef} />
+        <FrameScrubVideo videoSrc={CHAPTERS[1].videoSrc} fallbackImage={CHAPTERS[1].fallbackImage} containerRef={aboutRef} />
 
         <div className="relative z-10 glass-card max-w-4xl w-full p-6 sm:p-12 lg:p-14 rounded-3xl border border-white/15 bg-black/50 backdrop-blur-2xl text-center space-y-6 shadow-2xl">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 text-amber-300 text-xs font-semibold uppercase tracking-widest">
@@ -382,7 +442,7 @@ export function CinematicStorytelling() {
         ref={servicesRef}
         className="relative w-full min-h-screen flex flex-col justify-center px-4 sm:px-8 lg:px-16 py-16 sm:py-24 overflow-hidden"
       >
-        <FrameScrubVideo videoSrc="/videos/takeoff.mp4" containerRef={servicesRef} />
+        <FrameScrubVideo videoSrc={CHAPTERS[2].videoSrc} fallbackImage={CHAPTERS[2].fallbackImage} containerRef={servicesRef} />
 
         <div className="relative z-10 max-w-7xl mx-auto w-full space-y-8">
           {/* Header & Carousel Arrows */}
@@ -459,7 +519,7 @@ export function CinematicStorytelling() {
         ref={destRef}
         className="relative w-full h-screen flex items-center justify-start px-4 sm:px-8 lg:px-16 overflow-hidden"
       >
-        <FrameScrubVideo videoSrc="/videos/switzerland.mp4" containerRef={destRef} />
+        <FrameScrubVideo videoSrc={CHAPTERS[3].videoSrc} fallbackImage={CHAPTERS[3].fallbackImage} containerRef={destRef} />
 
         <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/40 to-transparent pointer-events-none" />
 
@@ -491,7 +551,7 @@ export function CinematicStorytelling() {
         ref={whyUsRef}
         className="relative w-full min-h-screen flex flex-col justify-center px-4 sm:px-8 lg:px-16 py-16 overflow-hidden"
       >
-        <FrameScrubVideo videoSrc="/videos/dubai.mp4" containerRef={whyUsRef} />
+        <FrameScrubVideo videoSrc={CHAPTERS[4].videoSrc} fallbackImage={CHAPTERS[4].fallbackImage} containerRef={whyUsRef} />
 
         <div className="relative z-10 max-w-7xl mx-auto space-y-8 w-full">
           <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4">
@@ -565,7 +625,7 @@ export function CinematicStorytelling() {
         ref={pkgRef}
         className="relative w-full min-h-screen flex flex-col justify-center px-4 sm:px-8 lg:px-16 py-16 overflow-hidden"
       >
-        <FrameScrubVideo videoSrc="/videos/paris.mp4" containerRef={pkgRef} />
+        <FrameScrubVideo videoSrc={CHAPTERS[5].videoSrc} fallbackImage={CHAPTERS[5].fallbackImage} containerRef={pkgRef} />
 
         <div className="relative z-10 max-w-7xl mx-auto w-full space-y-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4">
@@ -641,7 +701,7 @@ export function CinematicStorytelling() {
         ref={testimonialsRef}
         className="relative w-full min-h-screen flex items-center justify-center px-4 sm:px-8 lg:px-16 py-16 overflow-hidden"
       >
-        <FrameScrubVideo videoSrc="/videos/maldives.mp4" containerRef={testimonialsRef} />
+        <FrameScrubVideo videoSrc={CHAPTERS[6].videoSrc} fallbackImage={CHAPTERS[6].fallbackImage} containerRef={testimonialsRef} />
 
         <div className="relative z-10 w-full max-w-5xl">
           <TestimonialsSection />
@@ -655,7 +715,7 @@ export function CinematicStorytelling() {
         ref={faqRef}
         className="relative w-full min-h-screen flex flex-col justify-between items-center px-4 sm:px-8 lg:px-16 pt-20 pb-12 overflow-hidden"
       >
-        <FrameScrubVideo videoSrc="/videos/ending.mp4" containerRef={faqRef} />
+        <FrameScrubVideo videoSrc={CHAPTERS[7].videoSrc} fallbackImage={CHAPTERS[7].fallbackImage} containerRef={faqRef} />
 
         <div className="relative z-10 text-center max-w-4xl space-y-8 my-auto">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-amber-500/40 bg-amber-500/10 text-amber-300 text-xs sm:text-sm font-semibold uppercase tracking-widest">
