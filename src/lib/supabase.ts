@@ -1,8 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
 
-// Read environment variables for Supabase
-let rawUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || "").trim();
-const supabaseAnonKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "").trim();
+const DEFAULT_SUPABASE_URL = "https://ciixxtmneichewgjujbe.supabase.co";
+const DEFAULT_SUPABASE_ANON_KEY = "sb_publishable_IzWYI8X4GgnLXIg__LNJIg_tSA0ZaE5";
+
+// Read environment variables for Supabase with hardcoded production fallback
+let rawUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || DEFAULT_SUPABASE_URL).trim();
+const supabaseAnonKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || DEFAULT_SUPABASE_ANON_KEY).trim();
 
 // Automatically sanitize URL if user pasted trailing /rest/v1 or slashes
 if (rawUrl.endsWith("/")) rawUrl = rawUrl.slice(0, -1);

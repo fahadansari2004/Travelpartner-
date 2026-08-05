@@ -132,16 +132,22 @@ export default function AdminDashboardPage() {
     document.body.removeChild(link);
   };
 
-  const filteredEnquiries = enquiries.filter((e) => {
-    const matchesFilter = enquiryFilter === "All" || e.type === enquiryFilter;
+  const filteredEnquiries = (enquiries || []).filter((e) => {
+    if (!e) return false;
+    const matchesFilter = enquiryFilter === "All" || e.type === enquiryFilter || (enquiryFilter === "Flight" && (e.type === "Flight" || (e.message && e.message.toLowerCase().includes("flight"))));
     const q = enquirySearch.toLowerCase();
-    const matchesSearch = !q || e.name.toLowerCase().includes(q) || e.email.toLowerCase().includes(q) || e.subject.toLowerCase().includes(q);
+    const nameStr = (e.name || e.customerName || "").toLowerCase();
+    const emailStr = (e.email || "").toLowerCase();
+    const subjectStr = (e.subject || e.packageOrItemName || e.message || "").toLowerCase();
+    const matchesSearch = !q || nameStr.includes(q) || emailStr.includes(q) || subjectStr.includes(q);
     return matchesFilter && matchesSearch;
   });
 
-  const filteredTestimonials = testimonials.filter((t) => {
+  const filteredTestimonials = (testimonials || []).filter((t) => {
+    if (!t) return false;
     if (testimonialFilter === "All") return true;
-    return t.status === testimonialFilter;
+    const st = t.status || "Pending";
+    return st.toLowerCase() === testimonialFilter.toLowerCase();
   });
 
   const [isMounted, setIsMounted] = useState(false);

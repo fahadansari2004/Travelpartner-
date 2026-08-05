@@ -4,8 +4,11 @@ import { createClient } from "@supabase/supabase-js";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-let rawUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || "").trim();
-const supabaseAnonKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "").trim();
+const DEFAULT_SUPABASE_URL = "https://ciixxtmneichewgjujbe.supabase.co";
+const DEFAULT_SUPABASE_ANON_KEY = "sb_publishable_IzWYI8X4GgnLXIg__LNJIg_tSA0ZaE5";
+
+let rawUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || DEFAULT_SUPABASE_URL).trim();
+const supabaseAnonKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || DEFAULT_SUPABASE_ANON_KEY).trim();
 const supabaseServiceKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
 
 if (rawUrl.endsWith("/")) rawUrl = rawUrl.slice(0, -1);
@@ -13,7 +16,7 @@ if (rawUrl.endsWith("/rest/v1")) rawUrl = rawUrl.slice(0, -8);
 if (rawUrl.endsWith("/")) rawUrl = rawUrl.slice(0, -1);
 
 const supabaseKey = supabaseServiceKey || supabaseAnonKey;
-const supabase = rawUrl && supabaseKey ? createClient(rawUrl, supabaseKey) : null;
+const supabase = createClient(rawUrl, supabaseKey);
 
 const tableMap: Record<string, string> = {
   albums: "albums",
