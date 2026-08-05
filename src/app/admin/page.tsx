@@ -136,7 +136,7 @@ export default function AdminDashboardPage() {
     if (!e) return false;
     const matchesFilter = enquiryFilter === "All" || e.type === enquiryFilter || (enquiryFilter === "Flight" && (e.type === "Flight" || (e.message && e.message.toLowerCase().includes("flight"))));
     const q = enquirySearch.toLowerCase();
-    const nameStr = (e.name || e.customerName || "").toLowerCase();
+    const nameStr = (e.name || (e as any).customerName || "").toLowerCase();
     const emailStr = (e.email || "").toLowerCase();
     const subjectStr = (e.subject || e.packageOrItemName || e.message || "").toLowerCase();
     const matchesSearch = !q || nameStr.includes(q) || emailStr.includes(q) || subjectStr.includes(q);
