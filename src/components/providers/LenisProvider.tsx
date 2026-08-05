@@ -33,13 +33,20 @@ export function LenisProvider({ children }: LenisProviderProps) {
   const lenisRef = useRef<Lenis | null>(null);
 
   useEffect(() => {
-    // Instantiate Lenis with merged defaults
+    // Disable JS touch interception on mobile devices to allow native 120Hz smooth inertia scrolling
+    const isTouchDevice = typeof window !== "undefined" && (
+      "ontouchstart" in window ||
+      navigator.maxTouchPoints > 0 ||
+      window.matchMedia("(pointer: coarse)").matches
+    );
+
+    if (isTouchDevice) {
+      return;
+    }
+
     const lenis = new Lenis({
       ...LENIS_CONFIG,
-      touchMultiplier:
-        typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches
-          ? 2.5
-          : 1.5,
+      syncTouch: false,
     });
 
     lenisRef.current = lenis;
