@@ -918,6 +918,27 @@ function pruneOversizedStorage() {
   }
 }
 
+import { supabase, isSupabaseConfigured } from "./supabase";
+
+export async function syncWithSupabase<T>(key: string, value: T) {
+  if (!isSupabaseConfigured || !supabase) return;
+  try {
+    const tableMap: Record<string, string> = {
+      albums: "albums",
+      testimonials: "testimonials",
+      enquiries: "enquiries",
+      packages: "packages",
+      mediaLibrary: "media_library",
+    };
+    const tableName = tableMap[key];
+    if (tableName && Array.isArray(value)) {
+      await supabase.from(tableName).upsert(value as any);
+    }
+  } catch (err) {
+    console.warn(`Supabase sync notice for ${key}:`, err);
+  }
+}
+
 export function setStoredData<T>(key: string, value: T): void {
   if (typeof window === "undefined") return;
   try {
@@ -934,6 +955,11 @@ export function setStoredData<T>(key: string, value: T): void {
     }
     window.dispatchEvent(new Event("travel-store-update"));
   }
+
+  // Sync automatically with Supabase cloud database if configured
+  if (isSupabaseConfigured) {
+    syncWithSupabase(key, value);
+  }
 }
 
 /**
@@ -946,6 +972,31 @@ export function useStoreData<T>(key: string, defaultValue: T): [T, (val: T) => v
     const handleUpdate = () => {
       setData(getStoredData(key, defaultValue));
     };
+
+    // If Supabase is connected, fetch initial cloud records
+    if (isSupabaseConfigured && supabase) {
+      const tableMap: Record<string, string> = {
+        albums: "albums",
+        testimonials: "testimonials",
+        enquiries: "enquiries",
+        packages: "packages",
+        mediaLibrary: "media_library",
+      };
+      const tableName = tableMap[key];
+      if (tableName) {
+        supabase.from(tableName).select("*").then(({ data: cloudRecords, error }) => {
+          if (!error && cloudRecords && cloudRecords.length > 0) {
+            setData(cloudRecords as any);
+            try {
+              localStorage.setItem(`${STORE_KEY}_${key}`, JSON.stringify(cloudRecords));
+            } catch (e) {
+              // ignore
+            }
+          }
+        });
+      }
+    }
+
     window.addEventListener("travel-store-update", handleUpdate);
     window.addEventListener("storage", handleUpdate);
     return () => {
