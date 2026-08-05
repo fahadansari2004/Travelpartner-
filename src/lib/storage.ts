@@ -1020,7 +1020,7 @@ export function useStoreData<T>(key: string, defaultValue: T): [T, (val: T) => v
       try {
         const res = await fetch(`/api/store?key=${key}`);
         const json = await res.json();
-        if (json.success && Array.isArray(json.data)) {
+        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
           setData(json.data as any);
           try {
             localStorage.setItem(`${STORE_KEY}_${key}`, JSON.stringify(json.data));
