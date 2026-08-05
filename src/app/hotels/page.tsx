@@ -21,10 +21,12 @@ export default function HotelsPage() {
   const [guestsCount, setGuestsCount] = useState(2);
   const [hotelSuccessRef, setHotelSuccessRef] = useState<string | null>(null);
 
-  const activeHotels = hotels.filter((h) => h.active);
+  const activeHotels = (hotels || []).filter((h) => h && (h.active === undefined || h.active));
 
   const filteredHotels = activeHotels.filter((htl) => {
-    return selectedLocation === "all" || htl.location.toLowerCase().includes(selectedLocation.toLowerCase());
+    if (!htl) return false;
+    const locStr = (htl.location || "").toLowerCase();
+    return selectedLocation === "all" || locStr.includes(selectedLocation.toLowerCase());
   });
 
   const handleHotelSubmit = (e: React.FormEvent) => {

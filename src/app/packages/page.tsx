@@ -25,12 +25,15 @@ export default function PackagesPage() {
   const [specialNotes, setSpecialNotes] = useState("");
   const [bookingSuccessId, setBookingSuccessId] = useState<string | null>(null);
 
-  const activePackages = packages.filter((pkg) => pkg.active);
+  const activePackages = (packages || []).filter((pkg) => pkg && (pkg.active === undefined || pkg.active));
 
   const filteredPackages = activePackages.filter((pkg) => {
-    const matchesSearch = pkg.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          pkg.destination.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesDest = selectedDestination === "all" || pkg.destination.toLowerCase().includes(selectedDestination.toLowerCase());
+    if (!pkg) return false;
+    const nameStr = (pkg.name || "").toLowerCase();
+    const destStr = (pkg.destination || "").toLowerCase();
+    const q = searchTerm.toLowerCase();
+    const matchesSearch = !q || nameStr.includes(q) || destStr.includes(q);
+    const matchesDest = selectedDestination === "all" || destStr.includes(selectedDestination.toLowerCase());
     return matchesSearch && matchesDest;
   });
 

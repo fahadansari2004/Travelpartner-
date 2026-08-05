@@ -24,11 +24,19 @@ export default function FlightsPage() {
   const [seatsRequested, setSeatsRequested] = useState(1);
   const [flightSuccessRef, setFlightSuccessRef] = useState<string | null>(null);
 
-  const activeFlights = flights.filter((f) => f.active);
+  const activeFlights = (flights || []).filter((f) => f && (f.active === undefined || f.active));
 
   const filteredFlights = activeFlights.filter((flt) => {
-    const matchesFrom = !searchFrom || flt.fromCity.toLowerCase().includes(searchFrom.toLowerCase()) || flt.fromCode.toLowerCase().includes(searchFrom.toLowerCase());
-    const matchesTo = !searchTo || flt.toCity.toLowerCase().includes(searchTo.toLowerCase()) || flt.toCode.toLowerCase().includes(searchTo.toLowerCase());
+    if (!flt) return false;
+    const fromCityStr = (flt.fromCity || "").toLowerCase();
+    const fromCodeStr = (flt.fromCode || "").toLowerCase();
+    const toCityStr = (flt.toCity || "").toLowerCase();
+    const toCodeStr = (flt.toCode || "").toLowerCase();
+    const sf = searchFrom.toLowerCase();
+    const st = searchTo.toLowerCase();
+
+    const matchesFrom = !sf || fromCityStr.includes(sf) || fromCodeStr.includes(sf);
+    const matchesTo = !st || toCityStr.includes(st) || toCodeStr.includes(st);
     const matchesClass = selectedClass === "all" || flt.travelClass === selectedClass;
     return matchesFrom && matchesTo && matchesClass;
   });
