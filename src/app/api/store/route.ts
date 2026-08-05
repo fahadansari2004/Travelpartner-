@@ -44,6 +44,28 @@ export async function GET(req: Request) {
       travelDate: item.travelDate || item.travel_date,
       discountPrice: item.discountPrice || item.discount_price,
       uploadDate: item.uploadDate || item.upload_date,
+      createdAt: item.createdAt || item.created_at,
+      reviewsCount: item.reviewsCount ?? item.reviews_count,
+      mapLocation: item.mapLocation || item.map_location,
+      videoUrl: item.videoUrl || item.video_url,
+      airlineName: item.airlineName || item.airline_name,
+      airlineLogo: item.airlineLogo || item.airline_logo,
+      fromCity: item.fromCity || item.from_city,
+      fromCode: item.fromCode || item.from_code,
+      toCity: item.toCity || item.to_city,
+      toCode: item.toCode || item.to_code,
+      tripType: item.tripType || item.trip_type,
+      travelClass: item.travelClass || item.travel_class,
+      farePrice: item.farePrice ?? item.fare_price,
+      offerBadge: item.offerBadge || item.offer_badge,
+      seatsAvailable: item.seatsAvailable ?? item.seats_available,
+      bookingLink: item.bookingLink || item.booking_link,
+      pricePerNight: item.pricePerNight ?? item.price_per_night,
+      iconName: item.iconName || item.icon_name,
+      ctaText: item.ctaText || item.cta_text,
+      displayOrder: item.displayOrder ?? item.display_order,
+      packageName: item.packageName || item.package_name,
+      customerName: item.customerName || item.customer_name,
     }));
 
     return NextResponse.json({ success: true, data: mappedData });
@@ -64,12 +86,34 @@ export async function POST(req: Request) {
       if (value.length > 0) {
         const safeRecords = value.map((item: any) => {
           const clean: any = { ...item };
-          if (clean.coverImage && !clean.cover_image) clean.cover_image = clean.coverImage;
-          if (clean.shortDesc && !clean.short_desc) clean.short_desc = clean.shortDesc;
-          if (clean.longDesc && !clean.long_desc) clean.long_desc = clean.longDesc;
-          if (clean.travelDate && !clean.travel_date) clean.travel_date = clean.travelDate;
-          if (clean.discountPrice && !clean.discount_price) clean.discount_price = clean.discountPrice;
-          if (clean.uploadDate && !clean.upload_date) clean.upload_date = clean.uploadDate;
+          if (clean.coverImage !== undefined) { clean.cover_image = clean.coverImage; delete clean.coverImage; }
+          if (clean.shortDesc !== undefined) { clean.short_desc = clean.shortDesc; delete clean.shortDesc; }
+          if (clean.longDesc !== undefined) { clean.long_desc = clean.longDesc; delete clean.longDesc; }
+          if (clean.travelDate !== undefined) { clean.travel_date = clean.travelDate; delete clean.travelDate; }
+          if (clean.discountPrice !== undefined) { clean.discount_price = clean.discountPrice; delete clean.discountPrice; }
+          if (clean.uploadDate !== undefined) { clean.upload_date = clean.uploadDate; delete clean.uploadDate; }
+          if (clean.createdAt !== undefined) { clean.created_at = clean.createdAt; delete clean.createdAt; }
+          if (clean.reviewsCount !== undefined) { clean.reviews_count = clean.reviewsCount; delete clean.reviewsCount; }
+          if (clean.mapLocation !== undefined) { clean.map_location = clean.mapLocation; delete clean.mapLocation; }
+          if (clean.videoUrl !== undefined) { clean.video_url = clean.videoUrl; delete clean.videoUrl; }
+          if (clean.airlineName !== undefined) { clean.airline_name = clean.airlineName; delete clean.airlineName; }
+          if (clean.airlineLogo !== undefined) { clean.airline_logo = clean.airlineLogo; delete clean.airlineLogo; }
+          if (clean.fromCity !== undefined) { clean.from_city = clean.fromCity; delete clean.fromCity; }
+          if (clean.fromCode !== undefined) { clean.from_code = clean.fromCode; delete clean.fromCode; }
+          if (clean.toCity !== undefined) { clean.to_city = clean.toCity; delete clean.toCity; }
+          if (clean.toCode !== undefined) { clean.to_code = clean.toCode; delete clean.toCode; }
+          if (clean.tripType !== undefined) { clean.trip_type = clean.tripType; delete clean.tripType; }
+          if (clean.travelClass !== undefined) { clean.travel_class = clean.travelClass; delete clean.travelClass; }
+          if (clean.farePrice !== undefined) { clean.fare_price = clean.farePrice; delete clean.farePrice; }
+          if (clean.offerBadge !== undefined) { clean.offer_badge = clean.offerBadge; delete clean.offerBadge; }
+          if (clean.seatsAvailable !== undefined) { clean.seats_available = clean.seatsAvailable; delete clean.seatsAvailable; }
+          if (clean.bookingLink !== undefined) { clean.booking_link = clean.bookingLink; delete clean.bookingLink; }
+          if (clean.pricePerNight !== undefined) { clean.price_per_night = clean.pricePerNight; delete clean.pricePerNight; }
+          if (clean.iconName !== undefined) { clean.icon_name = clean.iconName; delete clean.iconName; }
+          if (clean.ctaText !== undefined) { clean.cta_text = clean.ctaText; delete clean.ctaText; }
+          if (clean.displayOrder !== undefined) { clean.display_order = clean.displayOrder; delete clean.displayOrder; }
+          if (clean.packageName !== undefined) { clean.package_name = clean.packageName; delete clean.packageName; }
+          if (clean.customerName !== undefined) { clean.customer_name = clean.customerName; delete clean.customerName; }
           return clean;
         });
 
