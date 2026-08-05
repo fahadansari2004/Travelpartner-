@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 let rawUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || "").trim();
 const supabaseAnonKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "").trim();
 const supabaseServiceKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
@@ -72,7 +75,10 @@ export async function GET(req: Request) {
       displayOrder: item.displayOrder ?? item.display_order,
     }));
 
-    return NextResponse.json({ success: true, data: mappedData });
+    return NextResponse.json(
+      { success: true, data: mappedData },
+      { headers: { "Cache-Control": "no-store, max-age=0" } }
+    );
   } catch (err: any) {
     return NextResponse.json({ success: false, error: err.message, data: [] });
   }
@@ -167,7 +173,7 @@ export async function POST(req: Request) {
       }
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true }, { headers: { "Cache-Control": "no-store, max-age=0" } });
   } catch (err: any) {
     return NextResponse.json({ success: false, error: err.message });
   }
