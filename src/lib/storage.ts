@@ -874,11 +874,7 @@ export function getStoredData<T>(key: string, defaultValue: T): T {
   try {
     const raw = localStorage.getItem(`${STORE_KEY}_${key}`);
     if (!raw) return defaultValue;
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed) && parsed.length === 0 && Array.isArray(defaultValue) && defaultValue.length > 0) {
-      return defaultValue;
-    }
-    return parsed;
+    return JSON.parse(raw);
   } catch (err) {
     console.error(`Error reading ${key} from storage:`, err);
     return defaultValue;
