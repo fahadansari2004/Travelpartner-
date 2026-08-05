@@ -119,7 +119,7 @@ export default function HotelsPage() {
                 </p>
 
                 <div className="flex flex-wrap gap-1.5 pt-2">
-                  {htl.facilities.map((fac, i) => (
+                  {(htl.facilities || []).map((fac, i) => (
                     <span key={i} className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-[10px] text-slate-300">
                       ✓ {fac}
                     </span>
