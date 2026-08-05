@@ -44,38 +44,42 @@ export async function GET(req: Request) {
     // Map snake_case database columns back to React camelCase properties
     const mappedData = (data || []).map((item: any) => ({
       ...item,
-      name: item.name || item.customer_name || item.customerName || "Valued Client",
-      customerName: item.customerName || item.customer_name || item.name || "Valued Client",
-      packageOrItemName: item.packageOrItemName || item.package_name || item.packageName || "Custom Booking",
-      packageName: item.packageName || item.package_name || item.packageOrItemName || "Custom Booking",
-      message: item.message || item.notes || "",
-      guestsCount: item.guestsCount || item.guests || 1,
-      travelDate: item.travelDate || item.travel_date || "",
-      createdAt: item.createdAt || item.created_at || "",
-      coverImage: item.coverImage || item.cover_image,
-      shortDesc: item.shortDesc || item.short_desc,
-      longDesc: item.longDesc || item.long_desc,
-      discountPrice: item.discountPrice || item.discount_price,
-      uploadDate: item.uploadDate || item.upload_date,
-      reviewsCount: item.reviewsCount ?? item.reviews_count,
-      mapLocation: item.mapLocation || item.map_location,
-      videoUrl: item.videoUrl || item.video_url,
-      airlineName: item.airlineName || item.airline_name,
-      airlineLogo: item.airlineLogo || item.airline_logo,
-      fromCity: item.fromCity || item.from_city,
-      fromCode: item.fromCode || item.from_code,
-      toCity: item.toCity || item.to_city,
-      toCode: item.toCode || item.to_code,
-      tripType: item.tripType || item.trip_type,
-      travelClass: item.travelClass || item.travel_class,
-      farePrice: item.farePrice ?? item.fare_price,
-      offerBadge: item.offerBadge || item.offer_badge,
-      seatsAvailable: item.seatsAvailable ?? item.seats_available,
-      bookingLink: item.bookingLink || item.booking_link,
-      pricePerNight: item.pricePerNight ?? item.price_per_night,
-      iconName: item.iconName || item.icon_name,
-      ctaText: item.ctaText || item.cta_text,
-      displayOrder: item.displayOrder ?? item.display_order,
+      name: item.customer_name || item.name || item.customerName || "Valued Client",
+      customerName: item.customer_name || item.customerName || item.name || "Valued Client",
+      packageOrItemName: item.package_name || item.packageOrItemName || item.packageName || item.subject || "Custom Booking",
+      packageName: item.package_name || item.packageName || item.packageOrItemName || item.subject || "Custom Booking",
+      subject: item.package_name || item.subject || item.packageOrItemName || "Custom Booking",
+      message: item.notes || item.message || "",
+      notes: item.notes || item.message || "",
+      guestsCount: item.guests || item.guestsCount || 1,
+      guests: item.guests || item.guestsCount || 1,
+      travelDate: item.travel_date || item.travelDate || "",
+      date: item.created_at || item.createdAt || item.date || new Date().toISOString().slice(0, 10),
+      createdAt: item.created_at || item.createdAt || item.date || new Date().toISOString().slice(0, 10),
+      coverImage: item.cover_image || item.coverImage,
+      shortDesc: item.short_desc || item.shortDesc,
+      longDesc: item.long_desc || item.longDesc,
+      discountPrice: item.discount_price || item.discountPrice,
+      uploadDate: item.upload_date || item.uploadDate,
+      reviewsCount: item.reviews_count ?? item.reviewsCount,
+      mapLocation: item.map_location || item.mapLocation,
+      videoUrl: item.video_url || item.videoUrl,
+      airlineName: item.airline_name || item.airlineName,
+      airlineLogo: item.airline_logo || item.airlineLogo,
+      fromCity: item.from_city || item.fromCity,
+      fromCode: item.from_code || item.fromCode,
+      toCity: item.to_city || item.toCity,
+      toCode: item.to_code || item.toCode,
+      tripType: item.trip_type || item.tripType,
+      travelClass: item.travel_class || item.travelClass,
+      farePrice: item.fare_price ?? item.farePrice,
+      offerBadge: item.offer_badge || item.offerBadge,
+      seatsAvailable: item.seats_available ?? item.seatsAvailable,
+      bookingLink: item.booking_link || item.bookingLink,
+      pricePerNight: item.price_per_night ?? item.pricePerNight,
+      iconName: item.icon_name || item.iconName,
+      ctaText: item.cta_text || item.ctaText,
+      displayOrder: item.display_order ?? item.displayOrder,
     }));
 
     return NextResponse.json(
@@ -100,17 +104,38 @@ export async function POST(req: Request) {
         const clean: any = { ...item };
 
         // 1. Column snake_case mapping
-        if (clean.name !== undefined && tableName === "enquiries") { clean.customer_name = clean.name; }
-        if (clean.customerName !== undefined && tableName === "enquiries") { clean.customer_name = clean.customerName; }
-        if (clean.packageOrItemName !== undefined && tableName === "enquiries") { clean.package_name = clean.packageOrItemName; }
-        if (clean.packageName !== undefined && tableName === "enquiries") { clean.package_name = clean.packageName; }
-        if (clean.message !== undefined && tableName === "enquiries") { clean.notes = clean.message; }
-        if (clean.guestsCount !== undefined && tableName === "enquiries") { clean.guests = clean.guestsCount; }
-        if (clean.travelDate !== undefined) { clean.travel_date = clean.travelDate; }
-        if (clean.createdAt !== undefined) { clean.created_at = clean.createdAt; }
+        if (tableName === "enquiries") {
+          clean.customer_name = clean.customer_name || clean.name || clean.customerName || "Valued Client";
+          clean.package_name = clean.package_name || clean.packageOrItemName || clean.packageName || clean.subject || "Flight Booking";
+          clean.notes = clean.notes || clean.message || clean.subject || "";
+          clean.guests = clean.guests || clean.guestsCount || 1;
+          clean.travel_date = clean.travel_date || clean.travelDate || "";
+          clean.created_at = clean.created_at || clean.createdAt || clean.date || new Date().toISOString().slice(0, 10);
+
+          const extraParts: string[] = [];
+          if (clean.preferredTime) { extraParts.push(`Time: ${clean.preferredTime}`); }
+          if (clean.totalAmount) { extraParts.push(`Total: $${clean.totalAmount}`); }
+          if (extraParts.length > 0) {
+            const extraStr = extraParts.join(" | ");
+            clean.notes = clean.notes ? `${clean.notes} (${extraStr})` : extraStr;
+          }
+
+          delete clean.name;
+          delete clean.customerName;
+          delete clean.packageName;
+          delete clean.packageOrItemName;
+          delete clean.subject;
+          delete clean.message;
+          delete clean.guestsCount;
+          delete clean.date;
+        }
+
+        // General Property Cleaning
         if (clean.coverImage !== undefined) { clean.cover_image = clean.coverImage; }
         if (clean.shortDesc !== undefined) { clean.short_desc = clean.shortDesc; }
         if (clean.longDesc !== undefined) { clean.long_desc = clean.longDesc; }
+        if (clean.travelDate !== undefined) { clean.travel_date = clean.travelDate; }
+        if (clean.createdAt !== undefined) { clean.created_at = clean.createdAt; }
         if (clean.discountPrice !== undefined) { clean.discount_price = clean.discountPrice; }
         if (clean.uploadDate !== undefined) { clean.upload_date = clean.uploadDate; }
         if (clean.reviewsCount !== undefined) { clean.reviews_count = clean.reviewsCount; }
@@ -132,16 +157,6 @@ export async function POST(req: Request) {
         if (clean.iconName !== undefined) { clean.icon_name = clean.iconName; }
         if (clean.ctaText !== undefined) { clean.cta_text = clean.ctaText; }
         if (clean.displayOrder !== undefined) { clean.display_order = clean.displayOrder; }
-
-        if (tableName === "enquiries") {
-          const extraParts: string[] = [];
-          if (clean.preferredTime) { extraParts.push(`Time: ${clean.preferredTime}`); }
-          if (clean.totalAmount) { extraParts.push(`Total: $${clean.totalAmount}`); }
-          if (extraParts.length > 0) {
-            const extraStr = extraParts.join(" | ");
-            clean.notes = clean.notes ? `${clean.notes} (${extraStr})` : extraStr;
-          }
-        }
 
         // 2. Strict deletion of non-PostgreSQL camelCase keys
         delete clean.customerName;
