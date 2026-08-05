@@ -64,13 +64,14 @@ export interface HotelItem {
   id: string;
   name: string;
   location: string;
-  images: string[];
+  image?: string;
+  images?: string[];
   rating: number;
   pricePerNight: number;
-  currency: string;
-  facilities: string[];
-  description: string;
-  bookingLink: string;
+  currency?: string;
+  facilities?: string[];
+  description?: string;
+  bookingLink?: string;
   featured: boolean;
   active: boolean;
 }
