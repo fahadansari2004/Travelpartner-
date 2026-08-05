@@ -32,7 +32,18 @@ export async function GET(req: Request) {
     const { data, error } = await supabase.from(tableName).select("*");
     if (error) return NextResponse.json({ success: false, error: error.message, data: [] });
 
-    return NextResponse.json({ success: true, data });
+    // Map snake_case database columns back to React camelCase properties
+    const mappedData = (data || []).map((item: any) => ({
+      ...item,
+      coverImage: item.coverImage || item.cover_image,
+      shortDesc: item.shortDesc || item.short_desc,
+      longDesc: item.longDesc || item.long_desc,
+      travelDate: item.travelDate || item.travel_date,
+      discountPrice: item.discountPrice || item.discount_price,
+      uploadDate: item.uploadDate || item.upload_date,
+    }));
+
+    return NextResponse.json({ success: true, data: mappedData });
   } catch (err: any) {
     return NextResponse.json({ success: false, error: err.message, data: [] });
   }

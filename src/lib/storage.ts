@@ -1045,12 +1045,19 @@ export function useStoreData<T>(key: string, defaultValue: T): [T, (val: T) => v
           supabase.from(tableName).select("*").then(({ data: cloudRecords, error }) => {
             if (!error && cloudRecords) {
               if (cloudRecords.length > 0) {
-                setData(cloudRecords as any);
+                const mapped = cloudRecords.map((item: any) => ({
+                  ...item,
+                  coverImage: item.coverImage || item.cover_image,
+                  shortDesc: item.shortDesc || item.short_desc,
+                  longDesc: item.longDesc || item.long_desc,
+                  travelDate: item.travelDate || item.travel_date,
+                  discountPrice: item.discountPrice || item.discount_price,
+                  uploadDate: item.uploadDate || item.upload_date,
+                }));
+                setData(mapped as any);
                 try {
-                  localStorage.setItem(`${STORE_KEY}_${key}`, JSON.stringify(cloudRecords));
-                } catch (e) {
-                  // ignore
-                }
+                  localStorage.setItem(`${STORE_KEY}_${key}`, JSON.stringify(mapped));
+                } catch (e) {}
               } else if (Array.isArray(defaultValue) && defaultValue.length > 0) {
                 // Seed Supabase with default initial records if cloud table is empty
                 syncWithSupabase(key, defaultValue);
