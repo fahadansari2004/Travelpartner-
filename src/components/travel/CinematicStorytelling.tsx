@@ -60,56 +60,56 @@ const CHAPTERS: Chapter[] = [
     id: "hero", 
     number: "01", 
     title: "Hero", 
-    videoSrc: "https://assets.mixkit.co/videos/preview/mixkit-top-view-of-a-beach-resort-and-the-ocean-41527-large.mp4",
+    videoSrc: "/videos/hero.mp4",
     fallbackImage: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=2000&q=85"
   },
   { 
     id: "about", 
     number: "02", 
     title: "About Us", 
-    videoSrc: "https://assets.mixkit.co/videos/preview/mixkit-airplane-flying-over-clouds-during-sunset-41538-large.mp4",
+    videoSrc: "/videos/airport.mp4",
     fallbackImage: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=2000&q=85"
   },
   { 
     id: "services", 
     number: "03", 
     title: "Services", 
-    videoSrc: "https://assets.mixkit.co/videos/preview/mixkit-clouds-and-blue-sky-from-the-window-of-an-airplane-41539-large.mp4",
+    videoSrc: "/videos/takeoff.mp4",
     fallbackImage: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=2000&q=85"
   },
   { 
     id: "destinations", 
     number: "04", 
     title: "Destinations", 
-    videoSrc: "https://assets.mixkit.co/videos/preview/mixkit-snow-capped-mountains-under-a-blue-sky-41535-large.mp4",
+    videoSrc: "/videos/switzerland.mp4",
     fallbackImage: "https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?auto=format&fit=crop&w=2000&q=85"
   },
   { 
     id: "why-us", 
     number: "05", 
     title: "Why Choose Us", 
-    videoSrc: "https://assets.mixkit.co/videos/preview/mixkit-modern-city-skyscrapers-at-sunset-41533-large.mp4",
+    videoSrc: "/videos/dubai.mp4",
     fallbackImage: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=2000&q=85"
   },
   { 
     id: "packages-section", 
     number: "06", 
     title: "Tour Packages", 
-    videoSrc: "https://assets.mixkit.co/videos/preview/mixkit-eiffel-tower-in-paris-at-sunset-41528-large.mp4",
+    videoSrc: "/videos/paris.mp4",
     fallbackImage: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=2000&q=85"
   },
   { 
     id: "testimonials-section", 
     number: "07", 
     title: "Testimonials", 
-    videoSrc: "https://assets.mixkit.co/videos/preview/mixkit-aerial-view-of-a-tropical-island-with-white-sand-41537-large.mp4",
+    videoSrc: "/videos/maldives.mp4",
     fallbackImage: "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&w=2000&q=85"
   },
   { 
     id: "faq-section", 
     number: "08", 
     title: "FAQ & Contact", 
-    videoSrc: "https://assets.mixkit.co/videos/preview/mixkit-sunset-over-the-ocean-41534-large.mp4",
+    videoSrc: "/videos/ending.mp4",
     fallbackImage: "https://images.unsplash.com/photo-1476514525535-ce74f45814d4?auto=format&fit=crop&w=2000&q=85"
   },
 ];
