@@ -8,7 +8,6 @@ import {
   Sparkles, 
   Hotel, 
   Plane, 
-  ShieldCheck, 
   ArrowRight,
   ArrowLeft,
   Globe,
@@ -28,10 +27,8 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Footer } from "@/components/layout/Footer";
 import { TestimonialsSection } from "@/components/travel/TestimonialsSection";
-import { gsap, ScrollTrigger } from "@/lib/gsap";
 import { useStoreData, INITIAL_SERVICES, INITIAL_PACKAGES } from "@/lib/storage";
 
-// Icon Map helper
 const ICON_MAP: Record<string, any> = {
   Plane,
   Hotel,
@@ -115,85 +112,36 @@ const CHAPTERS: Chapter[] = [
 ];
 
 /**
- * Strict Scroll-Driven Video Frame Scrubber with Mobile Viewport & Image Fallback Safety
+ * Autoplay Ambient Background Video Component with Fallback Image Safety
  */
-function FrameScrubVideo({
+function BackgroundMedia({
   videoSrc,
   fallbackImage,
-  containerRef,
 }: {
   videoSrc: string;
-  fallbackImage?: string;
-  containerRef: React.RefObject<HTMLDivElement | null>;
+  fallbackImage: string;
 }) {
-  const videoRef = useRef<HTMLVideoElement | null>(null);
   const [videoError, setVideoError] = useState(false);
 
-  useEffect(() => {
-    const video = videoRef.current;
-    const container = containerRef.current;
-    if (!video || !container || videoError) return;
-
-    video.pause();
-
-    let ctx = gsap.context(() => {
-      ScrollTrigger.create({
-        trigger: container,
-        start: "top top",
-        end: "+=120%",
-        pin: true,
-        scrub: 0.3,
-        onUpdate: (self) => {
-          if (video.duration && !isNaN(video.duration)) {
-            video.pause();
-            const targetTime = self.progress * video.duration;
-            if (Math.abs(video.currentTime - targetTime) > 0.03) {
-              video.currentTime = targetTime;
-            }
-          }
-        },
-      });
-
-      gsap.fromTo(
-        video,
-        { scale: 1.0 },
-        {
-          scale: 1.15,
-          ease: "none",
-          scrollTrigger: {
-            trigger: container,
-            start: "top top",
-            end: "+=120%",
-            scrub: true,
-          },
-        }
-      );
-    }, container);
-
-    return () => ctx.revert();
-  }, [containerRef, videoSrc, videoError]);
-
   return (
-    <div className="absolute inset-0 w-full h-full overflow-hidden bg-slate-950 pointer-events-none">
-      {fallbackImage && (
-        <img
-          src={fallbackImage}
-          alt="Background"
-          className="absolute inset-0 w-full h-full object-cover opacity-70"
-        />
-      )}
+    <div className="absolute inset-0 w-full h-full overflow-hidden bg-slate-950 pointer-events-none z-0">
+      <img
+        src={fallbackImage}
+        alt="Background"
+        className="absolute inset-0 w-full h-full object-cover opacity-60 scale-105"
+      />
       {!videoError && (
         <video
-          ref={videoRef}
           src={videoSrc}
+          autoPlay
+          loop
           muted
           playsInline
-          preload="auto"
           onError={() => setVideoError(true)}
-          className="absolute inset-0 w-full h-full object-cover will-change-transform opacity-80"
+          className="absolute inset-0 w-full h-full object-cover opacity-70 scale-105 transition-opacity duration-700"
         />
       )}
-      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/50 to-slate-950/70" />
+      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/65 to-slate-950/80" />
     </div>
   );
 }
@@ -201,28 +149,15 @@ function FrameScrubVideo({
 export function CinematicStorytelling() {
   const [activeChapterIndex, setActiveChapterIndex] = useState(0);
   const [isAudioMuted, setIsAudioMuted] = useState(true);
-  const [activeServiceModal, setActiveServiceModal] = useState<any | null>(null);
+  const [activeServiceModal, setActiveServiceModal] = useState<any>(null);
 
-  // Carousel Refs
-  const servicesCarouselRef = useRef<HTMLDivElement>(null);
-  const whyUsCarouselRef = useRef<HTMLDivElement>(null);
-  const packagesCarouselRef = useRef<HTMLDivElement>(null);
-
-  // Dynamic store data
   const [services] = useStoreData("services", INITIAL_SERVICES);
   const [packages] = useStoreData("packages", INITIAL_PACKAGES);
 
-  // Section Refs
-  const heroRef = useRef<HTMLDivElement>(null);
-  const aboutRef = useRef<HTMLDivElement>(null);
-  const servicesRef = useRef<HTMLDivElement>(null);
-  const destRef = useRef<HTMLDivElement>(null);
-  const whyUsRef = useRef<HTMLDivElement>(null);
-  const pkgRef = useRef<HTMLDivElement>(null);
-  const testimonialsRef = useRef<HTMLDivElement>(null);
-  const faqRef = useRef<HTMLDivElement>(null);
+  const servicesCarouselRef = useRef<HTMLDivElement>(null);
+  const whyUsCarouselRef = useRef<HTMLDivElement>(null);
 
-  const activeServices = services.filter((s) => s.active).sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
+  const activeServices = (services || []).filter((s) => s.active).sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
 
   const scrollToSection = (id: string) => {
     const el = document.getElementById(id);
@@ -261,27 +196,6 @@ export function CinematicStorytelling() {
     });
 
     return () => observer.disconnect();
-  }, []);
-
-  // Auto-scroll mobile carousels
-  useEffect(() => {
-    const autoScroll = (ref: React.RefObject<HTMLDivElement | null>) => {
-      if (ref.current && window.innerWidth < 768) {
-        const maxScroll = ref.current.scrollWidth - ref.current.clientWidth;
-        if (ref.current.scrollLeft >= maxScroll - 15) {
-          ref.current.scrollTo({ left: 0, behavior: "smooth" });
-        } else {
-          ref.current.scrollBy({ left: ref.current.clientWidth * 0.85, behavior: "smooth" });
-        }
-      }
-    };
-
-    const interval = setInterval(() => {
-      autoScroll(servicesCarouselRef);
-      autoScroll(whyUsCarouselRef);
-    }, 3800);
-
-    return () => clearInterval(interval);
   }, []);
 
   const scrollCarousel = (ref: React.RefObject<HTMLDivElement | null>, direction: "left" | "right") => {
@@ -337,37 +251,54 @@ export function CinematicStorytelling() {
         </button>
       </div>
 
-
-      {/* ── 1. HERO SECTION (Fluid Responsive Typography) ───────────────────── */}
+      {/* ── 1. HERO SECTION ─────────────────────────────────────────────────── */}
       <section 
         id="hero" 
-        ref={heroRef}
-        className="relative w-full h-screen flex flex-col items-center"
+        className="relative w-full min-h-screen flex flex-col items-center justify-between py-16 sm:py-24"
       >
-        <FrameScrubVideo videoSrc={CHAPTERS[0].videoSrc} fallbackImage={CHAPTERS[0].fallbackImage} containerRef={heroRef} />
+        <BackgroundMedia videoSrc={CHAPTERS[0].videoSrc} fallbackImage={CHAPTERS[0].fallbackImage} />
 
-        <div className="relative z-10 flex-1 flex flex-col justify-center items-center text-center max-w-5xl space-y-4 sm:space-y-8 pt-20 sm:pt-24 pb-10 w-full px-2 sm:px-4">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 sm:px-5 sm:py-2 rounded-full glass border border-amber-500/40 bg-amber-500/10 text-amber-300 text-[10px] sm:text-xs font-semibold uppercase tracking-widest backdrop-blur-md shadow-lg shadow-amber-500/10 max-w-full">
+        <div className="relative z-10 my-auto flex flex-col justify-center items-center text-center max-w-5xl space-y-6 sm:space-y-8 w-full px-4">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="inline-flex items-center gap-1.5 px-4 py-1.5 sm:px-5 sm:py-2 rounded-full glass border border-amber-500/40 bg-amber-500/10 text-amber-300 text-[10px] sm:text-xs font-semibold uppercase tracking-widest backdrop-blur-md shadow-lg shadow-amber-500/10"
+          >
             <Sparkles size={14} className="animate-pulse text-amber-400 shrink-0" />
-            <span className="truncate">ULTRA-LUXURY BESPOKE EXPEDITIONS</span>
-          </div>
+            <span>ULTRA-LUXURY BESPOKE EXPEDITIONS</span>
+          </motion.div>
 
-          <h1 className="text-3xl sm:text-6xl lg:text-7xl font-black tracking-tight text-white font-[family-name:var(--font-playfair)] leading-[1.12] sm:leading-[1.08] max-w-xs sm:max-w-4xl mx-auto">
+          <motion.h1 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="text-3xl sm:text-6xl lg:text-7xl font-black tracking-tight text-white font-[family-name:var(--font-playfair)] leading-[1.12] sm:leading-[1.08] max-w-xs sm:max-w-4xl mx-auto"
+          >
             Every Journey Begins With A <span className="gradient-text">Dream</span>
-          </h1>
+          </motion.h1>
 
-          <p className="text-xs sm:text-lg md:text-2xl text-slate-200 font-light max-w-xs sm:max-w-2xl mx-auto leading-relaxed">
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="text-xs sm:text-lg md:text-2xl text-slate-200 font-light max-w-xs sm:max-w-2xl mx-auto leading-relaxed"
+          >
             Explore the world&apos;s most extraordinary destinations with travelPartner.
-          </p>
+          </motion.p>
 
-          {/* Clean Responsive CTA Buttons */}
-          <div className="pt-2 sm:pt-4 flex flex-col sm:flex-row items-center justify-center gap-2.5 sm:gap-5 w-full max-w-xs sm:max-w-none mx-auto">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+            className="pt-2 sm:pt-4 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-5 w-full max-w-xs sm:max-w-none mx-auto"
+          >
             <Link href="/packages" className="w-full sm:w-auto">
               <Button 
                 variant="amber" 
                 size="lg" 
                 rightIcon={<ArrowRight size={16} />}
-                className="w-full sm:w-auto min-h-[44px] sm:min-h-[48px] text-xs sm:text-sm font-bold shadow-xl shadow-amber-500/25 justify-center"
+                className="w-full sm:w-auto min-h-[46px] sm:min-h-[50px] text-xs sm:text-sm font-bold shadow-xl shadow-amber-500/25 justify-center"
               >
                 Book Your Journey
               </Button>
@@ -376,33 +307,40 @@ export function CinematicStorytelling() {
               <Button 
                 variant="outline" 
                 size="lg"
-                className="w-full sm:w-auto min-h-[44px] sm:min-h-[48px] text-xs sm:text-sm font-bold justify-center border-white/30 text-white hover:bg-white/10"
+                className="w-full sm:w-auto min-h-[46px] sm:min-h-[50px] text-xs sm:text-sm font-bold justify-center border-white/30 text-white hover:bg-white/10"
               >
                 Explore Special Flights
               </Button>
             </Link>
-          </div>
+          </motion.div>
         </div>
 
-        {/* Scroll Indicator */}
-        <div className="relative z-10 flex flex-col items-center gap-2 text-slate-400 pb-2">
-          <span className="text-[10px] sm:text-xs uppercase tracking-widest text-slate-400 font-medium">Scroll to scrub journey</span>
+        {/* Scroll Down Indicator */}
+        <button 
+          onClick={() => scrollToSection("about")}
+          className="relative z-10 flex flex-col items-center gap-2 text-slate-400 hover:text-amber-400 transition-colors cursor-pointer"
+        >
+          <span className="text-[10px] sm:text-xs uppercase tracking-widest font-medium">Explore Chapters</span>
           <div className="w-7 h-10 sm:w-8 sm:h-12 rounded-full border-2 border-white/20 flex items-start justify-center p-1.5 backdrop-blur-sm">
             <div className="w-1.5 h-3 bg-amber-400 rounded-full animate-bounce" />
           </div>
-        </div>
+        </button>
       </section>
-
 
       {/* ── 2. ABOUT US SECTION ───────────────────────────────────────────── */}
       <section 
         id="about" 
-        ref={aboutRef}
-        className="relative w-full h-screen flex items-center justify-center px-4 sm:px-8 lg:px-16 overflow-hidden"
+        className="relative w-full min-h-screen flex items-center justify-center px-4 sm:px-8 lg:px-16 py-20 overflow-hidden"
       >
-        <FrameScrubVideo videoSrc={CHAPTERS[1].videoSrc} fallbackImage={CHAPTERS[1].fallbackImage} containerRef={aboutRef} />
+        <BackgroundMedia videoSrc={CHAPTERS[1].videoSrc} fallbackImage={CHAPTERS[1].fallbackImage} />
 
-        <div className="relative z-10 glass-card max-w-4xl w-full p-6 sm:p-12 lg:p-14 rounded-3xl border border-white/15 bg-black/50 backdrop-blur-2xl text-center space-y-6 shadow-2xl">
+        <motion.div 
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.8 }}
+          className="relative z-10 glass-card max-w-4xl w-full p-6 sm:p-12 lg:p-14 rounded-3xl border border-white/15 bg-black/50 backdrop-blur-2xl text-center space-y-6 shadow-2xl"
+        >
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 text-amber-300 text-xs font-semibold uppercase tracking-widest">
             <Compass size={14} /> About travelPartner
           </div>
@@ -433,290 +371,242 @@ export function CinematicStorytelling() {
               <p className="text-[10px] sm:text-xs text-slate-400 uppercase tracking-wider">Concierge</p>
             </div>
           </div>
-        </div>
+        </motion.div>
       </section>
-
 
       {/* ── 3. SERVICES CAROUSEL SECTION ───────────────────────────────────── */}
       <section 
         id="services" 
-        ref={servicesRef}
         className="relative w-full min-h-screen flex flex-col justify-center px-4 sm:px-8 lg:px-16 py-16 sm:py-24 overflow-hidden"
       >
-        <FrameScrubVideo videoSrc={CHAPTERS[2].videoSrc} fallbackImage={CHAPTERS[2].fallbackImage} containerRef={servicesRef} />
+        <BackgroundMedia videoSrc={CHAPTERS[2].videoSrc} fallbackImage={CHAPTERS[2].fallbackImage} />
 
         <div className="relative z-10 max-w-7xl mx-auto w-full space-y-8">
-          {/* Header & Carousel Arrows */}
           <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4">
-            <div className="space-y-2 max-w-2xl">
-              <span className="text-amber-400 text-xs font-semibold uppercase tracking-widest">Bespoke Concierge</span>
-              <h2 className="text-[clamp(1.75rem,4vw,3.75rem)] font-bold font-[family-name:var(--font-playfair)]">
-                Our Signature <span className="gradient-text">Services</span>
+            <motion.div 
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7 }}
+              className="space-y-2"
+            >
+              <span className="text-amber-400 font-semibold text-xs uppercase tracking-widest">CHAPTER 03</span>
+              <h2 className="text-3xl sm:text-5xl font-bold font-[family-name:var(--font-playfair)]">
+                Exclusive <span className="gradient-text">Concierge Services</span>
               </h2>
-              <p className="text-xs sm:text-base text-slate-300 font-light">
-                Swipe or scroll horizontally to discover our 12 luxury travel management solutions.
-              </p>
-            </div>
+            </motion.div>
 
-            {/* Carousel Navigation Buttons */}
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => scrollCarousel(servicesCarouselRef, "left")}
-                className="w-12 h-12 rounded-full bg-white/10 border border-white/20 hover:bg-amber-500 hover:text-slate-950 flex items-center justify-center transition-all active:scale-95 shadow-lg"
-                aria-label="Previous service"
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => scrollCarousel(servicesCarouselRef, "left")} 
+                className="w-10 h-10 rounded-full bg-white/10 hover:bg-amber-500 hover:text-slate-950 flex items-center justify-center transition-all border border-white/10"
               >
-                <ArrowLeft size={20} />
+                <ArrowLeft size={18} />
               </button>
-              <button
-                onClick={() => scrollCarousel(servicesCarouselRef, "right")}
-                className="w-12 h-12 rounded-full bg-white/10 border border-white/20 hover:bg-amber-500 hover:text-slate-950 flex items-center justify-center transition-all active:scale-95 shadow-lg"
-                aria-label="Next service"
+              <button 
+                onClick={() => scrollCarousel(servicesCarouselRef, "right")} 
+                className="w-10 h-10 rounded-full bg-white/10 hover:bg-amber-500 hover:text-slate-950 flex items-center justify-center transition-all border border-white/10"
               >
-                <ArrowRight size={20} />
+                <ArrowRight size={18} />
               </button>
             </div>
           </div>
 
-          {/* Interactive Touch Carousel */}
           <div 
-            ref={servicesCarouselRef}
-            className="flex gap-5 overflow-x-auto snap-x snap-mandatory scrollbar-none py-4 px-1"
-            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+            ref={servicesCarouselRef} 
+            className="flex gap-6 overflow-x-auto snap-x snap-mandatory scrollbar-none pb-4"
           >
-            {activeServices.map((serv) => {
-              const IconComponent = (serv.iconName && ICON_MAP[serv.iconName]) || Globe;
+            {activeServices.map((serv, i) => {
+              const Icon = ICON_MAP[serv.iconName || "Compass"] || Compass;
               return (
-                <div
+                <motion.div
                   key={serv.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: i * 0.1 }}
                   onClick={() => setActiveServiceModal(serv)}
-                  className="snap-start shrink-0 w-[280px] sm:w-[320px] lg:w-[340px] glass-card p-6 rounded-3xl border border-white/15 bg-slate-900/70 hover:border-amber-500/50 transition-all duration-300 hover:-translate-y-2 cursor-pointer group shadow-2xl flex flex-col justify-between"
+                  className="snap-start shrink-0 w-[280px] sm:w-[360px] glass-card p-6 sm:p-8 rounded-3xl border border-white/15 bg-slate-900/60 hover:bg-slate-900/80 transition-all cursor-pointer group flex flex-col justify-between"
                 >
-                  <div>
-                    <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 mb-4 group-hover:scale-110 group-hover:bg-amber-500 group-hover:text-slate-950 transition-all">
-                      <IconComponent size={22} />
+                  <div className="space-y-4">
+                    <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 group-hover:scale-110 transition-transform">
+                      <Icon size={24} />
                     </div>
-                    <h3 className="text-lg sm:text-xl font-bold text-white mb-2 flex items-center justify-between">
-                      {serv.name}
-                      <ChevronRight size={18} className="opacity-0 group-hover:opacity-100 transition-opacity text-amber-400" />
-                    </h3>
-                    <p className="text-xs text-slate-300 font-light leading-relaxed mb-4">
-                      {serv.shortDesc}
-                    </p>
+                    <h3 className="text-xl font-bold font-[family-name:var(--font-playfair)]">{serv.name}</h3>
+                    <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">{serv.shortDesc}</p>
                   </div>
-                  <span className="text-xs font-semibold text-amber-400 inline-flex items-center gap-1.5 group-hover:translate-x-1 transition-transform border-t border-white/10 pt-3">
-                    {serv.ctaText} →
-                  </span>
-                </div>
+                  <div className="pt-6 flex items-center text-xs font-bold text-amber-400 group-hover:translate-x-1 transition-transform">
+                    <span>{serv.ctaText || "Learn More"}</span>
+                    <ChevronRight size={16} />
+                  </div>
+                </motion.div>
               );
             })}
           </div>
         </div>
       </section>
 
-
-      {/* ── 4. FEATURED DESTINATIONS ────────────────────────────────────── */}
+      {/* ── 4. DESTINATIONS SECTION ────────────────────────────────────────── */}
       <section 
         id="destinations" 
-        ref={destRef}
-        className="relative w-full h-screen flex items-center justify-start px-4 sm:px-8 lg:px-16 overflow-hidden"
+        className="relative w-full min-h-screen flex flex-col justify-center px-4 sm:px-8 lg:px-16 py-16 sm:py-24 overflow-hidden"
       >
-        <FrameScrubVideo videoSrc={CHAPTERS[3].videoSrc} fallbackImage={CHAPTERS[3].fallbackImage} containerRef={destRef} />
+        <BackgroundMedia videoSrc={CHAPTERS[3].videoSrc} fallbackImage={CHAPTERS[3].fallbackImage} />
 
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/40 to-transparent pointer-events-none" />
-
-        <div className="relative z-10 max-w-xl space-y-6">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-semibold uppercase tracking-widest backdrop-blur-md">
-            <MapPin size={14} /> Swiss Alps & Valleys
-          </div>
-
-          <h2 className="text-[clamp(2rem,5vw,4.5rem)] font-bold tracking-tight text-white font-[family-name:var(--font-playfair)]">
-            Majestic <br /><span className="gradient-text">Switzerland</span>
-          </h2>
-
-          <p className="text-sm sm:text-lg text-slate-300 font-light leading-relaxed">
-            Glacier express trains, snow-capped alpine peaks, and private chalets nestling in pristine wilderness.
-          </p>
-
-          <Link href="/packages" className="inline-block w-full sm:w-auto">
-            <Button variant="amber" size="lg" className="w-full sm:w-auto min-h-[48px] shadow-xl shadow-amber-500/20">
-              Explore Alpine Packages
-            </Button>
-          </Link>
-        </div>
-      </section>
-
-
-      {/* ── 5. WHY CHOOSE US CAROUSEL SECTION ───────────────────────────── */}
-      <section 
-        id="why-us" 
-        ref={whyUsRef}
-        className="relative w-full min-h-screen flex flex-col justify-center px-4 sm:px-8 lg:px-16 py-16 overflow-hidden"
-      >
-        <FrameScrubVideo videoSrc={CHAPTERS[4].videoSrc} fallbackImage={CHAPTERS[4].fallbackImage} containerRef={whyUsRef} />
-
-        <div className="relative z-10 max-w-7xl mx-auto space-y-8 w-full">
-          <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4">
-            <div className="space-y-2">
-              <span className="text-amber-400 text-xs font-semibold uppercase tracking-widest">Excellence Guarantee</span>
-              <h2 className="text-[clamp(1.75rem,4vw,3.75rem)] font-bold font-[family-name:var(--font-playfair)]">
-                Why Choose <span className="gradient-text">travelPartner</span>
-              </h2>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => scrollCarousel(whyUsCarouselRef, "left")}
-                className="w-12 h-12 rounded-full bg-white/10 border border-white/20 hover:bg-amber-500 hover:text-slate-950 flex items-center justify-center transition-all active:scale-95 shadow-lg"
-                aria-label="Previous reason"
-              >
-                <ArrowLeft size={20} />
-              </button>
-              <button
-                onClick={() => scrollCarousel(whyUsCarouselRef, "right")}
-                className="w-12 h-12 rounded-full bg-white/10 border border-white/20 hover:bg-amber-500 hover:text-slate-950 flex items-center justify-center transition-all active:scale-95 shadow-lg"
-                aria-label="Next reason"
-              >
-                <ArrowRight size={20} />
-              </button>
-            </div>
-          </div>
-
-          <div 
-            ref={whyUsCarouselRef}
-            className="flex gap-6 overflow-x-auto snap-x snap-mandatory scrollbar-none py-4 px-1"
-            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+        <div className="relative z-10 max-w-7xl mx-auto w-full space-y-12">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7 }}
+            className="text-center space-y-3 max-w-3xl mx-auto"
           >
-            <div className="snap-start shrink-0 w-[300px] sm:w-[360px] glass-card p-8 rounded-3xl border border-white/15 bg-black/60 backdrop-blur-2xl space-y-4 shadow-2xl">
-              <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
-                <ShieldCheck size={28} />
-              </div>
-              <h3 className="text-xl font-bold text-white">VIP Protection & Privacy</h3>
-              <p className="text-xs text-slate-300 leading-relaxed font-light">
-                Complete discretion for high-profile travelers, diplomatic delegations, and private families with armored transfers.
-              </p>
-            </div>
+            <span className="text-amber-400 font-semibold text-xs uppercase tracking-widest">CHAPTER 04</span>
+            <h2 className="text-3xl sm:text-5xl font-bold font-[family-name:var(--font-playfair)]">
+              Curated <span className="gradient-text">Global Destinations</span>
+            </h2>
+            <p className="text-xs sm:text-base text-slate-300 font-light">From snow-capped peaks in Zermatt to private coral lagoons in the Maldives.</p>
+          </motion.div>
 
-            <div className="snap-start shrink-0 w-[300px] sm:w-[360px] glass-card p-8 rounded-3xl border border-white/15 bg-black/60 backdrop-blur-2xl space-y-4 shadow-2xl">
-              <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
-                <Sparkles size={28} />
-              </div>
-              <h3 className="text-xl font-bold text-white">Curated 5-Star Access</h3>
-              <p className="text-xs text-slate-300 leading-relaxed font-light">
-                Exclusive access to sold-out hotel inventory, private museum tours, and superyacht charters around the world.
-              </p>
-            </div>
-
-            <div className="snap-start shrink-0 w-[300px] sm:w-[360px] glass-card p-8 rounded-3xl border border-white/15 bg-black/60 backdrop-blur-2xl space-y-4 shadow-2xl">
-              <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
-                <Compass size={28} />
-              </div>
-              <h3 className="text-xl font-bold text-white">24/7 Dedicated Concierge</h3>
-              <p className="text-xs text-slate-300 leading-relaxed font-light">
-                Personal travel manager assigned to your trip from touchdown to departure for instant itinerary updates.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-
-      {/* ── 6. FEATURED TOUR PACKAGES CAROUSEL SECTION ────────────────────── */}
-      <section 
-        id="packages-section" 
-        ref={pkgRef}
-        className="relative w-full min-h-screen flex flex-col justify-center px-4 sm:px-8 lg:px-16 py-16 overflow-hidden"
-      >
-        <FrameScrubVideo videoSrc={CHAPTERS[5].videoSrc} fallbackImage={CHAPTERS[5].fallbackImage} containerRef={pkgRef} />
-
-        <div className="relative z-10 max-w-7xl mx-auto w-full space-y-8">
-          <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4">
-            <div className="space-y-2">
-              <span className="text-amber-400 text-xs font-semibold uppercase tracking-widest">Hand-Crafted Expeditions</span>
-              <h2 className="text-[clamp(1.75rem,4vw,3.75rem)] font-bold font-[family-name:var(--font-playfair)]">
-                Featured <span className="gradient-text">Packages</span>
-              </h2>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => scrollCarousel(packagesCarouselRef, "left")}
-                className="w-12 h-12 rounded-full bg-white/10 border border-white/20 hover:bg-amber-500 hover:text-slate-950 flex items-center justify-center transition-all active:scale-95 shadow-lg"
-                aria-label="Previous package"
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              { title: "Zermatt, Switzerland", image: "https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?auto=format&fit=crop&w=800&q=80", tag: "Alpine Chalets" },
+              { title: "Maldives Islands", image: "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&w=800&q=80", tag: "Overwater Villas" },
+              { title: "Kyoto, Japan", image: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=800&q=80", tag: "Heritage Ryokans" },
+            ].map((dest, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: i * 0.15 }}
+                className="group relative aspect-[4/5] rounded-3xl overflow-hidden border border-white/15 bg-slate-900 shadow-xl"
               >
-                <ArrowLeft size={20} />
-              </button>
-              <button
-                onClick={() => scrollCarousel(packagesCarouselRef, "right")}
-                className="w-12 h-12 rounded-full bg-white/10 border border-white/20 hover:bg-amber-500 hover:text-slate-950 flex items-center justify-center transition-all active:scale-95 shadow-lg"
-                aria-label="Next package"
-              >
-                <ArrowRight size={20} />
-              </button>
-            </div>
-          </div>
-
-          <div 
-            ref={packagesCarouselRef}
-            className="flex gap-6 overflow-x-auto snap-x snap-mandatory scrollbar-none py-4 px-1"
-            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-          >
-            {packages.filter((p) => p.active).map((pkg) => (
-              <div 
-                key={pkg.id} 
-                className="snap-start shrink-0 w-[290px] sm:w-[340px] glass-card rounded-3xl overflow-hidden border border-white/15 bg-slate-900/80 group shadow-2xl flex flex-col justify-between"
-              >
-                <div className="relative h-44 overflow-hidden bg-slate-800">
-                  <img src={pkg.image} alt={pkg.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                  <span className="absolute top-3 left-3 px-3 py-1 rounded-full bg-black/75 backdrop-blur-md text-[10px] font-bold text-amber-400 uppercase tracking-widest">
-                    {pkg.destination}
+                <img src={dest.image} alt={dest.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/30 to-transparent opacity-90" />
+                <div className="absolute bottom-6 left-6 right-6 space-y-2">
+                  <span className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-bold border border-amber-500/40 uppercase">
+                    {dest.tag}
                   </span>
+                  <h3 className="text-2xl font-bold font-[family-name:var(--font-playfair)]">{dest.title}</h3>
                 </div>
-
-                <div className="p-6 space-y-4">
-                  <div className="flex items-center justify-between text-xs text-amber-400 font-semibold">
-                    <span>{pkg.duration}</span>
-                    <span>★ {pkg.rating}</span>
-                  </div>
-                  <h3 className="text-lg font-bold text-white line-clamp-1">{pkg.name}</h3>
-
-                  <div className="flex items-baseline justify-between border-t border-white/10 pt-4">
-                    <div>
-                      <span className="text-2xl font-bold text-amber-400">${pkg.discountPrice || pkg.price}</span>
-                      {pkg.discountPrice && <span className="text-xs text-slate-500 line-through ml-2">${pkg.price}</span>}
-                    </div>
-                    <Link href="/packages">
-                      <Button variant="amber" size="sm">Explore</Button>
-                    </Link>
-                  </div>
-                </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
+      {/* ── 5. WHY US SECTION ─────────────────────────────────────────────── */}
+      <section 
+        id="why-us" 
+        className="relative w-full min-h-screen flex items-center justify-center px-4 sm:px-8 lg:px-16 py-20 overflow-hidden"
+      >
+        <BackgroundMedia videoSrc={CHAPTERS[4].videoSrc} fallbackImage={CHAPTERS[4].fallbackImage} />
 
-      {/* ── 7. TESTIMONIALS SECTION ──────────────────────────────────────── */}
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7 }}
+          className="relative z-10 max-w-5xl w-full glass-card p-8 sm:p-12 rounded-3xl border border-white/15 bg-black/60 backdrop-blur-2xl space-y-8"
+        >
+          <div className="text-center space-y-2">
+            <span className="text-amber-400 font-semibold text-xs uppercase tracking-widest">CHAPTER 05</span>
+            <h2 className="text-3xl sm:text-4xl font-bold font-[family-name:var(--font-playfair)]">
+              Why Discerning Travelers Choose <span className="gradient-text">travelPartner</span>
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            {[
+              { title: "24/7 Dedicated Butler", desc: "A personal concierge assigned to your trip from takeoff to landing." },
+              { title: "Direct Tarmac Transfers", desc: "Private VIP jet handling and luxury sports car escorts." },
+              { title: "Unmatched Confidentiality", desc: "Discreet expedition management for high-profile explorers." },
+            ].map((item, idx) => (
+              <div key={idx} className="p-6 rounded-2xl bg-white/5 border border-white/10 space-y-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold">
+                  {idx + 1}
+                </div>
+                <h3 className="text-lg font-bold font-[family-name:var(--font-playfair)]">{item.title}</h3>
+                <p className="text-xs text-slate-300 leading-relaxed">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      </section>
+
+      {/* ── 6. PACKAGES SECTION ────────────────────────────────────────────── */}
+      <section 
+        id="packages-section" 
+        className="relative w-full min-h-screen flex flex-col justify-center px-4 sm:px-8 lg:px-16 py-16 sm:py-24 overflow-hidden"
+      >
+        <BackgroundMedia videoSrc={CHAPTERS[5].videoSrc} fallbackImage={CHAPTERS[5].fallbackImage} />
+
+        <div className="relative z-10 max-w-7xl mx-auto w-full space-y-10">
+          <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4">
+            <div className="space-y-2">
+              <span className="text-amber-400 font-semibold text-xs uppercase tracking-widest">CHAPTER 06</span>
+              <h2 className="text-3xl sm:text-5xl font-bold font-[family-name:var(--font-playfair)]">
+                Featured <span className="gradient-text">Tour Packages</span>
+              </h2>
+            </div>
+            <Link href="/packages">
+              <Button variant="amber" size="md" rightIcon={<ArrowRight size={16} />}>
+                View All Packages
+              </Button>
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {(packages || []).slice(0, 3).map((pkg, idx) => (
+              <motion.div
+                key={pkg.id}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: idx * 0.1 }}
+                className="glass-card rounded-3xl overflow-hidden border border-white/15 bg-slate-900/70 space-y-4 flex flex-col justify-between p-5"
+              >
+                <div className="space-y-3">
+                  <div className="relative aspect-video rounded-2xl overflow-hidden">
+                    <img src={pkg.image} alt={pkg.name} className="w-full h-full object-cover" />
+                    <span className="absolute top-3 right-3 px-3 py-1 rounded-full bg-amber-500 text-slate-950 font-bold text-xs">
+                      ${pkg.discountPrice || pkg.price}
+                    </span>
+                  </div>
+                  <span className="text-xs text-amber-400 font-semibold uppercase">{pkg.destination}</span>
+                  <h3 className="text-xl font-bold font-[family-name:var(--font-playfair)] text-white">{pkg.name}</h3>
+                  <p className="text-xs text-slate-300 line-clamp-2">{pkg.shortDesc || pkg.description}</p>
+                </div>
+                <Link href="/packages" className="pt-2">
+                  <Button variant="outline" size="sm" fullWidth rightIcon={<ArrowRight size={14} />}>
+                    Reserve Package
+                  </Button>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── 7. TESTIMONIALS SECTION ────────────────────────────────────────── */}
       <section 
         id="testimonials-section" 
-        ref={testimonialsRef}
         className="relative w-full min-h-screen flex items-center justify-center px-4 sm:px-8 lg:px-16 py-16 overflow-hidden"
       >
-        <FrameScrubVideo videoSrc={CHAPTERS[6].videoSrc} fallbackImage={CHAPTERS[6].fallbackImage} containerRef={testimonialsRef} />
+        <BackgroundMedia videoSrc={CHAPTERS[6].videoSrc} fallbackImage={CHAPTERS[6].fallbackImage} />
 
         <div className="relative z-10 w-full max-w-5xl">
           <TestimonialsSection />
         </div>
       </section>
 
-
       {/* ── 8. FAQ & CONTACT SECTION ────────────────────────────────────── */}
       <section 
         id="faq-section" 
-        ref={faqRef}
         className="relative w-full min-h-screen flex flex-col justify-between items-center px-4 sm:px-8 lg:px-16 pt-20 pb-12 overflow-hidden"
       >
-        <FrameScrubVideo videoSrc={CHAPTERS[7].videoSrc} fallbackImage={CHAPTERS[7].fallbackImage} containerRef={faqRef} />
+        <BackgroundMedia videoSrc={CHAPTERS[7].videoSrc} fallbackImage={CHAPTERS[7].fallbackImage} />
 
         <div className="relative z-10 text-center max-w-4xl space-y-8 my-auto">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-amber-500/40 bg-amber-500/10 text-amber-300 text-xs sm:text-sm font-semibold uppercase tracking-widest">
