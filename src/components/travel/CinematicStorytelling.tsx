@@ -222,7 +222,7 @@ export function CinematicStorytelling() {
   const testimonialsRef = useRef<HTMLDivElement>(null);
   const faqRef = useRef<HTMLDivElement>(null);
 
-  const activeServices = services.filter((s) => s.active).sort((a, b) => a.displayOrder - b.displayOrder);
+  const activeServices = services.filter((s) => s.active).sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
 
   const scrollToSection = (id: string) => {
     const el = document.getElementById(id);
@@ -483,7 +483,7 @@ export function CinematicStorytelling() {
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
             {activeServices.map((serv) => {
-              const IconComponent = ICON_MAP[serv.iconName] || Globe;
+              const IconComponent = (serv.iconName && ICON_MAP[serv.iconName]) || Globe;
               return (
                 <div
                   key={serv.id}
