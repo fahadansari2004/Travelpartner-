@@ -13,7 +13,6 @@ import {
   Globe,
   Volume2,
   VolumeX,
-  MapPin,
   Heart,
   Users,
   Briefcase,
@@ -21,7 +20,6 @@ import {
   Shield,
   Car,
   FileCheck,
-  Star,
   ChevronRight
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
@@ -44,110 +42,72 @@ const ICON_MAP: Record<string, any> = {
   Car,
 };
 
-interface Chapter {
+interface SectionItem {
   id: string;
-  number: string;
   title: string;
-  videoSrc: string;
-  fallbackImage: string;
+  imageSrc: string;
 }
 
-const CHAPTERS: Chapter[] = [
+const SECTIONS: SectionItem[] = [
   { 
     id: "hero", 
-    number: "01", 
-    title: "Hero", 
-    videoSrc: "/videos/hero.mp4",
-    fallbackImage: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=2000&q=85"
+    title: "Home", 
+    imageSrc: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=2000&q=85"
   },
   { 
     id: "about", 
-    number: "02", 
     title: "About Us", 
-    videoSrc: "/videos/airport.mp4",
-    fallbackImage: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=2000&q=85"
+    imageSrc: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=2000&q=85"
   },
   { 
     id: "services", 
-    number: "03", 
     title: "Services", 
-    videoSrc: "/videos/takeoff.mp4",
-    fallbackImage: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=2000&q=85"
-  },
-  { 
-    id: "destinations", 
-    number: "04", 
-    title: "Destinations", 
-    videoSrc: "/videos/switzerland.mp4",
-    fallbackImage: "https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?auto=format&fit=crop&w=2000&q=85"
+    imageSrc: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=2000&q=85"
   },
   { 
     id: "why-us", 
-    number: "05", 
     title: "Why Choose Us", 
-    videoSrc: "/videos/dubai.mp4",
-    fallbackImage: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=2000&q=85"
+    imageSrc: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=2000&q=85"
   },
   { 
     id: "packages-section", 
-    number: "06", 
     title: "Tour Packages", 
-    videoSrc: "/videos/paris.mp4",
-    fallbackImage: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=2000&q=85"
+    imageSrc: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=2000&q=85"
   },
   { 
     id: "testimonials-section", 
-    number: "07", 
-    title: "Testimonials", 
-    videoSrc: "/videos/maldives.mp4",
-    fallbackImage: "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&w=2000&q=85"
+    title: "Guest Reviews", 
+    imageSrc: "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&w=2000&q=85"
   },
   { 
     id: "faq-section", 
-    number: "08", 
-    title: "FAQ & Contact", 
-    videoSrc: "/videos/ending.mp4",
-    fallbackImage: "https://images.unsplash.com/photo-1476514525535-ce74f45814d4?auto=format&fit=crop&w=2000&q=85"
+    title: "Contact", 
+    imageSrc: "https://images.unsplash.com/photo-1476514525535-ce74f45814d4?auto=format&fit=crop&w=2000&q=85"
   },
 ];
 
 /**
- * Autoplay Ambient Background Video Component with Fallback Image Safety
+ * Scroll-Driven Smooth Parallax Background Animation Component
  */
-function BackgroundMedia({
-  videoSrc,
-  fallbackImage,
-}: {
-  videoSrc: string;
-  fallbackImage: string;
-}) {
-  const [videoError, setVideoError] = useState(false);
-
+function AnimatedParallaxBackground({ imageSrc }: { imageSrc: string }) {
   return (
     <div className="absolute inset-0 w-full h-full overflow-hidden bg-slate-950 pointer-events-none z-0">
-      <img
-        src={fallbackImage}
-        alt="Background"
-        className="absolute inset-0 w-full h-full object-cover opacity-60 scale-105"
+      <motion.img
+        initial={{ scale: 1.15, opacity: 0.45 }}
+        whileInView={{ scale: 1.0, opacity: 0.65 }}
+        viewport={{ once: false, amount: 0.2 }}
+        transition={{ duration: 1.2, ease: "easeOut" }}
+        src={imageSrc}
+        alt="Animated Background"
+        className="absolute inset-0 w-full h-full object-cover"
       />
-      {!videoError && (
-        <video
-          src={videoSrc}
-          autoPlay
-          loop
-          muted
-          playsInline
-          onError={() => setVideoError(true)}
-          className="absolute inset-0 w-full h-full object-cover opacity-70 scale-105 transition-opacity duration-700"
-        />
-      )}
       <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/65 to-slate-950/80" />
     </div>
   );
 }
 
 export function CinematicStorytelling() {
-  const [activeChapterIndex, setActiveChapterIndex] = useState(0);
+  const [activeSectionIndex, setActiveSectionIndex] = useState(0);
   const [isAudioMuted, setIsAudioMuted] = useState(true);
   const [activeServiceModal, setActiveServiceModal] = useState<any>(null);
 
@@ -155,7 +115,6 @@ export function CinematicStorytelling() {
   const [packages] = useStoreData("packages", INITIAL_PACKAGES);
 
   const servicesCarouselRef = useRef<HTMLDivElement>(null);
-  const whyUsCarouselRef = useRef<HTMLDivElement>(null);
 
   const activeServices = (services || []).filter((s) => s.active).sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
 
@@ -164,8 +123,8 @@ export function CinematicStorytelling() {
     if (el) {
       const topPos = el.getBoundingClientRect().top + window.pageYOffset;
       window.scrollTo({ top: topPos, behavior: "smooth" });
-      const index = CHAPTERS.findIndex((ch) => ch.id === id);
-      if (index !== -1) setActiveChapterIndex(index);
+      const index = SECTIONS.findIndex((s) => s.id === id);
+      if (index !== -1) setActiveSectionIndex(index);
     }
   };
 
@@ -173,16 +132,16 @@ export function CinematicStorytelling() {
   useEffect(() => {
     const observerOptions = {
       root: null,
-      rootMargin: "-30% 0px -30% 0px",
+      rootMargin: "-35% 0px -35% 0px",
       threshold: 0,
     };
 
     const handleIntersect: IntersectionObserverCallback = (entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
-          const index = CHAPTERS.findIndex((ch) => ch.id === entry.target.id);
+          const index = SECTIONS.findIndex((s) => s.id === entry.target.id);
           if (index !== -1) {
-            setActiveChapterIndex(index);
+            setActiveSectionIndex(index);
           }
         }
       });
@@ -190,8 +149,8 @@ export function CinematicStorytelling() {
 
     const observer = new IntersectionObserver(handleIntersect, observerOptions);
 
-    CHAPTERS.forEach((ch) => {
-      const el = document.getElementById(ch.id);
+    SECTIONS.forEach((s) => {
+      const el = document.getElementById(s.id);
       if (el) observer.observe(el);
     });
 
@@ -211,14 +170,14 @@ export function CinematicStorytelling() {
   return (
     <div className="relative w-full text-white bg-slate-950 font-sans selection:bg-amber-500/30 selection:text-amber-200 overflow-x-hidden">
       
-      {/* ── DESKTOP CHAPTER SIDEBAR PROGRESS INDICATOR ───────────────────────── */}
+      {/* ── DESKTOP SIDEBAR PROGRESS INDICATOR ───────────────────────── */}
       <aside className="fixed right-6 top-1/2 -translate-y-1/2 z-40 hidden xl:flex flex-col items-end gap-3 pointer-events-auto">
-        {CHAPTERS.map((ch, idx) => {
-          const isActive = idx === activeChapterIndex;
+        {SECTIONS.map((sec, idx) => {
+          const isActive = idx === activeSectionIndex;
           return (
             <button
-              key={ch.id}
-              onClick={() => scrollToSection(ch.id)}
+              key={sec.id}
+              onClick={() => scrollToSection(sec.id)}
               className="group flex items-center gap-3 cursor-pointer py-1"
             >
               <span 
@@ -226,7 +185,7 @@ export function CinematicStorytelling() {
                   isActive ? "text-amber-400 opacity-100 translate-x-0" : "text-slate-400 opacity-0 group-hover:opacity-100 translate-x-2"
                 }`}
               >
-                {ch.number}. {ch.title}
+                {sec.title}
               </span>
               <div 
                 className={`transition-all duration-300 rounded-full ${
@@ -256,7 +215,7 @@ export function CinematicStorytelling() {
         id="hero" 
         className="relative w-full min-h-screen flex flex-col items-center justify-between py-16 sm:py-24"
       >
-        <BackgroundMedia videoSrc={CHAPTERS[0].videoSrc} fallbackImage={CHAPTERS[0].fallbackImage} />
+        <AnimatedParallaxBackground imageSrc={SECTIONS[0].imageSrc} />
 
         <div className="relative z-10 my-auto flex flex-col justify-center items-center text-center max-w-5xl space-y-6 sm:space-y-8 w-full px-4">
           <motion.div 
@@ -320,7 +279,7 @@ export function CinematicStorytelling() {
           onClick={() => scrollToSection("about")}
           className="relative z-10 flex flex-col items-center gap-2 text-slate-400 hover:text-amber-400 transition-colors cursor-pointer"
         >
-          <span className="text-[10px] sm:text-xs uppercase tracking-widest font-medium">Explore Chapters</span>
+          <span className="text-[10px] sm:text-xs uppercase tracking-widest font-medium">Scroll to Explore</span>
           <div className="w-7 h-10 sm:w-8 sm:h-12 rounded-full border-2 border-white/20 flex items-start justify-center p-1.5 backdrop-blur-sm">
             <div className="w-1.5 h-3 bg-amber-400 rounded-full animate-bounce" />
           </div>
@@ -332,7 +291,7 @@ export function CinematicStorytelling() {
         id="about" 
         className="relative w-full min-h-screen flex items-center justify-center px-4 sm:px-8 lg:px-16 py-20 overflow-hidden"
       >
-        <BackgroundMedia videoSrc={CHAPTERS[1].videoSrc} fallbackImage={CHAPTERS[1].fallbackImage} />
+        <AnimatedParallaxBackground imageSrc={SECTIONS[1].imageSrc} />
 
         <motion.div 
           initial={{ opacity: 0, y: 40 }}
@@ -379,7 +338,7 @@ export function CinematicStorytelling() {
         id="services" 
         className="relative w-full min-h-screen flex flex-col justify-center px-4 sm:px-8 lg:px-16 py-16 sm:py-24 overflow-hidden"
       >
-        <BackgroundMedia videoSrc={CHAPTERS[2].videoSrc} fallbackImage={CHAPTERS[2].fallbackImage} />
+        <AnimatedParallaxBackground imageSrc={SECTIONS[2].imageSrc} />
 
         <div className="relative z-10 max-w-7xl mx-auto w-full space-y-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4">
@@ -390,7 +349,6 @@ export function CinematicStorytelling() {
               transition={{ duration: 0.7 }}
               className="space-y-2"
             >
-              <span className="text-amber-400 font-semibold text-xs uppercase tracking-widest">CHAPTER 03</span>
               <h2 className="text-3xl sm:text-5xl font-bold font-[family-name:var(--font-playfair)]">
                 Exclusive <span className="gradient-text">Concierge Services</span>
               </h2>
@@ -446,62 +404,12 @@ export function CinematicStorytelling() {
         </div>
       </section>
 
-      {/* ── 4. DESTINATIONS SECTION ────────────────────────────────────────── */}
-      <section 
-        id="destinations" 
-        className="relative w-full min-h-screen flex flex-col justify-center px-4 sm:px-8 lg:px-16 py-16 sm:py-24 overflow-hidden"
-      >
-        <BackgroundMedia videoSrc={CHAPTERS[3].videoSrc} fallbackImage={CHAPTERS[3].fallbackImage} />
-
-        <div className="relative z-10 max-w-7xl mx-auto w-full space-y-12">
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
-            className="text-center space-y-3 max-w-3xl mx-auto"
-          >
-            <span className="text-amber-400 font-semibold text-xs uppercase tracking-widest">CHAPTER 04</span>
-            <h2 className="text-3xl sm:text-5xl font-bold font-[family-name:var(--font-playfair)]">
-              Curated <span className="gradient-text">Global Destinations</span>
-            </h2>
-            <p className="text-xs sm:text-base text-slate-300 font-light">From snow-capped peaks in Zermatt to private coral lagoons in the Maldives.</p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              { title: "Zermatt, Switzerland", image: "https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?auto=format&fit=crop&w=800&q=80", tag: "Alpine Chalets" },
-              { title: "Maldives Islands", image: "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&w=800&q=80", tag: "Overwater Villas" },
-              { title: "Kyoto, Japan", image: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=800&q=80", tag: "Heritage Ryokans" },
-            ].map((dest, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: i * 0.15 }}
-                className="group relative aspect-[4/5] rounded-3xl overflow-hidden border border-white/15 bg-slate-900 shadow-xl"
-              >
-                <img src={dest.image} alt={dest.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/30 to-transparent opacity-90" />
-                <div className="absolute bottom-6 left-6 right-6 space-y-2">
-                  <span className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-bold border border-amber-500/40 uppercase">
-                    {dest.tag}
-                  </span>
-                  <h3 className="text-2xl font-bold font-[family-name:var(--font-playfair)]">{dest.title}</h3>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── 5. WHY US SECTION ─────────────────────────────────────────────── */}
+      {/* ── 4. WHY US SECTION ─────────────────────────────────────────────── */}
       <section 
         id="why-us" 
         className="relative w-full min-h-screen flex items-center justify-center px-4 sm:px-8 lg:px-16 py-20 overflow-hidden"
       >
-        <BackgroundMedia videoSrc={CHAPTERS[4].videoSrc} fallbackImage={CHAPTERS[4].fallbackImage} />
+        <AnimatedParallaxBackground imageSrc={SECTIONS[3].imageSrc} />
 
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
@@ -511,7 +419,6 @@ export function CinematicStorytelling() {
           className="relative z-10 max-w-5xl w-full glass-card p-8 sm:p-12 rounded-3xl border border-white/15 bg-black/60 backdrop-blur-2xl space-y-8"
         >
           <div className="text-center space-y-2">
-            <span className="text-amber-400 font-semibold text-xs uppercase tracking-widest">CHAPTER 05</span>
             <h2 className="text-3xl sm:text-4xl font-bold font-[family-name:var(--font-playfair)]">
               Why Discerning Travelers Choose <span className="gradient-text">travelPartner</span>
             </h2>
@@ -535,17 +442,16 @@ export function CinematicStorytelling() {
         </motion.div>
       </section>
 
-      {/* ── 6. PACKAGES SECTION ────────────────────────────────────────────── */}
+      {/* ── 5. PACKAGES SECTION ────────────────────────────────────────────── */}
       <section 
         id="packages-section" 
         className="relative w-full min-h-screen flex flex-col justify-center px-4 sm:px-8 lg:px-16 py-16 sm:py-24 overflow-hidden"
       >
-        <BackgroundMedia videoSrc={CHAPTERS[5].videoSrc} fallbackImage={CHAPTERS[5].fallbackImage} />
+        <AnimatedParallaxBackground imageSrc={SECTIONS[4].imageSrc} />
 
         <div className="relative z-10 max-w-7xl mx-auto w-full space-y-10">
           <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4">
             <div className="space-y-2">
-              <span className="text-amber-400 font-semibold text-xs uppercase tracking-widest">CHAPTER 06</span>
               <h2 className="text-3xl sm:text-5xl font-bold font-[family-name:var(--font-playfair)]">
                 Featured <span className="gradient-text">Tour Packages</span>
               </h2>
@@ -589,24 +495,24 @@ export function CinematicStorytelling() {
         </div>
       </section>
 
-      {/* ── 7. TESTIMONIALS SECTION ────────────────────────────────────────── */}
+      {/* ── 6. TESTIMONIALS SECTION ────────────────────────────────────────── */}
       <section 
         id="testimonials-section" 
         className="relative w-full min-h-screen flex items-center justify-center px-4 sm:px-8 lg:px-16 py-16 overflow-hidden"
       >
-        <BackgroundMedia videoSrc={CHAPTERS[6].videoSrc} fallbackImage={CHAPTERS[6].fallbackImage} />
+        <AnimatedParallaxBackground imageSrc={SECTIONS[5].imageSrc} />
 
         <div className="relative z-10 w-full max-w-5xl">
           <TestimonialsSection />
         </div>
       </section>
 
-      {/* ── 8. FAQ & CONTACT SECTION ────────────────────────────────────── */}
+      {/* ── 7. FAQ & CONTACT SECTION ────────────────────────────────────── */}
       <section 
         id="faq-section" 
         className="relative w-full min-h-screen flex flex-col justify-between items-center px-4 sm:px-8 lg:px-16 pt-20 pb-12 overflow-hidden"
       >
-        <BackgroundMedia videoSrc={CHAPTERS[7].videoSrc} fallbackImage={CHAPTERS[7].fallbackImage} />
+        <AnimatedParallaxBackground imageSrc={SECTIONS[6].imageSrc} />
 
         <div className="relative z-10 text-center max-w-4xl space-y-8 my-auto">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-amber-500/40 bg-amber-500/10 text-amber-300 text-xs sm:text-sm font-semibold uppercase tracking-widest">
