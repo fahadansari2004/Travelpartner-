@@ -5,13 +5,15 @@ import { useState, useEffect } from "react";
 // ─── Data Interfaces ──────────────────────────────────────────────────────────
 export interface ServiceItem {
   id: string;
-  name: string;
-  iconName: string;
-  image: string;
+  name?: string;
+  title?: string;
+  category?: string;
+  iconName?: string;
+  image?: string;
   shortDesc: string;
-  longDesc: string;
-  ctaText: string;
-  displayOrder: number;
+  longDesc?: string;
+  ctaText?: string;
+  displayOrder?: number;
   active: boolean;
 }
 
@@ -27,10 +29,12 @@ export interface PackageItem {
   reviewsCount: number;
   featured: boolean;
   active: boolean;
-  itinerary: { day: number; title: string; desc: string }[];
-  gallery: string[];
-  included: string[];
-  excluded: string[];
+  shortDesc?: string;
+  description?: string;
+  itinerary?: { day: number; title: string; desc: string }[];
+  gallery?: string[];
+  included?: string[];
+  excluded?: string[];
   mapLocation?: string;
   videoUrl?: string;
 }
@@ -38,19 +42,21 @@ export interface PackageItem {
 export interface FlightFare {
   id: string;
   airlineName: string;
-  airlineLogo: string;
+  airlineLogo?: string;
   fromCity: string;
   fromCode: string;
   toCity: string;
   toCode: string;
   tripType: "One Way" | "Round Trip";
   travelClass: "Economy" | "Business" | "First Class";
-  travelDate: string;
+  travelDate?: string;
+  duration?: string;
   farePrice: number;
-  currency: string;
+  currency?: string;
   offerBadge?: string;
-  seatsAvailable: number;
-  bookingLink: string;
+  seatsAvailable?: number;
+  bookingLink?: string;
+  featured?: boolean;
   active: boolean;
 }
 
