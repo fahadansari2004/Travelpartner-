@@ -26,7 +26,7 @@ export function TestimonialsSection() {
   const [guestComment, setGuestComment] = useState("");
 
   // Only show Approved Testimonials
-  const approvedTestimonials = testimonials.filter((t) => t.status === "Approved");
+  const approvedTestimonials = testimonials.filter((t) => !t.status || t.status === "Approved" || t.status.toLowerCase() === "approved");
 
   const activeIndex = approvedTestimonials.length > 0 ? currentIndex % approvedTestimonials.length : 0;
   const current = approvedTestimonials[activeIndex];

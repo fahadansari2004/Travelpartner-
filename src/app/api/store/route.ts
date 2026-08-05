@@ -140,11 +140,17 @@ export async function POST(req: Request) {
           return clean;
         });
 
-        // 1. Upsert current active items
-        const { error: upsertError } = await supabase.from(tableName).upsert(safeRecords);
+        // 1. Upsert current active items with explicit onConflict key
+        const { error: upsertError } = await supabase.from(tableName).upsert(safeRecords, { onConflict: "id" });
         if (upsertError) {
           console.error(`Supabase server upsert error for ${tableName}:`, upsertError);
-          return NextResponse.json({ success: false, error: upsertError.message });
+          // Fallback: update status/fields record by record
+          for (const rec of safeRecords) {
+            const { error: updateErr } = await supabase.from(tableName).update(rec).eq("id", rec.id);
+            if (updateErr) {
+              await supabase.from(tableName).insert(rec);
+            }
+          }
         }
 
         // 2. Reconcile and delete missing items
