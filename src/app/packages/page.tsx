@@ -322,7 +322,7 @@ export default function PackagesPage() {
                     <div className="p-4 rounded-xl bg-white/5 border border-white/10">
                       <span className="text-xs font-bold text-red-400 uppercase">What&apos;s Excluded</span>
                       <ul className="mt-2 space-y-1 text-xs text-slate-300">
-                        {activePackageModal.excluded.map((exc, i) => <li key={i}>✕ {exc}</li>)}
+                        {(activePackageModal.excluded || []).map((exc, i) => <li key={i}>✕ {exc}</li>)}
                       </ul>
                     </div>
                   </div>
