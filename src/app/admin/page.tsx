@@ -54,7 +54,7 @@ export default function AdminDashboardPage() {
   // Authenticate session
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const isAuth = sessionStorage.getItem("ADMIN_AUTH");
+      const isAuth = sessionStorage.getItem("ADMIN_AUTH") || localStorage.getItem("ADMIN_AUTH");
       if (!isAuth) {
         router.push("/admin/login");
       }

@@ -28,6 +28,7 @@ export default function AdminLoginPage() {
       if (res.ok && data.success) {
         if (typeof window !== "undefined") {
           sessionStorage.setItem("ADMIN_AUTH", "true");
+          localStorage.setItem("ADMIN_AUTH", "true");
         }
         router.push("/admin");
       } else {
