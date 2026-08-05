@@ -12,15 +12,29 @@ export default function AdminLoginPage() {
   const [password, setPassword] = useState("admin123");
   const [error, setError] = useState("");
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email === "admin@travelpartner.com" && password === "admin123") {
-      if (typeof window !== "undefined") {
-        sessionStorage.setItem("ADMIN_AUTH", "true");
+    setError("");
+
+    try {
+      const res = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem("ADMIN_AUTH", "true");
+        }
+        router.push("/admin");
+      } else {
+        setError(data.message || "Invalid admin credentials");
       }
-      router.push("/admin");
-    } else {
-      setError("Invalid admin credentials. Use admin@travelpartner.com / admin123");
+    } catch (err) {
+      setError("Authentication failed. Please check network connection.");
     }
   };
 
