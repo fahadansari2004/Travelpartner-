@@ -974,6 +974,7 @@ export function setStoredData<T>(key: string, value: T): void {
   try {
     localStorage.setItem(`${STORE_KEY}_${key}`, JSON.stringify(value));
     window.dispatchEvent(new Event("travel-store-update"));
+    window.dispatchEvent(new CustomEvent("travel-store-key-update", { detail: { key, value } }));
   } catch (err: any) {
     if (err?.name === "QuotaExceededError" || err?.code === 22 || err?.number === -2147024882) {
       pruneOversizedStorage();
@@ -984,6 +985,7 @@ export function setStoredData<T>(key: string, value: T): void {
       }
     }
     window.dispatchEvent(new Event("travel-store-update"));
+    window.dispatchEvent(new CustomEvent("travel-store-key-update", { detail: { key, value } }));
   }
 
   // Sync automatically with Supabase cloud database if configured
@@ -993,7 +995,7 @@ export function setStoredData<T>(key: string, value: T): void {
 }
 
 /**
- * Custom React Hook to consume reactive store data
+ * Custom React Hook to consume reactive store data with real-time cloud sync
  */
 export function useStoreData<T>(key: string, defaultValue: T): [T, (val: T) => void] {
   const [data, setData] = useState<T>(() => getStoredData(key, defaultValue));
@@ -1004,39 +1006,59 @@ export function useStoreData<T>(key: string, defaultValue: T): [T, (val: T) => v
       setData(stored);
     };
 
-    // If Supabase is connected, fetch initial cloud records or seed if empty
-    if (isSupabaseConfigured && supabase) {
-      const tableMap: Record<string, string> = {
-        albums: "albums",
-        testimonials: "testimonials",
-        enquiries: "enquiries",
-        packages: "packages",
-        mediaLibrary: "media_library",
-      };
-      const tableName = tableMap[key];
-      if (tableName) {
-        supabase.from(tableName).select("*").then(({ data: cloudRecords, error }) => {
-          if (!error && cloudRecords) {
-            if (cloudRecords.length > 0) {
-              setData(cloudRecords as any);
-              try {
-                localStorage.setItem(`${STORE_KEY}_${key}`, JSON.stringify(cloudRecords));
-              } catch (e) {
-                // ignore
-              }
-            } else if (Array.isArray(defaultValue) && defaultValue.length > 0) {
-              // Seed Supabase with default initial records if cloud table is empty
-              syncWithSupabase(key, defaultValue);
-            }
-          }
-        });
+    const handleKeyUpdate = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail && customEvent.detail.key === key) {
+        setData(customEvent.detail.value);
       }
+    };
+
+    const fetchFromSupabase = () => {
+      if (isSupabaseConfigured && supabase) {
+        const tableMap: Record<string, string> = {
+          albums: "albums",
+          testimonials: "testimonials",
+          enquiries: "enquiries",
+          packages: "packages",
+          mediaLibrary: "media_library",
+        };
+        const tableName = tableMap[key];
+        if (tableName) {
+          supabase.from(tableName).select("*").then(({ data: cloudRecords, error }) => {
+            if (!error && cloudRecords) {
+              if (cloudRecords.length > 0) {
+                setData(cloudRecords as any);
+                try {
+                  localStorage.setItem(`${STORE_KEY}_${key}`, JSON.stringify(cloudRecords));
+                } catch (e) {
+                  // ignore
+                }
+              } else if (Array.isArray(defaultValue) && defaultValue.length > 0) {
+                // Seed Supabase with default initial records if cloud table is empty
+                syncWithSupabase(key, defaultValue);
+              }
+            }
+          });
+        }
+      }
+    };
+
+    // Initial fetch from Supabase
+    fetchFromSupabase();
+
+    // 4-second auto-poll interval for real-time multi-device cloud updates
+    let pollInterval: NodeJS.Timeout | null = null;
+    if (isSupabaseConfigured) {
+      pollInterval = setInterval(fetchFromSupabase, 4000);
     }
 
     window.addEventListener("travel-store-update", handleUpdate);
+    window.addEventListener("travel-store-key-update", handleKeyUpdate);
     window.addEventListener("storage", handleUpdate);
     return () => {
+      if (pollInterval) clearInterval(pollInterval);
       window.removeEventListener("travel-store-update", handleUpdate);
+      window.removeEventListener("travel-store-key-update", handleKeyUpdate);
       window.removeEventListener("storage", handleUpdate);
     };
   }, [key, defaultValue]);
