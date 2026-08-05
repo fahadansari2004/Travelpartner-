@@ -925,43 +925,49 @@ function pruneOversizedStorage() {
 import { supabase, isSupabaseConfigured } from "./supabase";
 
 export async function syncWithSupabase<T>(key: string, value: T) {
-  if (!isSupabaseConfigured || !supabase) return;
   try {
-    const tableMap: Record<string, string> = {
-      albums: "albums",
-      testimonials: "testimonials",
-      enquiries: "enquiries",
-      packages: "packages",
-      mediaLibrary: "media_library",
-    };
-    const tableName = tableMap[key];
-    if (tableName && Array.isArray(value)) {
-      if (value.length > 0) {
-        // 1. Upsert current active items to Supabase
-        const safeRecords = value.map((item: any) => {
-          const clean: any = { ...item };
-          if (clean.coverImage && !clean.cover_image) clean.cover_image = clean.coverImage;
-          if (clean.shortDesc && !clean.short_desc) clean.short_desc = clean.shortDesc;
-          if (clean.longDesc && !clean.long_desc) clean.long_desc = clean.longDesc;
-          if (clean.travelDate && !clean.travel_date) clean.travel_date = clean.travelDate;
-          if (clean.discountPrice && !clean.discount_price) clean.discount_price = clean.discountPrice;
-          if (clean.uploadDate && !clean.upload_date) clean.upload_date = clean.uploadDate;
-          return clean;
-        });
-        await supabase.from(tableName).upsert(safeRecords);
+    // 1. Post to Next.js server API endpoint
+    await fetch("/api/store", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key, value }),
+    });
 
-        // 2. Reconcile and permanently delete removed items from Supabase Cloud DB
-        const { data: dbRows } = await supabase.from(tableName).select("id");
-        if (dbRows && dbRows.length > 0) {
-          const currentIds = new Set(value.map((v: any) => v.id));
-          const deletedIds = dbRows.filter((r: any) => !currentIds.has(r.id)).map((r: any) => r.id);
-          if (deletedIds.length > 0) {
-            await supabase.from(tableName).delete().in("id", deletedIds);
+    // 2. Direct client fallback if Supabase is configured
+    if (isSupabaseConfigured && supabase) {
+      const tableMap: Record<string, string> = {
+        albums: "albums",
+        testimonials: "testimonials",
+        enquiries: "enquiries",
+        packages: "packages",
+        mediaLibrary: "media_library",
+      };
+      const tableName = tableMap[key];
+      if (tableName && Array.isArray(value)) {
+        if (value.length > 0) {
+          const safeRecords = value.map((item: any) => {
+            const clean: any = { ...item };
+            if (clean.coverImage && !clean.cover_image) clean.cover_image = clean.coverImage;
+            if (clean.shortDesc && !clean.short_desc) clean.short_desc = clean.shortDesc;
+            if (clean.longDesc && !clean.long_desc) clean.long_desc = clean.longDesc;
+            if (clean.travelDate && !clean.travel_date) clean.travel_date = clean.travelDate;
+            if (clean.discountPrice && !clean.discount_price) clean.discount_price = clean.discountPrice;
+            if (clean.uploadDate && !clean.upload_date) clean.upload_date = clean.uploadDate;
+            return clean;
+          });
+          await supabase.from(tableName).upsert(safeRecords);
+
+          const { data: dbRows } = await supabase.from(tableName).select("id");
+          if (dbRows && dbRows.length > 0) {
+            const currentIds = new Set(value.map((v: any) => v.id));
+            const deletedIds = dbRows.filter((r: any) => !currentIds.has(r.id)).map((r: any) => r.id);
+            if (deletedIds.length > 0) {
+              await supabase.from(tableName).delete().in("id", deletedIds);
+            }
           }
+        } else {
+          await supabase.from(tableName).delete().neq("id", "00000000-0000-0000-0000-000000000000");
         }
-      } else {
-        // If array is emptied, delete all rows from Supabase table
-        await supabase.from(tableName).delete().neq("id", "00000000-0000-0000-0000-000000000000");
       }
     }
   } catch (err) {
@@ -988,10 +994,8 @@ export function setStoredData<T>(key: string, value: T): void {
     window.dispatchEvent(new CustomEvent("travel-store-key-update", { detail: { key, value } }));
   }
 
-  // Sync automatically with Supabase cloud database if configured
-  if (isSupabaseConfigured) {
-    syncWithSupabase(key, value);
-  }
+  // Sync automatically with Supabase cloud database
+  syncWithSupabase(key, value);
 }
 
 /**
@@ -1013,7 +1017,21 @@ export function useStoreData<T>(key: string, defaultValue: T): [T, (val: T) => v
       }
     };
 
-    const fetchFromSupabase = () => {
+    const fetchFromSupabase = async () => {
+      try {
+        const res = await fetch(`/api/store?key=${key}`);
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+          setData(json.data as any);
+          try {
+            localStorage.setItem(`${STORE_KEY}_${key}`, JSON.stringify(json.data));
+          } catch (e) {}
+          return;
+        }
+      } catch (err) {
+        // fallback
+      }
+
       if (isSupabaseConfigured && supabase) {
         const tableMap: Record<string, string> = {
           albums: "albums",
