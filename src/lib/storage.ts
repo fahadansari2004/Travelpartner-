@@ -1021,10 +1021,40 @@ export function useStoreData<T>(key: string, defaultValue: T): [T, (val: T) => v
         const res = await fetch(`/api/store?key=${key}`);
         const json = await res.json();
         if (json.success && Array.isArray(json.data) && json.data.length > 0) {
-          setData(json.data as any);
-          try {
-            localStorage.setItem(`${STORE_KEY}_${key}`, JSON.stringify(json.data));
-          } catch (e) {}
+          setData((prevData: any) => {
+            if (!Array.isArray(prevData) || prevData.length === 0) {
+              try {
+                localStorage.setItem(`${STORE_KEY}_${key}`, JSON.stringify(json.data));
+              } catch (e) {}
+              return json.data as any;
+            }
+            
+            // Merge: preserve local status updates (e.g. Approved / Rejected / Read) and combine new cloud items
+            const cloudMap = new Map((json.data as any[]).map((item: any) => [item.id, item]));
+            const prevMap = new Map(prevData.map((item: any) => [item.id, item]));
+            const mergedMap = new Map();
+
+            for (const [id, cloudItem] of cloudMap.entries()) {
+              const prevItem = prevMap.get(id);
+              if (prevItem && prevItem.status && prevItem.status !== cloudItem.status && prevItem.status !== "Pending") {
+                mergedMap.set(id, { ...cloudItem, status: prevItem.status });
+              } else {
+                mergedMap.set(id, cloudItem);
+              }
+            }
+
+            for (const [id, prevItem] of prevMap.entries()) {
+              if (!mergedMap.has(id)) {
+                mergedMap.set(id, prevItem);
+              }
+            }
+
+            const mergedList = Array.from(mergedMap.values());
+            try {
+              localStorage.setItem(`${STORE_KEY}_${key}`, JSON.stringify(mergedList));
+            } catch (e) {}
+            return mergedList as any;
+          });
           return;
         }
       } catch (err) {
