@@ -1410,6 +1410,309 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
+      {/* ── CREATE / EDIT SERVICE MODAL ──────────────────────────────────── */}
+      {editingService && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div className="glass-card max-w-lg w-full p-8 rounded-3xl border border-white/20 bg-slate-900 text-white space-y-4">
+            <h3 className="text-xl font-bold font-[family-name:var(--font-playfair)]">
+              {editingService.id ? "Edit Concierge Service" : "Add New Concierge Service"}
+            </h3>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="block uppercase text-slate-300 font-semibold mb-1">Service Title *</label>
+                <input
+                  type="text"
+                  value={editingService.title || editingService.name || ""}
+                  onChange={(e) => setEditingService({ ...editingService, title: e.target.value, name: e.target.value })}
+                  placeholder="e.g. Private Helicopter Charter"
+                  className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block uppercase text-slate-300 font-semibold mb-1">Category</label>
+                <input
+                  type="text"
+                  value={editingService.category || "Concierge"}
+                  onChange={(e) => setEditingService({ ...editingService, category: e.target.value })}
+                  placeholder="e.g. Concierge, Aviation, Yachting"
+                  className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block uppercase text-slate-300 font-semibold mb-1">Description *</label>
+                <textarea
+                  rows={3}
+                  value={editingService.shortDesc || ""}
+                  onChange={(e) => setEditingService({ ...editingService, shortDesc: e.target.value })}
+                  placeholder="Short service description..."
+                  className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white resize-none"
+                />
+              </div>
+
+              <FileInputOrUrl
+                label="Cover Image"
+                value={editingService.image || ""}
+                onChange={(val) => setEditingService({ ...editingService, image: val })}
+              />
+            </div>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <Button variant="ghost" size="sm" onClick={() => setEditingService(null)}>Cancel</Button>
+              <Button variant="amber" size="sm" onClick={() => {
+                if (editingService.id) {
+                  setServices(services.map(s => s.id === editingService.id ? (editingService as ServiceItem) : s));
+                } else {
+                  const newSrv: ServiceItem = {
+                    id: `srv-${Date.now()}`,
+                    title: editingService.title || editingService.name || "New Service",
+                    name: editingService.title || editingService.name || "New Service",
+                    category: editingService.category || "Concierge",
+                    shortDesc: editingService.shortDesc || "Custom travel concierge service.",
+                    image: editingService.image || "https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=800&q=80",
+                    active: true,
+                  };
+                  setServices([newSrv, ...services]);
+                }
+                setEditingService(null);
+              }}>Save Service</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── CREATE / EDIT FLIGHT FARE MODAL ───────────────────────────────── */}
+      {editingFlight && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div className="glass-card max-w-xl w-full p-8 rounded-3xl border border-white/20 bg-slate-900 text-white space-y-4">
+            <h3 className="text-xl font-bold font-[family-name:var(--font-playfair)]">
+              {editingFlight.id ? "Edit Flight Deal" : "Add Special Flight Deal"}
+            </h3>
+
+            <div className="space-y-3 text-xs max-h-[70vh] overflow-y-auto pr-1 custom-scrollbar">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block uppercase text-slate-300 font-semibold mb-1">Airline Name *</label>
+                  <input
+                    type="text"
+                    value={editingFlight.airlineName || ""}
+                    onChange={(e) => setEditingFlight({ ...editingFlight, airlineName: e.target.value })}
+                    placeholder="e.g. Emirates"
+                    className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block uppercase text-slate-300 font-semibold mb-1">Fare Price ($) *</label>
+                  <input
+                    type="number"
+                    value={editingFlight.farePrice || 850}
+                    onChange={(e) => setEditingFlight({ ...editingFlight, farePrice: Number(e.target.value) })}
+                    className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block uppercase text-slate-300 font-semibold mb-1">From City *</label>
+                  <input
+                    type="text"
+                    value={editingFlight.fromCity || ""}
+                    onChange={(e) => setEditingFlight({ ...editingFlight, fromCity: e.target.value })}
+                    placeholder="New York"
+                    className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block uppercase text-slate-300 font-semibold mb-1">From Code *</label>
+                  <input
+                    type="text"
+                    value={editingFlight.fromCode || ""}
+                    onChange={(e) => setEditingFlight({ ...editingFlight, fromCode: e.target.value })}
+                    placeholder="JFK"
+                    className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block uppercase text-slate-300 font-semibold mb-1">To City *</label>
+                  <input
+                    type="text"
+                    value={editingFlight.toCity || ""}
+                    onChange={(e) => setEditingFlight({ ...editingFlight, toCity: e.target.value })}
+                    placeholder="Dubai"
+                    className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block uppercase text-slate-300 font-semibold mb-1">To Code *</label>
+                  <input
+                    type="text"
+                    value={editingFlight.toCode || ""}
+                    onChange={(e) => setEditingFlight({ ...editingFlight, toCode: e.target.value })}
+                    placeholder="DXB"
+                    className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block uppercase text-slate-300 font-semibold mb-1">Cabin Class</label>
+                  <select
+                    value={editingFlight.travelClass || "Economy"}
+                    onChange={(e) => setEditingFlight({ ...editingFlight, travelClass: e.target.value as any })}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-white/10 text-white"
+                  >
+                    <option value="Economy">Economy</option>
+                    <option value="Business">Business</option>
+                    <option value="First Class">First Class</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block uppercase text-slate-300 font-semibold mb-1">Trip Type</label>
+                  <select
+                    value={editingFlight.tripType || "Round Trip"}
+                    onChange={(e) => setEditingFlight({ ...editingFlight, tripType: e.target.value as any })}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-white/10 text-white"
+                  >
+                    <option value="Round Trip">Round Trip</option>
+                    <option value="One Way">One Way</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <Button variant="ghost" size="sm" onClick={() => setEditingFlight(null)}>Cancel</Button>
+              <Button variant="amber" size="sm" onClick={() => {
+                if (editingFlight.id) {
+                  setFlights(flights.map(f => f.id === editingFlight.id ? (editingFlight as FlightFare) : f));
+                } else {
+                  const newFlight: FlightFare = {
+                    id: `flt-${Date.now()}`,
+                    airlineName: editingFlight.airlineName || "Emirates",
+                    fromCity: editingFlight.fromCity || "New York",
+                    fromCode: editingFlight.fromCode || "JFK",
+                    toCity: editingFlight.toCity || "Dubai",
+                    toCode: editingFlight.toCode || "DXB",
+                    tripType: editingFlight.tripType || "Round Trip",
+                    travelClass: editingFlight.travelClass || "Economy",
+                    farePrice: editingFlight.farePrice || 850,
+                    active: true,
+                  };
+                  setFlights([newFlight, ...flights]);
+                }
+                setEditingFlight(null);
+              }}>Save Flight Deal</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── CREATE / EDIT HOTEL MODAL ────────────────────────────────────── */}
+      {editingHotel && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div className="glass-card max-w-xl w-full p-8 rounded-3xl border border-white/20 bg-slate-900 text-white space-y-4">
+            <h3 className="text-xl font-bold font-[family-name:var(--font-playfair)]">
+              {editingHotel.id ? "Edit Hotel Listing" : "Add Luxury Hotel Listing"}
+            </h3>
+
+            <div className="space-y-3 text-xs max-h-[70vh] overflow-y-auto pr-1 custom-scrollbar">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block uppercase text-slate-300 font-semibold mb-1">Hotel Name *</label>
+                  <input
+                    type="text"
+                    value={editingHotel.name || ""}
+                    onChange={(e) => setEditingHotel({ ...editingHotel, name: e.target.value })}
+                    placeholder="e.g. Soneva Jani Resort"
+                    className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block uppercase text-slate-300 font-semibold mb-1">Location *</label>
+                  <input
+                    type="text"
+                    value={editingHotel.location || ""}
+                    onChange={(e) => setEditingHotel({ ...editingHotel, location: e.target.value })}
+                    placeholder="e.g. Noonu Atoll, Maldives"
+                    className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block uppercase text-slate-300 font-semibold mb-1">Price Per Night ($) *</label>
+                  <input
+                    type="number"
+                    value={editingHotel.pricePerNight || 850}
+                    onChange={(e) => setEditingHotel({ ...editingHotel, pricePerNight: Number(e.target.value) })}
+                    className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block uppercase text-slate-300 font-semibold mb-1">Rating (1-5)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    max="5"
+                    value={editingHotel.rating || 5.0}
+                    onChange={(e) => setEditingHotel({ ...editingHotel, rating: Number(e.target.value) })}
+                    className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white"
+                  />
+                </div>
+              </div>
+
+              <FileInputOrUrl
+                label="Cover Image"
+                value={editingHotel.image || (editingHotel.images && editingHotel.images[0]) || ""}
+                onChange={(val) => setEditingHotel({ ...editingHotel, image: val, images: [val] })}
+              />
+
+              <div>
+                <label className="block uppercase text-slate-300 font-semibold mb-1">Description</label>
+                <textarea
+                  rows={3}
+                  value={editingHotel.description || ""}
+                  onChange={(e) => setEditingHotel({ ...editingHotel, description: e.target.value })}
+                  placeholder="Luxury resort description..."
+                  className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white resize-none"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <Button variant="ghost" size="sm" onClick={() => setEditingHotel(null)}>Cancel</Button>
+              <Button variant="amber" size="sm" onClick={() => {
+                if (editingHotel.id) {
+                  setHotels(hotels.map(h => h.id === editingHotel.id ? (editingHotel as HotelItem) : h));
+                } else {
+                  const newHotel: HotelItem = {
+                    id: `htl-${Date.now()}`,
+                    name: editingHotel.name || "New Resort",
+                    location: editingHotel.location || "Maldives",
+                    pricePerNight: editingHotel.pricePerNight || 850,
+                    rating: editingHotel.rating || 5.0,
+                    image: editingHotel.image || "https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=800&q=80",
+                    images: [editingHotel.image || "https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=800&q=80"],
+                    featured: true,
+                    active: true,
+                  };
+                  setHotels([newHotel, ...hotels]);
+                }
+                setEditingHotel(null);
+              }}>Save Hotel Listing</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
