@@ -935,19 +935,34 @@ export async function syncWithSupabase<T>(key: string, value: T) {
       mediaLibrary: "media_library",
     };
     const tableName = tableMap[key];
-    if (tableName && Array.isArray(value) && value.length > 0) {
-      // Map items to safe database records
-      const safeRecords = value.map((item: any) => {
-        const clean: any = { ...item };
-        if (clean.coverImage && !clean.cover_image) clean.cover_image = clean.coverImage;
-        if (clean.shortDesc && !clean.short_desc) clean.short_desc = clean.shortDesc;
-        if (clean.longDesc && !clean.long_desc) clean.long_desc = clean.longDesc;
-        if (clean.travelDate && !clean.travel_date) clean.travel_date = clean.travelDate;
-        if (clean.discountPrice && !clean.discount_price) clean.discount_price = clean.discountPrice;
-        if (clean.uploadDate && !clean.upload_date) clean.upload_date = clean.uploadDate;
-        return clean;
-      });
-      await supabase.from(tableName).upsert(safeRecords);
+    if (tableName && Array.isArray(value)) {
+      if (value.length > 0) {
+        // 1. Upsert current active items to Supabase
+        const safeRecords = value.map((item: any) => {
+          const clean: any = { ...item };
+          if (clean.coverImage && !clean.cover_image) clean.cover_image = clean.coverImage;
+          if (clean.shortDesc && !clean.short_desc) clean.short_desc = clean.shortDesc;
+          if (clean.longDesc && !clean.long_desc) clean.long_desc = clean.longDesc;
+          if (clean.travelDate && !clean.travel_date) clean.travel_date = clean.travelDate;
+          if (clean.discountPrice && !clean.discount_price) clean.discount_price = clean.discountPrice;
+          if (clean.uploadDate && !clean.upload_date) clean.upload_date = clean.uploadDate;
+          return clean;
+        });
+        await supabase.from(tableName).upsert(safeRecords);
+
+        // 2. Reconcile and permanently delete removed items from Supabase Cloud DB
+        const { data: dbRows } = await supabase.from(tableName).select("id");
+        if (dbRows && dbRows.length > 0) {
+          const currentIds = new Set(value.map((v: any) => v.id));
+          const deletedIds = dbRows.filter((r: any) => !currentIds.has(r.id)).map((r: any) => r.id);
+          if (deletedIds.length > 0) {
+            await supabase.from(tableName).delete().in("id", deletedIds);
+          }
+        }
+      } else {
+        // If array is emptied, delete all rows from Supabase table
+        await supabase.from(tableName).delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      }
     }
   } catch (err) {
     console.warn(`Supabase sync notice for ${key}:`, err);
