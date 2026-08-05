@@ -376,51 +376,63 @@ export default function AdminDashboardPage() {
         {activeTab === "dashboard" && (
           <div className="space-y-8">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="glass-card p-6 rounded-3xl border border-white/10 space-y-2">
-                <span className="text-xs text-slate-400 font-semibold uppercase">Pending Requests</span>
+              <button onClick={() => setActiveTab("enquiries")} className="glass-card p-6 rounded-3xl border border-white/10 space-y-2 text-left hover:border-amber-500/50 hover:scale-[1.02] transition-all cursor-pointer group">
+                <span className="text-xs text-slate-400 font-semibold uppercase group-hover:text-amber-300">Pending Requests</span>
                 <p className="text-3xl font-bold text-amber-400 font-[family-name:var(--font-playfair)]">
                   {enquiries.filter((e) => e.status === "New").length}
                 </p>
-                <span className="text-[11px] text-slate-500">Unread customer bookings</span>
-              </div>
+                <span className="text-[11px] text-slate-500 block">Click to view Bookings Desk →</span>
+              </button>
 
-              <div className="glass-card p-6 rounded-3xl border border-white/10 space-y-2">
-                <span className="text-xs text-slate-400 font-semibold uppercase">Gallery Albums</span>
+              <button onClick={() => setActiveTab("albums")} className="glass-card p-6 rounded-3xl border border-white/10 space-y-2 text-left hover:border-emerald-500/50 hover:scale-[1.02] transition-all cursor-pointer group">
+                <span className="text-xs text-slate-400 font-semibold uppercase group-hover:text-emerald-300">Gallery Albums</span>
                 <p className="text-3xl font-bold text-emerald-400 font-[family-name:var(--font-playfair)]">
                   {albums.length}
                 </p>
-                <span className="text-[11px] text-slate-500">Published photo/video albums</span>
-              </div>
+                <span className="text-[11px] text-slate-500 block">Click to view Albums Desk →</span>
+              </button>
 
-              <div className="glass-card p-6 rounded-3xl border border-white/10 space-y-2">
-                <span className="text-xs text-slate-400 font-semibold uppercase">Pending Reviews</span>
+              <button onClick={() => setActiveTab("testimonials")} className="glass-card p-6 rounded-3xl border border-white/10 space-y-2 text-left hover:border-purple-500/50 hover:scale-[1.02] transition-all cursor-pointer group">
+                <span className="text-xs text-slate-400 font-semibold uppercase group-hover:text-purple-300">Pending Reviews</span>
                 <p className="text-3xl font-bold text-purple-400 font-[family-name:var(--font-playfair)]">
                   {testimonials.filter(t => t.status === "Pending").length}
                 </p>
-                <span className="text-[11px] text-slate-500">Awaiting admin approval</span>
-              </div>
+                <span className="text-[11px] text-slate-500 block">Click to approve Reviews →</span>
+              </button>
 
-              <div className="glass-card p-6 rounded-3xl border border-white/10 space-y-2">
-                <span className="text-xs text-slate-400 font-semibold uppercase">Active Tour Packages</span>
+              <button onClick={() => setActiveTab("packages")} className="glass-card p-6 rounded-3xl border border-white/10 space-y-2 text-left hover:border-amber-500/50 hover:scale-[1.02] transition-all cursor-pointer group">
+                <span className="text-xs text-slate-400 font-semibold uppercase group-hover:text-white">Active Tour Packages</span>
                 <p className="text-3xl font-bold text-white font-[family-name:var(--font-playfair)]">
                   {packages.length}
                 </p>
-                <span className="text-[11px] text-slate-500">Published itineraries</span>
-              </div>
+                <span className="text-[11px] text-slate-500 block">Click to view Packages Desk →</span>
+              </button>
             </div>
 
             {/* Shortcuts */}
             <div className="glass-card p-8 rounded-3xl border border-white/10 space-y-4">
-              <h2 className="text-xl font-bold font-[family-name:var(--font-playfair)]">Administrative Quick Shortcuts</h2>
+              <h2 className="text-xl font-bold font-[family-name:var(--font-playfair)]">Administrative Quick Control Desks</h2>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <Button variant="amber" size="sm" leftIcon={<Plus size={14} />} onClick={() => { setActiveTab("albums"); setEditingAlbum({ name: "", destination: "Switzerland", category: "Mountains", featured: true, active: true, images: [], videos: [] }); }}>
-                  Create New Album
+                <Button variant="amber" size="sm" leftIcon={<Inbox size={14} />} onClick={() => setActiveTab("enquiries")}>
+                  Bookings Desk ({enquiries.filter(e => e.status === "New").length})
                 </Button>
                 <Button variant="secondary" size="sm" leftIcon={<Star size={14} />} onClick={() => setActiveTab("testimonials")}>
-                  Review Guest Stories ({testimonials.filter(t => t.status === "Pending").length})
+                  Review Stories ({testimonials.filter(t => t.status === "Pending").length})
                 </Button>
-                <Button variant="secondary" size="sm" leftIcon={<ImageIcon size={14} />} onClick={() => setActiveTab("media")}>
-                  Media Library Assets
+                <Button variant="secondary" size="sm" leftIcon={<Plane size={14} />} onClick={() => setActiveTab("flights")}>
+                  Flight Deals ({flights.length})
+                </Button>
+                <Button variant="secondary" size="sm" leftIcon={<Hotel size={14} />} onClick={() => setActiveTab("hotels")}>
+                  Hotel Listings ({hotels.length})
+                </Button>
+                <Button variant="secondary" size="sm" leftIcon={<Sparkles size={14} />} onClick={() => setActiveTab("packages")}>
+                  Tour Packages ({packages.length})
+                </Button>
+                <Button variant="secondary" size="sm" leftIcon={<Compass size={14} />} onClick={() => setActiveTab("services")}>
+                  Services ({services.length})
+                </Button>
+                <Button variant="secondary" size="sm" leftIcon={<Plus size={14} />} onClick={() => { setActiveTab("albums"); setEditingAlbum({ name: "", destination: "Switzerland", category: "Mountains", featured: true, active: true, images: [], videos: [] }); }}>
+                  Create Album
                 </Button>
                 <Button variant="secondary" size="sm" leftIcon={<Edit size={14} />} onClick={() => setActiveTab("mainpage")}>
                   Edit Main Page

@@ -227,7 +227,8 @@ export function CinematicStorytelling() {
   const scrollToSection = (id: string) => {
     const el = document.getElementById(id);
     if (el) {
-      el.scrollIntoView({ behavior: "smooth" });
+      const topPos = el.getBoundingClientRect().top + window.pageYOffset;
+      window.scrollTo({ top: topPos, behavior: "smooth" });
       const index = CHAPTERS.findIndex((ch) => ch.id === id);
       if (index !== -1) setActiveChapterIndex(index);
     }
