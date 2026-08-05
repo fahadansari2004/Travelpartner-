@@ -18,6 +18,9 @@ const tableMap: Record<string, string> = {
   enquiries: "enquiries",
   packages: "packages",
   mediaLibrary: "media_library",
+  flights: "flights",
+  hotels: "hotels",
+  services: "services",
 };
 
 export async function GET(req: Request) {

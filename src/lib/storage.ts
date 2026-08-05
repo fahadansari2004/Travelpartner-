@@ -941,6 +941,9 @@ export async function syncWithSupabase<T>(key: string, value: T) {
         enquiries: "enquiries",
         packages: "packages",
         mediaLibrary: "media_library",
+        flights: "flights",
+        hotels: "hotels",
+        services: "services",
       };
       const tableName = tableMap[key];
       if (tableName && Array.isArray(value)) {
@@ -1021,7 +1024,7 @@ export function useStoreData<T>(key: string, defaultValue: T): [T, (val: T) => v
       try {
         const res = await fetch(`/api/store?key=${key}`);
         const json = await res.json();
-        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+        if (json.success && Array.isArray(json.data)) {
           setData(json.data as any);
           try {
             localStorage.setItem(`${STORE_KEY}_${key}`, JSON.stringify(json.data));
@@ -1039,29 +1042,27 @@ export function useStoreData<T>(key: string, defaultValue: T): [T, (val: T) => v
           enquiries: "enquiries",
           packages: "packages",
           mediaLibrary: "media_library",
+          flights: "flights",
+          hotels: "hotels",
+          services: "services",
         };
         const tableName = tableMap[key];
         if (tableName) {
           supabase.from(tableName).select("*").then(({ data: cloudRecords, error }) => {
             if (!error && cloudRecords) {
-              if (cloudRecords.length > 0) {
-                const mapped = cloudRecords.map((item: any) => ({
-                  ...item,
-                  coverImage: item.coverImage || item.cover_image,
-                  shortDesc: item.shortDesc || item.short_desc,
-                  longDesc: item.longDesc || item.long_desc,
-                  travelDate: item.travelDate || item.travel_date,
-                  discountPrice: item.discountPrice || item.discount_price,
-                  uploadDate: item.uploadDate || item.upload_date,
-                }));
-                setData(mapped as any);
-                try {
-                  localStorage.setItem(`${STORE_KEY}_${key}`, JSON.stringify(mapped));
-                } catch (e) {}
-              } else if (Array.isArray(defaultValue) && defaultValue.length > 0) {
-                // Seed Supabase with default initial records if cloud table is empty
-                syncWithSupabase(key, defaultValue);
-              }
+              const mapped = cloudRecords.map((item: any) => ({
+                ...item,
+                coverImage: item.coverImage || item.cover_image,
+                shortDesc: item.shortDesc || item.short_desc,
+                longDesc: item.longDesc || item.long_desc,
+                travelDate: item.travelDate || item.travel_date,
+                discountPrice: item.discountPrice || item.discount_price,
+                uploadDate: item.uploadDate || item.upload_date,
+              }));
+              setData(mapped as any);
+              try {
+                localStorage.setItem(`${STORE_KEY}_${key}`, JSON.stringify(mapped));
+              } catch (e) {}
             }
           });
         }
