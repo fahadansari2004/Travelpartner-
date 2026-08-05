@@ -145,7 +145,7 @@ export default function PackagesPage() {
                   </h3>
 
                   <div className="space-y-1.5 pt-2">
-                    {pkg.included.slice(0, 3).map((item, i) => (
+                    {(pkg.included || []).slice(0, 3).map((item, i) => (
                       <span key={i} className="flex items-center gap-2 text-xs text-slate-300">
                         <CheckCircle2 size={14} className="text-emerald-400 shrink-0" /> {item}
                       </span>
