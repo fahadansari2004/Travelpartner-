@@ -1398,26 +1398,27 @@ export default function AdminDashboardPage() {
             <div className="flex justify-end gap-3 pt-2 border-t border-white/10">
               <Button variant="ghost" size="sm" onClick={() => setEditingAlbum(null)}>Cancel</Button>
               <Button variant="amber" size="sm" onClick={() => {
+                const updatedAlb: AlbumItem = {
+                  id: editingAlbum.id || `alb-${Date.now()}`,
+                  name: editingAlbum.name || "New Album",
+                  destination: editingAlbum.destination || "Destination",
+                  country: editingAlbum.country || "Country",
+                  category: editingAlbum.category || "Destinations",
+                  coverImage: editingAlbum.coverImage || "https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?auto=format&fit=crop&w=1200&q=80",
+                  shortDesc: editingAlbum.shortDesc || "Curated luxury travel photo album.",
+                  longDesc: editingAlbum.longDesc || "",
+                  travelDate: editingAlbum.travelDate || "2026",
+                  featured: editingAlbum.featured || false,
+                  active: editingAlbum.active !== false,
+                  displayOrder: editingAlbum.displayOrder || (albums.length + 1),
+                  images: editingAlbum.images || [],
+                  videos: editingAlbum.videos || [],
+                };
+
                 if (editingAlbum.id) {
-                  setAlbums(albums.map(a => a.id === editingAlbum.id ? (editingAlbum as AlbumItem) : a));
+                  setAlbums(albums.map(a => a.id === editingAlbum.id ? updatedAlb : a));
                 } else {
-                  const newAlb: AlbumItem = {
-                    id: `alb-${Date.now()}`,
-                    name: editingAlbum.name || "New Album",
-                    destination: editingAlbum.destination || "Destination",
-                    country: editingAlbum.country || "Country",
-                    category: editingAlbum.category || "Destinations",
-                    coverImage: editingAlbum.coverImage || "https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?auto=format&fit=crop&w=1200&q=80",
-                    shortDesc: editingAlbum.shortDesc || "Curated luxury travel photo album.",
-                    longDesc: editingAlbum.longDesc || "",
-                    travelDate: editingAlbum.travelDate || "2026",
-                    featured: editingAlbum.featured || false,
-                    active: editingAlbum.active !== false,
-                    displayOrder: albums.length + 1,
-                    images: editingAlbum.images || [],
-                    videos: editingAlbum.videos || [],
-                  };
-                  setAlbums([...albums, newAlb]);
+                  setAlbums([...albums, updatedAlb]);
                 }
                 setEditingAlbum(null);
               }}>Save Album</Button>

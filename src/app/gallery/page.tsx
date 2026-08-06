@@ -36,7 +36,7 @@ export default function GalleryPage() {
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
   // Active albums
-  const activeAlbums = useMemo(() => albums.filter((a) => a.active), [albums]);
+  const activeAlbums = useMemo(() => (albums || []).filter((a) => a && a.active !== false), [albums]);
 
   // All Individual Photos extracted from all active albums
   const allIndividualPhotos = useMemo(() => {

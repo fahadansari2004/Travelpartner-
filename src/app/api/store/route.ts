@@ -27,9 +27,17 @@ const tableMap: Record<string, string> = {
   flights: "flights",
   hotels: "hotels",
   services: "services",
+  mainPage: "services",
+  footer: "services",
+  about: "services",
+  contact: "services",
+  seo: "services",
 };
+
 const apiCache: Record<string, { timestamp: number; data: any }> = {};
 const CACHE_TTL_MS = 5000;
+
+const settingsKeys = ["mainPage", "footer", "about", "contact", "seo"];
 
 export async function GET(req: Request) {
   try {
@@ -49,73 +57,88 @@ export async function GET(req: Request) {
       );
     }
 
+    // Handle System Settings keys stored in services table
+    if (settingsKeys.includes(key)) {
+      const { data: settingRow } = await supabase.from("services").select("*").eq("id", `setting_${key}`).maybeSingle();
+      if (settingRow && settingRow.short_desc) {
+        try {
+          const parsed = JSON.parse(settingRow.short_desc);
+          apiCache[key] = { timestamp: Date.now(), data: parsed };
+          return NextResponse.json({ success: true, data: parsed }, { headers: { "Cache-Control": "public, max-age=5, stale-while-revalidate=30" } });
+        } catch (e) {}
+      }
+      return NextResponse.json({ success: true, data: null });
+    }
+
     const { data, error } = await supabase.from(tableName).select("*");
     if (error) return NextResponse.json({ success: false, error: error.message, data: [] });
 
     // Map PostgreSQL columns to React camelCase properties
-    const mappedData = (data || []).map((item: any) => {
-      let rawDesc = item.description || "";
-      let parsedIncluded: string[] = [];
-      let parsedExcluded: string[] = [];
-      let parsedItinerary: any[] = [];
-      let cleanDesc = rawDesc;
+    const mappedData = (data || [])
+      .filter((item: any) => !item.id?.startsWith("setting_"))
+      .map((item: any) => {
+        let rawDesc = item.description || "";
+        let parsedIncluded: string[] = [];
+        let parsedExcluded: string[] = [];
+        let parsedItinerary: any[] = [];
+        let cleanDesc = rawDesc;
 
-      if (typeof rawDesc === "string" && rawDesc.trim().startsWith("{") && rawDesc.trim().endsWith("}")) {
-        try {
-          const parsed = JSON.parse(rawDesc);
-          cleanDesc = parsed.text || parsed.description || cleanDesc;
-          if (Array.isArray(parsed.included)) parsedIncluded = parsed.included;
-          if (Array.isArray(parsed.excluded)) parsedExcluded = parsed.excluded;
-          if (Array.isArray(parsed.itinerary)) parsedItinerary = parsed.itinerary;
-        } catch (e) {}
-      }
+        if (typeof rawDesc === "string" && rawDesc.trim().startsWith("{") && rawDesc.trim().endsWith("}")) {
+          try {
+            const parsed = JSON.parse(rawDesc);
+            cleanDesc = parsed.text || parsed.description || cleanDesc;
+            if (Array.isArray(parsed.included)) parsedIncluded = parsed.included;
+            if (Array.isArray(parsed.excluded)) parsedExcluded = parsed.excluded;
+            if (Array.isArray(parsed.itinerary)) parsedItinerary = parsed.itinerary;
+          } catch (e) {}
+        }
 
-      return {
-        ...item,
-        name: item.name || item.customer_name || item.customerName || "Valued Client",
-        customerName: item.name || item.customer_name || item.customerName || "Valued Client",
-        packageOrItemName: item.subject || item.package_name || item.packageOrItemName || "Travel Booking",
-        packageName: item.subject || item.package_name || item.packageName || "Travel Booking",
-        subject: item.subject || item.package_name || item.packageOrItemName || "Travel Booking",
-        message: item.message || item.notes || "",
-        notes: item.message || item.notes || "",
-        guestsCount: item.guests_count || item.guests || 1,
-        guests: item.guests_count || item.guests || 1,
-        travelDate: item.travel_date || item.travelDate || "",
-        preferredTime: item.preferred_time || item.preferredTime || "",
-        totalAmount: item.total_amount || item.totalAmount || 0,
-        createdAt: item.created_at || item.createdAt || item.date || new Date().toISOString().slice(0, 10),
-        date: item.created_at || item.createdAt || item.date || new Date().toISOString().slice(0, 10),
-        coverImage: item.image || item.cover_image || item.coverImage,
-        shortDesc: cleanDesc,
-        description: cleanDesc,
-        included: parsedIncluded.length > 0 ? parsedIncluded : item.included,
-        excluded: parsedExcluded.length > 0 ? parsedExcluded : item.excluded,
-        itinerary: parsedItinerary.length > 0 ? parsedItinerary : item.itinerary,
-        longDesc: cleanDesc,
-        discountPrice: item.discount_price ?? item.discountPrice ?? item.price,
-        uploadDate: item.upload_date || item.uploadDate,
-        reviewsCount: item.reviews_count ?? item.reviewsCount ?? 10,
-        mapLocation: item.map_location || item.mapLocation,
-        videoUrl: item.video_url || item.videoUrl,
-        airlineName: item.airline_name || item.airlineName,
-        airlineLogo: item.airline_logo || item.airlineLogo,
-        fromCity: item.from_city || item.fromCity,
-        fromCode: item.from_code || item.fromCode,
-        toCity: item.to_city || item.toCity,
-        toCode: item.to_code || item.toCode,
-        tripType: item.trip_type || item.tripType,
-        travelClass: item.travel_class || item.travelClass,
-        farePrice: item.fare_price ?? item.farePrice,
-        offerBadge: item.offer_badge || item.offerBadge,
-        seatsAvailable: item.seats_available ?? item.seatsAvailable,
-        bookingLink: item.booking_link || item.bookingLink,
-        pricePerNight: item.price_per_night ?? item.pricePerNight,
-        iconName: item.icon_name || item.iconName,
-        ctaText: item.cta_text || item.ctaText,
-        displayOrder: item.display_order ?? item.displayOrder,
-      };
-    });
+        return {
+          ...item,
+          name: item.name || item.customer_name || item.customerName || "Valued Client",
+          customerName: item.name || item.customer_name || item.customerName || "Valued Client",
+          packageOrItemName: item.subject || item.package_name || item.packageOrItemName || "Travel Booking",
+          packageName: item.subject || item.package_name || item.packageName || "Travel Booking",
+          subject: item.subject || item.package_name || item.packageOrItemName || "Travel Booking",
+          message: item.message || item.notes || "",
+          notes: item.message || item.notes || "",
+          guestsCount: item.guests_count || item.guests || 1,
+          guests: item.guests_count || item.guests || 1,
+          travelDate: item.travel_date || item.travelDate || "",
+          preferredTime: item.preferred_time || item.preferredTime || "",
+          totalAmount: item.total_amount || item.totalAmount || 0,
+          createdAt: item.created_at || item.createdAt || item.date || new Date().toISOString().slice(0, 10),
+          date: item.created_at || item.createdAt || item.date || new Date().toISOString().slice(0, 10),
+          coverImage: item.image || item.cover_image || item.coverImage,
+          shortDesc: cleanDesc,
+          description: cleanDesc,
+          included: parsedIncluded.length > 0 ? parsedIncluded : item.included,
+          excluded: parsedExcluded.length > 0 ? parsedExcluded : item.excluded,
+          itinerary: parsedItinerary.length > 0 ? parsedItinerary : item.itinerary,
+          longDesc: cleanDesc,
+          discountPrice: item.discount_price ?? item.discountPrice ?? item.price,
+          uploadDate: item.upload_date || item.uploadDate,
+          reviewsCount: item.reviews_count ?? item.reviewsCount ?? 10,
+          mapLocation: item.map_location || item.mapLocation,
+          videoUrl: item.video_url || item.videoUrl,
+          airlineName: item.airline_name || item.airlineName,
+          airlineLogo: item.airline_logo || item.airlineLogo,
+          fromCity: item.from_city || item.fromCity,
+          fromCode: item.from_code || item.fromCode,
+          toCity: item.to_city || item.toCity,
+          toCode: item.to_code || item.toCode,
+          tripType: item.trip_type || item.tripType,
+          travelClass: item.travel_class || item.travelClass,
+          farePrice: item.fare_price ?? item.farePrice,
+          offerBadge: item.offer_badge || item.offerBadge,
+          seatsAvailable: item.seats_available ?? item.seatsAvailable,
+          bookingLink: item.booking_link || item.bookingLink,
+          pricePerNight: item.price_per_night ?? item.pricePerNight,
+          iconName: item.icon_name || item.iconName,
+          ctaText: item.cta_text || item.ctaText,
+          displayOrder: item.display_order ?? item.displayOrder,
+        };
+      });
 
     apiCache[key] = { timestamp: Date.now(), data: mappedData };
 
@@ -134,6 +157,18 @@ export async function POST(req: Request) {
     if (!key || !value || !supabase) return NextResponse.json({ success: false, message: "Missing params or Supabase client" });
 
     delete apiCache[key];
+
+    // Handle System Settings keys
+    if (settingsKeys.includes(key)) {
+      const settingPayload = {
+        id: `setting_${key}`,
+        name: key,
+        short_desc: JSON.stringify(value),
+        long_desc: "System Setting",
+      };
+      await supabase.from("services").upsert([settingPayload], { onConflict: "id" });
+      return NextResponse.json({ success: true }, { headers: { "Cache-Control": "no-store, max-age=0" } });
+    }
 
     const tableName = tableMap[key];
     if (!tableName) return NextResponse.json({ success: false, message: "Invalid key" });
@@ -298,7 +333,9 @@ export async function POST(req: Request) {
       const { data: dbRows } = await supabase.from(tableName).select("id");
       if (dbRows && dbRows.length > 0) {
         const currentIds = new Set(value.map((v: any) => v.id));
-        const deletedIds = dbRows.filter((r: any) => !currentIds.has(r.id)).map((r: any) => r.id);
+        const deletedIds = dbRows
+          .filter((r: any) => !currentIds.has(r.id) && !r.id.startsWith("setting_"))
+          .map((r: any) => r.id);
         if (deletedIds.length > 0) {
           const { error: deleteErr } = await supabase.from(tableName).delete().in("id", deletedIds);
           if (deleteErr) {

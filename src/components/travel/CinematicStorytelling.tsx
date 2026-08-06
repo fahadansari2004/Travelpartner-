@@ -89,34 +89,55 @@ const SECTIONS: SectionItem[] = [
 /**
  * Scroll-Driven Smooth Parallax Background Animation Component
  */
-function AnimatedParallaxBackground({ imageSrc }: { imageSrc: string }) {
-  const [imgUrl, setImgUrl] = useState(imageSrc);
+function AnimatedParallaxBackground({ mediaSrc }: { mediaSrc: string }) {
+  const [mediaUrl, setMediaUrl] = useState(mediaSrc);
   const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
-    setImgUrl(imageSrc);
+    setMediaUrl(mediaSrc);
     setHasError(false);
-  }, [imageSrc]);
+  }, [mediaSrc]);
+
+  const isVideo = typeof mediaUrl === "string" && (
+    mediaUrl.endsWith(".mp4") || 
+    mediaUrl.endsWith(".webm") || 
+    mediaUrl.includes("videos/") ||
+    mediaUrl.includes("video")
+  );
 
   return (
     <div className="absolute inset-0 w-full h-full overflow-hidden bg-slate-950 pointer-events-none z-0">
       {!hasError ? (
-        <motion.img
-          initial={{ scale: 1.15, opacity: 0.45 }}
-          whileInView={{ scale: 1.0, opacity: 0.65 }}
-          viewport={{ once: false, amount: 0.2 }}
-          transition={{ duration: 1.2, ease: "easeOut" }}
-          src={imgUrl}
-          alt=""
-          onError={() => {
-            if (!imgUrl.includes("photo-1507525428034")) {
-              setImgUrl("https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=2000&q=85");
-            } else {
-              setHasError(true);
-            }
-          }}
-          className="absolute inset-0 w-full h-full object-cover"
-        />
+        isVideo ? (
+          <video
+            src={mediaUrl}
+            autoPlay
+            loop
+            muted
+            playsInline
+            onError={() => {
+              setMediaUrl("https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=2000&q=85");
+            }}
+            className="absolute inset-0 w-full h-full object-cover opacity-60 scale-105"
+          />
+        ) : (
+          <motion.img
+            initial={{ scale: 1.15, opacity: 0.45 }}
+            whileInView={{ scale: 1.0, opacity: 0.65 }}
+            viewport={{ once: false, amount: 0.2 }}
+            transition={{ duration: 1.2, ease: "easeOut" }}
+            src={mediaUrl}
+            alt=""
+            onError={() => {
+              if (!mediaUrl.includes("photo-1507525428034")) {
+                setMediaUrl("https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=2000&q=85");
+              } else {
+                setHasError(true);
+              }
+            }}
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        )
       ) : (
         <div className="absolute inset-0 w-full h-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-black opacity-80" />
       )}
@@ -132,6 +153,14 @@ export function CinematicStorytelling() {
 
   const [services] = useStoreData("services", INITIAL_SERVICES);
   const [packages] = useStoreData("packages", INITIAL_PACKAGES);
+  const [mainPage] = useStoreData<any>("mainPage", {
+    heroHeadline: "Every Journey Begins With A Dream",
+    heroSubtitle: "Handcrafted 5-star itineraries with private guides, luxury transfers, and exclusive VIP access.",
+    heroMediaUrl: "/videos/hero.mp4",
+    aboutTitle: "Redefining Luxury Travel for the Modern Explorer",
+    aboutSubtitle: "Crafting Unforgettable Tailor-Made Expeditions Since 2010"
+  });
+  const [albums] = useStoreData<any[]>("albums", []);
 
   const servicesCarouselRef = useRef<HTMLDivElement>(null);
 
@@ -234,7 +263,7 @@ export function CinematicStorytelling() {
         id="hero" 
         className="relative w-full min-h-screen flex flex-col items-center justify-between py-16 sm:py-24"
       >
-        <AnimatedParallaxBackground imageSrc={SECTIONS[0].imageSrc} />
+        <AnimatedParallaxBackground mediaSrc={mainPage?.heroMediaUrl || SECTIONS[0].imageSrc} />
 
         <div className="relative z-10 my-auto flex flex-col justify-center items-center text-center max-w-5xl space-y-6 sm:space-y-8 w-full px-4">
           <motion.div 
@@ -253,7 +282,7 @@ export function CinematicStorytelling() {
             transition={{ duration: 0.8, delay: 0.2 }}
             className="text-3xl sm:text-6xl lg:text-7xl font-black tracking-tight text-white font-[family-name:var(--font-playfair)] leading-[1.12] sm:leading-[1.08] max-w-xs sm:max-w-4xl mx-auto"
           >
-            Every Journey Begins With A <span className="gradient-text">Dream</span>
+            {mainPage?.heroHeadline || "Every Journey Begins With A Dream"}
           </motion.h1>
 
           <motion.p 
@@ -262,7 +291,7 @@ export function CinematicStorytelling() {
             transition={{ duration: 0.8, delay: 0.4 }}
             className="text-xs sm:text-lg md:text-2xl text-slate-200 font-light max-w-xs sm:max-w-2xl mx-auto leading-relaxed"
           >
-            Explore the world&apos;s most extraordinary destinations with travelPartner.
+            {mainPage?.heroSubtitle || "Explore the world's most extraordinary destinations with travelPartner."}
           </motion.p>
 
           <motion.div 
