@@ -90,17 +90,36 @@ const SECTIONS: SectionItem[] = [
  * Scroll-Driven Smooth Parallax Background Animation Component
  */
 function AnimatedParallaxBackground({ imageSrc }: { imageSrc: string }) {
+  const [imgUrl, setImgUrl] = useState(imageSrc);
+  const [hasError, setHasError] = useState(false);
+
+  useEffect(() => {
+    setImgUrl(imageSrc);
+    setHasError(false);
+  }, [imageSrc]);
+
   return (
     <div className="absolute inset-0 w-full h-full overflow-hidden bg-slate-950 pointer-events-none z-0">
-      <motion.img
-        initial={{ scale: 1.15, opacity: 0.45 }}
-        whileInView={{ scale: 1.0, opacity: 0.65 }}
-        viewport={{ once: false, amount: 0.2 }}
-        transition={{ duration: 1.2, ease: "easeOut" }}
-        src={imageSrc}
-        alt="Animated Background"
-        className="absolute inset-0 w-full h-full object-cover"
-      />
+      {!hasError ? (
+        <motion.img
+          initial={{ scale: 1.15, opacity: 0.45 }}
+          whileInView={{ scale: 1.0, opacity: 0.65 }}
+          viewport={{ once: false, amount: 0.2 }}
+          transition={{ duration: 1.2, ease: "easeOut" }}
+          src={imgUrl}
+          alt=""
+          onError={() => {
+            if (!imgUrl.includes("photo-1507525428034")) {
+              setImgUrl("https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=2000&q=85");
+            } else {
+              setHasError(true);
+            }
+          }}
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+      ) : (
+        <div className="absolute inset-0 w-full h-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-black opacity-80" />
+      )}
       <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/65 to-slate-950/80" />
     </div>
   );

@@ -102,30 +102,40 @@ export default function HotelsPage() {
               key={htl.id} 
               className="glass-card rounded-3xl overflow-hidden border border-white/10 bg-slate-900/60 hover:border-amber-500/40 transition-all duration-300 hover:-translate-y-2 group shadow-2xl flex flex-col justify-between"
             >
-              <div className="p-6 space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-1.5 text-xs text-amber-400 font-semibold">
-                    <MapPin size={14} /> {htl.location}
+              <div>
+                <div className="relative aspect-video w-full overflow-hidden bg-slate-950">
+                  <img 
+                    src={htl.image || (htl.images && htl.images[0]) || "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80"} 
+                    alt={htl.name} 
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                  />
+                  <span className="absolute top-3 right-3 px-3 py-1 rounded-full bg-slate-950/80 backdrop-blur-md text-amber-400 text-xs font-bold border border-amber-500/30">
+                    ★ {htl.rating}
                   </span>
-                  <div className="flex items-center gap-1 text-xs text-amber-300 font-bold">
-                    <Star size={14} fill="currentColor" /> {htl.rating}
-                  </div>
                 </div>
 
-                <h3 className="text-2xl font-bold font-[family-name:var(--font-playfair)] text-white group-hover:text-amber-400 transition-colors">
-                  {htl.name}
-                </h3>
-
-                <p className="text-xs text-slate-300 font-light leading-relaxed">
-                  {htl.description}
-                </p>
-
-                <div className="flex flex-wrap gap-1.5 pt-2">
-                  {(htl.facilities || []).map((fac, i) => (
-                    <span key={i} className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-[10px] text-slate-300">
-                      ✓ {fac}
+                <div className="p-6 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-1.5 text-xs text-amber-400 font-semibold">
+                      <MapPin size={14} /> {htl.location}
                     </span>
-                  ))}
+                  </div>
+
+                  <h3 className="text-2xl font-bold font-[family-name:var(--font-playfair)] text-white group-hover:text-amber-400 transition-colors">
+                    {htl.name}
+                  </h3>
+
+                  <p className="text-xs text-slate-300 font-light leading-relaxed line-clamp-3">
+                    {htl.description}
+                  </p>
+
+                  <div className="flex flex-wrap gap-1.5 pt-2">
+                    {(htl.facilities || []).map((fac, i) => (
+                      <span key={i} className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-[10px] text-slate-300">
+                        ✓ {fac}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </div>
 
