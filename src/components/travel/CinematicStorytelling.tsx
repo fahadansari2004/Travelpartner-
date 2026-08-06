@@ -87,61 +87,57 @@ const SECTIONS: SectionItem[] = [
 ];
 
 /**
- * Scroll-Driven Smooth Parallax Background Animation Component
+ * Scroll-Driven Smooth Zooming Parallax Background Animation Component
  */
 function AnimatedParallaxBackground({ mediaSrc, imageSrc }: { mediaSrc?: string; imageSrc?: string }) {
-  const initialSrc = mediaSrc || imageSrc || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=75";
-  const [mediaUrl, setMediaUrl] = useState(initialSrc);
+  let rawSrc = mediaSrc || imageSrc || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80";
+
+  // Replace video URLs with high-definition luxury travel background imagery
+  if (typeof rawSrc === "string" && (rawSrc.endsWith(".mp4") || rawSrc.endsWith(".webm") || rawSrc.includes("videos/") || rawSrc.includes("video"))) {
+    rawSrc = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80";
+  }
+
+  const [mediaUrl, setMediaUrl] = useState(rawSrc);
   const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
-    setMediaUrl(initialSrc);
+    let cleanSrc = mediaSrc || imageSrc || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80";
+    if (typeof cleanSrc === "string" && (cleanSrc.endsWith(".mp4") || cleanSrc.endsWith(".webm") || cleanSrc.includes("videos/") || cleanSrc.includes("video"))) {
+      cleanSrc = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80";
+    }
+    setMediaUrl(cleanSrc);
     setHasError(false);
-  }, [initialSrc]);
-
-  const isVideo = typeof mediaUrl === "string" && (
-    mediaUrl.endsWith(".mp4") || 
-    mediaUrl.endsWith(".webm") || 
-    mediaUrl.includes("videos/") ||
-    mediaUrl.includes("video")
-  );
+  }, [mediaSrc, imageSrc]);
 
   return (
     <div className="absolute inset-0 w-full h-full overflow-hidden bg-slate-950 pointer-events-none z-0">
       {!hasError ? (
-        isVideo ? (
-          <video
-            src={mediaUrl}
-            autoPlay
-            loop
-            muted
-            playsInline
-            preload="metadata"
-            onError={() => {
-              setMediaUrl("https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=75");
-            }}
-            className="absolute inset-0 w-full h-full object-cover opacity-60 scale-105"
-          />
-        ) : (
-          <motion.img
-            initial={{ scale: 1.1, opacity: 0.45 }}
-            whileInView={{ scale: 1.0, opacity: 0.65 }}
-            viewport={{ once: true, amount: 0.1 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            src={mediaUrl}
-            alt=""
-            loading="lazy"
-            decoding="async"
-            onError={() => {
-              if (!mediaUrl.includes("photo-1507525428034")) {
-                setMediaUrl("https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=75");
-              } else {
-                setHasError(true);
-              }
-            }}
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-        )
+        <motion.img
+          initial={{ scale: 1.05, opacity: 0.5 }}
+          whileInView={{ scale: 1.25, opacity: 0.7 }}
+          viewport={{ once: false, amount: 0.1 }}
+          transition={{ duration: 1.8, ease: "easeOut" }}
+          animate={{
+            scale: [1.05, 1.15, 1.05],
+          }}
+          transition-animate={{
+            duration: 15,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+          src={mediaUrl}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          onError={() => {
+            if (!mediaUrl.includes("photo-1507525428034")) {
+              setMediaUrl("https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80");
+            } else {
+              setHasError(true);
+            }
+          }}
+          className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 ease-out"
+        />
       ) : (
         <div className="absolute inset-0 w-full h-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-black opacity-80" />
       )}
