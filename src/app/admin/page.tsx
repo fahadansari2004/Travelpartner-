@@ -769,17 +769,32 @@ export default function AdminDashboardPage() {
             <div className="glass-card rounded-3xl p-6 border border-white/10 space-y-4">
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-white/10 pb-4">
                 <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto">
-                  {(["All", "Package", "Flight", "Hotel", "General"] as const).map((cat) => (
-                    <button
-                      key={cat}
-                      onClick={() => setEnquiryFilter(cat)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                        enquiryFilter === cat ? "bg-amber-500 text-slate-950" : "bg-white/5 text-slate-400 hover:text-white"
-                      }`}
-                    >
-                      {cat}
-                    </button>
-                  ))}
+                  {(["All", "Package", "Flight", "Hotel", "General"] as const).map((cat) => {
+                    const count = cat === "All"
+                      ? enquiries.length
+                      : enquiries.filter(e => {
+                          const t = (e.type || "").toLowerCase();
+                          const c = cat.toLowerCase();
+                          return t === c || (e.subject && e.subject.toLowerCase().includes(c)) || (e.message && e.message.toLowerCase().includes(c));
+                        }).length;
+
+                    return (
+                      <button
+                        key={cat}
+                        onClick={() => setEnquiryFilter(cat)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                          enquiryFilter === cat ? "bg-amber-500 text-slate-950 shadow-md" : "bg-white/5 text-slate-400 hover:text-white"
+                        }`}
+                      >
+                        <span>{cat}</span>
+                        <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                          enquiryFilter === cat ? "bg-slate-950 text-amber-400" : "bg-white/10 text-slate-300"
+                        }`}>
+                          {count}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
 
                 <input
