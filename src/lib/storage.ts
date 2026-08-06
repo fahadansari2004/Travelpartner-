@@ -524,14 +524,17 @@ export function useStoreData<T>(key: string, defaultValue: T): [T, (val: T) => v
       setData(stored);
     };
 
-    // Deduplicated, non-blocking background fetch
-    fetchKeyFromCloud(key);
+    // Non-blocking deferred background fetch after main thread render completes
+    const timer = setTimeout(() => {
+      fetchKeyFromCloud(key);
+    }, 100);
 
     window.addEventListener("storage", handleStorageUpdate);
     window.addEventListener("travel-store-update", handleStorageUpdate);
     window.addEventListener("travel-store-key-update", handleKeyUpdate);
 
     return () => {
+      clearTimeout(timer);
       window.removeEventListener("storage", handleStorageUpdate);
       window.removeEventListener("travel-store-update", handleStorageUpdate);
       window.removeEventListener("travel-store-key-update", handleKeyUpdate);

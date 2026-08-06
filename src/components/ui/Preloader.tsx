@@ -19,7 +19,12 @@ const LOADING_STEPS = [
 export function Preloader({ onComplete }: PreloaderProps) {
   const [progress, setProgress] = useState(0);
   const [stepText, setStepText] = useState(LOADING_STEPS[0]);
-  const [isFinished, setIsFinished] = useState(false);
+  const [isFinished, setIsFinished] = useState(() => {
+    if (typeof window !== "undefined") {
+      return sessionStorage.getItem("travel_has_seen_preloader") === "true";
+    }
+    return false;
+  });
 
   const containerRef = useRef<HTMLDivElement>(null);
   const logoRef = useRef<HTMLDivElement>(null);
@@ -28,13 +33,18 @@ export function Preloader({ onComplete }: PreloaderProps) {
   const stepTextRef = useRef<HTMLParagraphElement>(null);
 
   useEffect(() => {
+    if (isFinished) {
+      onComplete?.();
+      return;
+    }
+
     // ── Prevent scrolling during intro ─────────────────────────────────────
     document.body.style.overflow = "hidden";
 
-    // ── Counter & Step Interval ────────────────────────────────────────────
+    // ── Ultra Fast Counter & Step Interval ───────────────────────────────────
     let currentProgress = 0;
     const interval = setInterval(() => {
-      currentProgress += Math.floor(Math.random() * 8) + 4;
+      currentProgress += Math.floor(Math.random() * 20) + 15;
       if (currentProgress >= 100) {
         currentProgress = 100;
         clearInterval(interval);
@@ -46,17 +56,20 @@ export function Preloader({ onComplete }: PreloaderProps) {
         LOADING_STEPS.length - 1
       );
       setStepText(LOADING_STEPS[stepIndex]);
-    }, 60);
+    }, 15);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [isFinished, onComplete]);
 
   useEffect(() => {
-    if (progress === 100) {
+    if (progress === 100 && !isFinished) {
       // ── Animate Exit Transition with GSAP ─────────────────────────────────
       const ctx = gsap.context(() => {
         const tl = gsap.timeline({
           onComplete: () => {
+            try {
+              sessionStorage.setItem("travel_has_seen_preloader", "true");
+            } catch (e) {}
             setIsFinished(true);
             document.body.style.overflow = "";
             onComplete?.();
@@ -72,21 +85,21 @@ export function Preloader({ onComplete }: PreloaderProps) {
           ],
           {
             opacity: 0,
-            y: -20,
-            duration: 0.4,
-            stagger: 0.05,
+            y: -10,
+            duration: 0.15,
+            stagger: 0.02,
             ease: "power2.in",
           }
         ).to(containerRef.current, {
-          yPercent: -100,
-          duration: 0.9,
-          ease: "expo.inOut",
+          opacity: 0,
+          duration: 0.2,
+          ease: "power2.out",
         });
       });
 
       return () => ctx.revert();
     }
-  }, [progress, onComplete]);
+  }, [progress, isFinished, onComplete]);
 
   if (isFinished) return null;
 

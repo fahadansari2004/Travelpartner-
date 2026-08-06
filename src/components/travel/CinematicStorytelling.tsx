@@ -52,37 +52,37 @@ const SECTIONS: SectionItem[] = [
   { 
     id: "hero", 
     title: "Home", 
-    imageSrc: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=2000&q=85"
+    imageSrc: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=75"
   },
   { 
     id: "about", 
     title: "About Us", 
-    imageSrc: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=2000&q=85"
+    imageSrc: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=1200&q=75"
   },
   { 
     id: "services", 
     title: "Services", 
-    imageSrc: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=2000&q=85"
+    imageSrc: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1200&q=75"
   },
   { 
     id: "why-us", 
     title: "Why Choose Us", 
-    imageSrc: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=2000&q=85"
+    imageSrc: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1200&q=75"
   },
   { 
     id: "packages-section", 
     title: "Tour Packages", 
-    imageSrc: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=2000&q=85"
+    imageSrc: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1200&q=75"
   },
   { 
     id: "testimonials-section", 
     title: "Guest Reviews", 
-    imageSrc: "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&w=2000&q=85"
+    imageSrc: "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&w=1200&q=75"
   },
   { 
     id: "faq-section", 
     title: "Contact", 
-    imageSrc: "https://images.unsplash.com/photo-1476514525535-ce74f45814d4?auto=format&fit=crop&w=2000&q=85"
+    imageSrc: "https://images.unsplash.com/photo-1476514525535-ce74f45814d4?auto=format&fit=crop&w=1200&q=75"
   },
 ];
 
@@ -90,7 +90,7 @@ const SECTIONS: SectionItem[] = [
  * Scroll-Driven Smooth Parallax Background Animation Component
  */
 function AnimatedParallaxBackground({ mediaSrc, imageSrc }: { mediaSrc?: string; imageSrc?: string }) {
-  const initialSrc = mediaSrc || imageSrc || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=2000&q=85";
+  const initialSrc = mediaSrc || imageSrc || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=75";
   const [mediaUrl, setMediaUrl] = useState(initialSrc);
   const [hasError, setHasError] = useState(false);
 
@@ -116,22 +116,25 @@ function AnimatedParallaxBackground({ mediaSrc, imageSrc }: { mediaSrc?: string;
             loop
             muted
             playsInline
+            preload="metadata"
             onError={() => {
-              setMediaUrl("https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=2000&q=85");
+              setMediaUrl("https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=75");
             }}
             className="absolute inset-0 w-full h-full object-cover opacity-60 scale-105"
           />
         ) : (
           <motion.img
-            initial={{ scale: 1.15, opacity: 0.45 }}
+            initial={{ scale: 1.1, opacity: 0.45 }}
             whileInView={{ scale: 1.0, opacity: 0.65 }}
-            viewport={{ once: false, amount: 0.2 }}
-            transition={{ duration: 1.2, ease: "easeOut" }}
+            viewport={{ once: true, amount: 0.1 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
             src={mediaUrl}
             alt=""
+            loading="lazy"
+            decoding="async"
             onError={() => {
               if (!mediaUrl.includes("photo-1507525428034")) {
-                setMediaUrl("https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=2000&q=85");
+                setMediaUrl("https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=75");
               } else {
                 setHasError(true);
               }

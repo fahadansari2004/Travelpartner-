@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { LenisProvider } from "@/components/providers/LenisProvider";
 import { CustomCursor } from "@/components/ui/CustomCursor";
+import { WhatsAppButton } from "@/components/ui/WhatsAppButton";
 import { SITE_CONFIG } from "@/lib/constants";
 import "./globals.css";
 
@@ -96,7 +97,10 @@ export default function RootLayout({
       <body
         className="font-sans bg-slate-950 text-slate-100 antialiased selection:bg-amber-500/30 selection:text-amber-200 overflow-x-hidden"
       >
-        <LenisProvider>{children}</LenisProvider>
+        <LenisProvider>
+          {children}
+          <WhatsAppButton />
+        </LenisProvider>
       </body>
     </html>
   );
