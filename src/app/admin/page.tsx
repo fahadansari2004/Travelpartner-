@@ -1149,6 +1149,35 @@ export default function AdminDashboardPage() {
                 />
               </div>
 
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block uppercase text-emerald-400 font-semibold mb-1">What&apos;s Included (1 item per line) *</label>
+                  <textarea
+                    value={Array.isArray(editingPackage.included) ? editingPackage.included.join("\n") : (editingPackage.included || "")}
+                    onChange={(e) => {
+                      const lines = e.target.value.split("\n");
+                      setEditingPackage({ ...editingPackage, included: lines as any });
+                    }}
+                    placeholder="5-Star Luxury Resort Stay&#10;Daily Gourmet Breakfast&#10;Private Airport Transfer&#10;Guided Excursions"
+                    rows={4}
+                    className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs resize-none"
+                  />
+                </div>
+                <div>
+                  <label className="block uppercase text-red-400 font-semibold mb-1">What&apos;s Excluded (1 item per line) *</label>
+                  <textarea
+                    value={Array.isArray(editingPackage.excluded) ? editingPackage.excluded.join("\n") : (editingPackage.excluded || "")}
+                    onChange={(e) => {
+                      const lines = e.target.value.split("\n");
+                      setEditingPackage({ ...editingPackage, excluded: lines as any });
+                    }}
+                    placeholder="International Airfare&#10;Personal Shopping & Expenses&#10;Travel Insurance & Visa Fees"
+                    rows={4}
+                    className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs resize-none"
+                  />
+                </div>
+              </div>
+
               <div className="flex items-center gap-6 pt-2">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -1183,20 +1212,40 @@ export default function AdminDashboardPage() {
                     alert("Please provide a package title and destination.");
                     return;
                   }
+
+                  const incArr = Array.isArray(editingPackage.included)
+                    ? (editingPackage.included as any[]).map(s => String(s).trim()).filter(s => s.length > 0)
+                    : typeof editingPackage.included === "string"
+                    ? (editingPackage.included as string).split("\n").map(s => s.trim()).filter(s => s.length > 0)
+                    : [];
+
+                  const excArr = Array.isArray(editingPackage.excluded)
+                    ? (editingPackage.excluded as any[]).map(s => String(s).trim()).filter(s => s.length > 0)
+                    : typeof editingPackage.excluded === "string"
+                    ? (editingPackage.excluded as string).split("\n").map(s => s.trim()).filter(s => s.length > 0)
+                    : [];
+
                   const newPkgItem: PackageItem = {
                     id: editingPackage.id || `pkg-${Date.now()}`,
                     name: editingPackage.name,
                     destination: editingPackage.destination,
                     duration: editingPackage.duration || "5 Days / 4 Nights",
-                    price: editingPackage.price || 1999,
-                    discountPrice: editingPackage.discountPrice || editingPackage.price || 1999,
+                    price: Number(editingPackage.price || 1999),
+                    discountPrice: Number(editingPackage.discountPrice || editingPackage.price || 1999),
                     image: editingPackage.image || "https://images.unsplash.com/photo-1502602898657-3e91760cbb34",
-                    rating: editingPackage.rating || 4.9,
-                    reviewsCount: editingPackage.reviewsCount || 45,
+                    rating: Number(editingPackage.rating || 4.9),
+                    reviewsCount: Number(editingPackage.reviewsCount || 45),
                     featured: editingPackage.featured ?? true,
                     active: editingPackage.active ?? true,
                     shortDesc: editingPackage.shortDesc || editingPackage.description || "Luxury tour package",
                     description: editingPackage.description || editingPackage.shortDesc || "Luxury tour package",
+                    included: incArr,
+                    excluded: excArr,
+                    itinerary: editingPackage.itinerary || [
+                      { day: 1, title: "VIP Arrival & Luxury Resort Check-in", desc: "Private transfer to resort with welcome champagne reception." },
+                      { day: 2, title: "Guided Excursion & Sightseeing Tour", desc: "Full-day bespoke guided tour with private expert guide." },
+                      { day: 3, title: "Leisure & Fine Dining Experience", desc: "Relax at world-class spa facilities and private gourmet dining." }
+                    ],
                   };
 
                   if (editingPackage.id) {

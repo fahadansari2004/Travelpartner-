@@ -42,48 +42,69 @@ export async function GET(req: Request) {
     if (error) return NextResponse.json({ success: false, error: error.message, data: [] });
 
     // Map PostgreSQL columns to React camelCase properties
-    const mappedData = (data || []).map((item: any) => ({
-      ...item,
-      name: item.name || item.customer_name || item.customerName || "Valued Client",
-      customerName: item.name || item.customer_name || item.customerName || "Valued Client",
-      packageOrItemName: item.subject || item.package_name || item.packageOrItemName || "Travel Booking",
-      packageName: item.subject || item.package_name || item.packageName || "Travel Booking",
-      subject: item.subject || item.package_name || item.packageOrItemName || "Travel Booking",
-      message: item.message || item.notes || "",
-      notes: item.message || item.notes || "",
-      guestsCount: item.guests_count || item.guests || 1,
-      guests: item.guests_count || item.guests || 1,
-      travelDate: item.travel_date || item.travelDate || "",
-      preferredTime: item.preferred_time || item.preferredTime || "",
-      totalAmount: item.total_amount || item.totalAmount || 0,
-      createdAt: item.created_at || item.createdAt || item.date || new Date().toISOString().slice(0, 10),
-      date: item.created_at || item.createdAt || item.date || new Date().toISOString().slice(0, 10),
-      coverImage: item.image || item.cover_image || item.coverImage,
-      shortDesc: item.description || item.short_desc || item.shortDesc,
-      description: item.description || item.short_desc || item.shortDesc,
-      longDesc: item.description || item.long_desc || item.longDesc,
-      discountPrice: item.discount_price ?? item.discountPrice ?? item.price,
-      uploadDate: item.upload_date || item.uploadDate,
-      reviewsCount: item.reviews_count ?? item.reviewsCount ?? 10,
-      mapLocation: item.map_location || item.mapLocation,
-      videoUrl: item.video_url || item.videoUrl,
-      airlineName: item.airline_name || item.airlineName,
-      airlineLogo: item.airline_logo || item.airlineLogo,
-      fromCity: item.from_city || item.fromCity,
-      fromCode: item.from_code || item.fromCode,
-      toCity: item.to_city || item.toCity,
-      toCode: item.to_code || item.toCode,
-      tripType: item.trip_type || item.tripType,
-      travelClass: item.travel_class || item.travelClass,
-      farePrice: item.fare_price ?? item.farePrice,
-      offerBadge: item.offer_badge || item.offerBadge,
-      seatsAvailable: item.seats_available ?? item.seatsAvailable,
-      bookingLink: item.booking_link || item.bookingLink,
-      pricePerNight: item.price_per_night ?? item.pricePerNight,
-      iconName: item.icon_name || item.iconName,
-      ctaText: item.cta_text || item.ctaText,
-      displayOrder: item.display_order ?? item.displayOrder,
-    }));
+    const mappedData = (data || []).map((item: any) => {
+      let rawDesc = item.description || "";
+      let parsedIncluded: string[] = [];
+      let parsedExcluded: string[] = [];
+      let parsedItinerary: any[] = [];
+      let cleanDesc = rawDesc;
+
+      if (typeof rawDesc === "string" && rawDesc.trim().startsWith("{") && rawDesc.trim().endsWith("}")) {
+        try {
+          const parsed = JSON.parse(rawDesc);
+          cleanDesc = parsed.text || parsed.description || cleanDesc;
+          if (Array.isArray(parsed.included)) parsedIncluded = parsed.included;
+          if (Array.isArray(parsed.excluded)) parsedExcluded = parsed.excluded;
+          if (Array.isArray(parsed.itinerary)) parsedItinerary = parsed.itinerary;
+        } catch (e) {}
+      }
+
+      return {
+        ...item,
+        name: item.name || item.customer_name || item.customerName || "Valued Client",
+        customerName: item.name || item.customer_name || item.customerName || "Valued Client",
+        packageOrItemName: item.subject || item.package_name || item.packageOrItemName || "Travel Booking",
+        packageName: item.subject || item.package_name || item.packageName || "Travel Booking",
+        subject: item.subject || item.package_name || item.packageOrItemName || "Travel Booking",
+        message: item.message || item.notes || "",
+        notes: item.message || item.notes || "",
+        guestsCount: item.guests_count || item.guests || 1,
+        guests: item.guests_count || item.guests || 1,
+        travelDate: item.travel_date || item.travelDate || "",
+        preferredTime: item.preferred_time || item.preferredTime || "",
+        totalAmount: item.total_amount || item.totalAmount || 0,
+        createdAt: item.created_at || item.createdAt || item.date || new Date().toISOString().slice(0, 10),
+        date: item.created_at || item.createdAt || item.date || new Date().toISOString().slice(0, 10),
+        coverImage: item.image || item.cover_image || item.coverImage,
+        shortDesc: cleanDesc,
+        description: cleanDesc,
+        included: parsedIncluded.length > 0 ? parsedIncluded : item.included,
+        excluded: parsedExcluded.length > 0 ? parsedExcluded : item.excluded,
+        itinerary: parsedItinerary.length > 0 ? parsedItinerary : item.itinerary,
+        longDesc: cleanDesc,
+        discountPrice: item.discount_price ?? item.discountPrice ?? item.price,
+        uploadDate: item.upload_date || item.uploadDate,
+        reviewsCount: item.reviews_count ?? item.reviewsCount ?? 10,
+        mapLocation: item.map_location || item.mapLocation,
+        videoUrl: item.video_url || item.videoUrl,
+        airlineName: item.airline_name || item.airlineName,
+        airlineLogo: item.airline_logo || item.airlineLogo,
+        fromCity: item.from_city || item.fromCity,
+        fromCode: item.from_code || item.fromCode,
+        toCity: item.to_city || item.toCity,
+        toCode: item.to_code || item.toCode,
+        tripType: item.trip_type || item.tripType,
+        travelClass: item.travel_class || item.travelClass,
+        farePrice: item.fare_price ?? item.farePrice,
+        offerBadge: item.offer_badge || item.offerBadge,
+        seatsAvailable: item.seats_available ?? item.seatsAvailable,
+        bookingLink: item.booking_link || item.bookingLink,
+        pricePerNight: item.price_per_night ?? item.pricePerNight,
+        iconName: item.icon_name || item.iconName,
+        ctaText: item.cta_text || item.ctaText,
+        displayOrder: item.display_order ?? item.displayOrder,
+      };
+    });
 
     return NextResponse.json(
       { success: true, data: mappedData },
@@ -119,7 +140,7 @@ export async function POST(req: Request) {
             clean.guests_count = Number(clean.guests_count || clean.guestsCount || clean.guests || 1);
             clean.total_amount = Number(clean.total_amount || clean.totalAmount || 0);
             clean.status = clean.status || "New";
-            clean.created_at = clean.created_at || clean.createdAt || clean.date || new Date().toISOString();
+            clean.created_at = new Date().toISOString();
 
             delete clean.customerName;
             delete clean.packageOrItemName;
@@ -134,6 +155,14 @@ export async function POST(req: Request) {
           }
 
           if (tableName === "packages") {
+            const rawText = clean.description || clean.shortDesc || "Bespoke luxury tour package.";
+            const packageMetadata = {
+              text: rawText,
+              included: Array.isArray(clean.included) ? clean.included : [],
+              excluded: Array.isArray(clean.excluded) ? clean.excluded : [],
+              itinerary: Array.isArray(clean.itinerary) ? clean.itinerary : [],
+            };
+
             clean.name = clean.name || "Luxury Tour Package";
             clean.destination = clean.destination || "Global Destination";
             clean.duration = clean.duration || "5 Days / 4 Nights";
@@ -142,7 +171,7 @@ export async function POST(req: Request) {
             clean.rating = Number(clean.rating || 4.9);
             clean.reviews_count = Number(clean.reviews_count ?? clean.reviewsCount ?? 15);
             clean.image = clean.image || "https://images.unsplash.com/photo-1502602898657-3e91760cbb34";
-            clean.description = clean.description || clean.shortDesc || "Bespoke luxury tour package.";
+            clean.description = JSON.stringify(packageMetadata);
             clean.featured = Boolean(clean.featured);
             clean.active = clean.active !== undefined ? Boolean(clean.active) : true;
             clean.created_at = clean.created_at || new Date().toISOString();
@@ -273,7 +302,6 @@ export async function POST(req: Request) {
           }
         }
       } else if (value.length === 0) {
-        // If all items were deleted locally
         await supabase.from(tableName).delete().neq("id", "impossible-id-xyz");
       }
     }
