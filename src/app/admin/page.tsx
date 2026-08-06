@@ -690,7 +690,7 @@ export default function AdminDashboardPage() {
               <p className="text-xs text-slate-400 mt-1">Customize headlines, hero media banner, and titles across all sections.</p>
             </div>
 
-            <form onSubmit={(e) => { e.preventDefault(); setMainPage({ ...mainPage }); alert("Main page section titles updated!"); }} className="space-y-6 text-xs">
+            <form onSubmit={(e) => { e.preventDefault(); setMainPage({ ...mainPage }); setStoredData("mainPage", mainPage); alert("Main page section titles updated & synced to live website!"); }} className="space-y-6 text-xs">
               <div className="p-6 rounded-2xl bg-white/5 border border-white/10 space-y-4">
                 <h4 className="text-sm font-bold text-amber-400 uppercase tracking-wider">1. Hero Banner Section</h4>
                 <div>
@@ -717,7 +717,7 @@ export default function AdminDashboardPage() {
               <p className="text-xs text-slate-400 mt-1">Edit brand description, contact email, phone, social URLs, and copyright notice.</p>
             </div>
 
-            <form onSubmit={(e) => { e.preventDefault(); setFooter({ ...footer }); alert("Footer settings saved successfully!"); }} className="space-y-4 text-xs">
+            <form onSubmit={(e) => { e.preventDefault(); setFooter({ ...footer }); setStoredData("footer", footer); alert("Footer settings saved & synced to live website!"); }} className="space-y-4 text-xs">
               <div>
                 <label className="block uppercase text-slate-300 font-semibold mb-1">Footer Brand Description</label>
                 <textarea rows={3} value={footer.brandDescription || ""} onChange={(e) => setFooter({ ...footer, brandDescription: e.target.value })} className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-amber-400" />

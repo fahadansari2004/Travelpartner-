@@ -60,7 +60,7 @@ function YoutubeIcon({ size = 16 }: { size?: number }) {
 }
 
 export const Footer = memo(function Footer() {
-  const [footer] = useStoreData<FooterSettings>("footerSettings", INITIAL_FOOTER);
+  const [footer] = useStoreData<FooterSettings>("footer", INITIAL_FOOTER);
 
   const socialPlatforms = [
     { icon: InstagramIcon, href: footer.instagram || SITE_CONFIG.social.instagram, label: "Instagram" },
