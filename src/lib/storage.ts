@@ -443,19 +443,22 @@ export const INITIAL_TESTIMONIALS: TestimonialItem[] = [
 const STORE_KEY = "TRAVEL_PARTNER_STORE_V2";
 const lastMutationTimestamps: Record<string, number> = {};
 
+/** Returns stored data. Never replaces with defaults if a value was explicitly saved. */
 export function getStoredData<T>(key: string, defaultValue: T): T {
   if (typeof window === "undefined") return defaultValue;
   try {
     const raw = localStorage.getItem(`${STORE_KEY}_${key}`);
-    if (!raw) return defaultValue;
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed) && parsed.length === 0 && Array.isArray(defaultValue) && defaultValue.length > 0) {
-      return defaultValue;
-    }
-    return parsed;
+    if (raw === null || raw === undefined) return defaultValue;
+    return JSON.parse(raw) as T;
   } catch (err) {
     return defaultValue;
   }
+}
+
+/** Returns true if admin has ever explicitly saved data for this key */
+function hasAdminSavedData(key: string): boolean {
+  if (typeof window === "undefined") return false;
+  return localStorage.getItem(`HAS_DATA_${key}`) === "true";
 }
 
 export async function syncWithSupabase<T>(key: string, value: T) {
@@ -475,7 +478,8 @@ export function setStoredData<T>(key: string, value: T): void {
   lastMutationTimestamps[key] = Date.now();
   try {
     localStorage.setItem(`${STORE_KEY}_${key}`, JSON.stringify(value));
-    localStorage.setItem(`SEEDED_${key}`, "true");
+    // Mark that admin has explicitly saved data for this key
+    localStorage.setItem(`HAS_DATA_${key}`, "true");
     window.dispatchEvent(new Event("travel-store-update"));
     window.dispatchEvent(new CustomEvent("travel-store-key-update", { detail: { key, value } }));
   } catch (err: any) {
@@ -483,7 +487,7 @@ export function setStoredData<T>(key: string, value: T): void {
     window.dispatchEvent(new CustomEvent("travel-store-key-update", { detail: { key, value } }));
   }
 
-  // Fast background sync with Supabase cloud database (handles additions, edits, and deletions)
+  // Sync to Supabase cloud database (additions, edits, and deletions)
   syncWithSupabase(key, value);
 }
 
@@ -515,6 +519,10 @@ export async function fetchKeyFromCloud(key: string, force = false): Promise<any
       if (json.success && json.data !== null && json.data !== undefined) {
         try {
           localStorage.setItem(`${STORE_KEY}_${key}`, JSON.stringify(json.data));
+          // If cloud returned real data, mark as saved
+          if (Array.isArray(json.data) ? json.data.length > 0 : json.data !== null) {
+            localStorage.setItem(`HAS_DATA_${key}`, "true");
+          }
         } catch (e) {}
         window.dispatchEvent(new CustomEvent("travel-store-key-update", { detail: { key, value: json.data } }));
         return json.data;
@@ -532,32 +540,50 @@ export async function fetchKeyFromCloud(key: string, force = false): Promise<any
 }
 
 /**
- * Ultra high-performance React Hook to consume reactive store data with 0ms rendering and zero network flooding
+ * React Hook to consume reactive store data.
+ *
+ * Priority logic:
+ * 1. If admin has saved data before (HAS_DATA flag) → always use stored/cloud (even if [])
+ * 2. If never saved before → show defaults and seed Supabase on first visit
  */
 export function useStoreData<T>(key: string, defaultValue: T): [T, (val: T) => void] {
   const [data, setData] = useState<T>(() => {
-    const local = getStoredData(key, defaultValue);
-    if (Array.isArray(local) && local.length === 0 && Array.isArray(defaultValue) && defaultValue.length > 0) {
-      return defaultValue;
+    // On first render: if admin has previously saved, use stored value (even if [])
+    if (hasAdminSavedData(key)) {
+      return getStoredData(key, defaultValue);
     }
-    return (local !== null && local !== undefined) ? local : defaultValue;
+    // First-ever visit: show defaults
+    return defaultValue;
   });
 
   useEffect(() => {
     let isMounted = true;
 
     fetchKeyFromCloud(key).then((cloudData) => {
-      if (isMounted) {
-        if (cloudData !== null && cloudData !== undefined) {
-          if (Array.isArray(cloudData) && cloudData.length === 0 && Array.isArray(defaultValue) && defaultValue.length > 0) {
-            setData(defaultValue);
-            syncWithSupabase(key, defaultValue);
-            return;
-          }
-          setData(cloudData);
-        } else if (defaultValue) {
+      if (!isMounted) return;
+
+      if (cloudData !== null && cloudData !== undefined) {
+        const isEmptyArray = Array.isArray(cloudData) && cloudData.length === 0;
+
+        if (isEmptyArray && !hasAdminSavedData(key)) {
+          // Cloud empty + admin never saved → seed defaults once
+          localStorage.setItem(`HAS_DATA_${key}`, "true");
           setData(defaultValue);
           syncWithSupabase(key, defaultValue);
+        } else {
+          // Admin has data in cloud (or intentionally cleared) → trust cloud
+          if (!isEmptyArray) {
+            localStorage.setItem(`HAS_DATA_${key}`, "true");
+          }
+          setData(cloudData);
+        }
+      } else {
+        // Cloud returned null/error
+        if (!hasAdminSavedData(key)) {
+          // First visit - seed defaults
+          localStorage.setItem(`HAS_DATA_${key}`, "true");
+          syncWithSupabase(key, defaultValue);
+          // Keep showing defaultValue from initial state
         }
       }
     });
@@ -570,11 +596,13 @@ export function useStoreData<T>(key: string, defaultValue: T): [T, (val: T) => v
     };
 
     const handleStorageUpdate = () => {
-      const stored = getStoredData(key, defaultValue);
-      setData(stored);
+      if (hasAdminSavedData(key)) {
+        const stored = getStoredData(key, defaultValue);
+        setData(stored);
+      }
     };
 
-    // Non-blocking deferred background fetch after main thread render completes
+    // Non-blocking deferred background fetch
     const timer = setTimeout(() => {
       fetchKeyFromCloud(key);
     }, 100);
