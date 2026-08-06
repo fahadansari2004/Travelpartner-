@@ -12,6 +12,7 @@ export interface ServiceItem {
   image?: string;
   shortDesc: string;
   longDesc?: string;
+  description?: string;
   ctaText?: string;
   displayOrder?: number;
   active: boolean;

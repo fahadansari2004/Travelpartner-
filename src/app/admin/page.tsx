@@ -51,7 +51,7 @@ import { FileInputOrUrl, MultiFileInputOrUrl } from "@/components/ui/FileInputOr
 export default function AdminDashboardPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<
-    "dashboard" | "albums" | "media" | "testimonials" | "mainpage" | "footer" | "services" | "packages" | "flights" | "hotels" | "about" | "contact" | "enquiries" | "seo"
+    "dashboard" | "albums" | "media" | "testimonials" | "mainpage" | "whychoose" | "footer" | "services" | "packages" | "flights" | "hotels" | "about" | "contact" | "enquiries" | "seo"
   >("dashboard");
 
   // Authenticate session
