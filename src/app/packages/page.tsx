@@ -141,6 +141,8 @@ export default function PackagesPage() {
                   <img
                     src={pkg.image && pkg.image.trim() !== "" ? pkg.image : "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1200&q=80"}
                     alt={pkg.name || "Package"}
+                    loading="lazy"
+                    decoding="async"
                     onError={(e) => {
                       (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1200&q=80";
                     }}

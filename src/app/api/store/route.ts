@@ -28,6 +28,8 @@ const tableMap: Record<string, string> = {
   hotels: "hotels",
   services: "services",
 };
+const apiCache: Record<string, { timestamp: number; data: any }> = {};
+const CACHE_TTL_MS = 5000;
 
 export async function GET(req: Request) {
   try {
@@ -37,6 +39,15 @@ export async function GET(req: Request) {
 
     const tableName = tableMap[key];
     if (!tableName) return NextResponse.json({ success: false, error: "Invalid key", data: [] });
+
+    // Check fast in-memory cache (sub-millisecond response time)
+    const cached = apiCache[key];
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+      return NextResponse.json(
+        { success: true, data: cached.data },
+        { headers: { "Cache-Control": "public, max-age=5, stale-while-revalidate=30" } }
+      );
+    }
 
     const { data, error } = await supabase.from(tableName).select("*");
     if (error) return NextResponse.json({ success: false, error: error.message, data: [] });
@@ -106,9 +117,11 @@ export async function GET(req: Request) {
       };
     });
 
+    apiCache[key] = { timestamp: Date.now(), data: mappedData };
+
     return NextResponse.json(
       { success: true, data: mappedData },
-      { headers: { "Cache-Control": "no-store, max-age=0" } }
+      { headers: { "Cache-Control": "public, max-age=5, stale-while-revalidate=30" } }
     );
   } catch (err: any) {
     return NextResponse.json({ success: false, error: err.message, data: [] });
@@ -119,6 +132,8 @@ export async function POST(req: Request) {
   try {
     const { key, value } = await req.json();
     if (!key || !value || !supabase) return NextResponse.json({ success: false, message: "Missing params or Supabase client" });
+
+    delete apiCache[key];
 
     const tableName = tableMap[key];
     if (!tableName) return NextResponse.json({ success: false, message: "Invalid key" });
@@ -308,6 +323,8 @@ export async function DELETE(req: Request) {
   try {
     const { key, id } = await req.json();
     if (!key || !id || !supabase) return NextResponse.json({ success: false, message: "Missing key or ID" });
+
+    delete apiCache[key];
 
     const tableName = tableMap[key];
     if (!tableName) return NextResponse.json({ success: false, message: "Invalid key" });

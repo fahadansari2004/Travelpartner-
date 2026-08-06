@@ -90,6 +90,8 @@ export default function RootLayout({
             }),
           }}
         />
+        <link rel="preconnect" href="https://ciixxtmneichewgjujbe.supabase.co" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://images.unsplash.com" />
       </head>
       <body
         className="font-sans bg-slate-950 text-slate-100 antialiased selection:bg-amber-500/30 selection:text-amber-200 overflow-x-hidden"
