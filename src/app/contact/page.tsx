@@ -19,7 +19,7 @@ export default function ContactPage() {
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const newEnquiry: EnquiryItem = {
       id: `enq-${Date.now()}`,
@@ -29,12 +29,24 @@ export default function ContactPage() {
       type,
       subject,
       message,
-      date: new Date().toISOString().replace("T", " ").substring(0, 16),
+      date: new Date().toISOString(),
       status: "New",
     };
 
-    setEnquiries([newEnquiry, ...enquiries]);
+    const updated = [newEnquiry, ...(enquiries || [])];
+    setEnquiries(updated);
     setSubmitted(true);
+
+    // Direct HTTP post to Supabase PostgreSQL
+    try {
+      await fetch("/api/store", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: "enquiries", value: updated }),
+      });
+    } catch (err) {
+      console.warn("Direct contact post notice:", err);
+    }
   };
 
   return (

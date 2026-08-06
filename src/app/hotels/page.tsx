@@ -29,7 +29,7 @@ export default function HotelsPage() {
     return selectedLocation === "all" || locStr.includes(selectedLocation.toLowerCase());
   });
 
-  const handleHotelSubmit = (e: React.FormEvent) => {
+  const handleHotelSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!activeHotelModal) return;
 
@@ -42,7 +42,7 @@ export default function HotelsPage() {
       type: "Hotel",
       subject: `Hotel Booking: ${activeHotelModal.name}`,
       message: `Hotel: ${activeHotelModal.name} (${activeHotelModal.location})\nCheck-in Date: ${checkInDate}\nPreferred Check-in Time: ${checkInTime}\nGuests Count: ${guestsCount}\nPrice per night: ${activeHotelModal.currency}${activeHotelModal.pricePerNight}`,
-      date: new Date().toISOString().replace("T", " ").slice(0, 16),
+      date: new Date().toISOString(),
       status: "New",
       preferredTime: checkInTime,
       travelDate: checkInDate,
@@ -51,8 +51,20 @@ export default function HotelsPage() {
       totalAmount: activeHotelModal.pricePerNight * guestsCount,
     };
 
-    setEnquiries([newReq, ...enquiries]);
+    const updated = [newReq, ...(enquiries || [])];
+    setEnquiries(updated);
     setHotelSuccessRef(refId);
+
+    // Direct HTTP post to Supabase PostgreSQL
+    try {
+      await fetch("/api/store", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: "enquiries", value: updated }),
+      });
+    } catch (err) {
+      console.warn("Direct hotel booking post notice:", err);
+    }
   };
 
   return (

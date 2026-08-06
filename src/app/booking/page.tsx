@@ -51,7 +51,7 @@ function BookingContent() {
     );
   };
 
-  const handleConfirmBooking = () => {
+  const handleConfirmBooking = async () => {
     const bookingId = `ENQ-PKG-${Math.floor(100000 + Math.random() * 900000)}`;
     const newReq: EnquiryItem = {
       id: bookingId,
@@ -61,7 +61,7 @@ function BookingContent() {
       type: "Package",
       subject: `Package Booking: ${selectedDest.name}`,
       message: `Destination: ${selectedDest.name} (${selectedDest.country})\nTravel Date: ${startDate}\nPreferred Time: ${preferredTime}\nGuests: ${travelers}\nRoom Tier: ${roomType}\nAdd-ons: ${selectedAddons.join(", ") || "None"}\nNotes: ${specialRequests || "None"}`,
-      date: new Date().toISOString().replace("T", " ").slice(0, 16),
+      date: new Date().toISOString(),
       status: "New",
       preferredTime,
       travelDate: startDate,
@@ -71,8 +71,20 @@ function BookingContent() {
       additionalGuests: travelers > 1 ? `${travelers - 1} additional passenger(s)` : "Single Traveler",
     };
 
-    setEnquiries([newReq, ...enquiries]);
+    const updated = [newReq, ...(enquiries || [])];
+    setEnquiries(updated);
     setConfirmedBookingId(bookingId);
+
+    // Direct HTTP post to Supabase PostgreSQL
+    try {
+      await fetch("/api/store", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: "enquiries", value: updated }),
+      });
+    } catch (err) {
+      console.warn("Direct package booking post notice:", err);
+    }
     setStep(4);
   };
 

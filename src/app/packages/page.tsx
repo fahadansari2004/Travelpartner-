@@ -37,7 +37,7 @@ export default function PackagesPage() {
     return matchesSearch && matchesDest;
   });
 
-  const handlePackageBookingSubmit = (e: React.FormEvent) => {
+  const handlePackageBookingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!activePackageModal) return;
 
@@ -49,19 +49,31 @@ export default function PackagesPage() {
       phone: guestPhone || "Not Provided",
       type: "Package",
       subject: `Package Booking: ${activePackageModal.name}`,
-      message: `Destination: ${activePackageModal.destination}\nDuration: ${activePackageModal.duration}\nTravel Date: ${travelDate}\nPreferred Time Slot: ${timeSlot}\nGuests: ${guestsCount}\nSpecial Notes: ${specialNotes || "None"}`,
-      date: new Date().toISOString().replace("T", " ").slice(0, 16),
+      message: `Package: ${activePackageModal.name}\nDestination: ${activePackageModal.destination}\nDuration: ${activePackageModal.duration}\nTravel Date: ${travelDate || "Flexible"}\nPreferred Time Slot: ${timeSlot || "Standard"}\nGuests: ${guestsCount}\nSpecial Notes: ${specialNotes || "None"}`,
+      date: new Date().toISOString(),
       status: "New",
-      preferredTime: timeSlot,
-      travelDate: travelDate,
+      preferredTime: timeSlot || "Standard",
+      travelDate: travelDate || "Flexible",
       guestsCount: guestsCount,
       packageOrItemName: activePackageModal.name,
       totalAmount: (activePackageModal.discountPrice || activePackageModal.price) * guestsCount,
       additionalGuests: guestsCount > 1 ? `${guestsCount - 1} guest(s)` : "Solo",
     };
 
-    setEnquiries([newReq, ...enquiries]);
+    const updated = [newReq, ...(enquiries || [])];
+    setEnquiries(updated);
     setBookingSuccessId(refId);
+
+    // Direct HTTP post to Supabase PostgreSQL
+    try {
+      await fetch("/api/store", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: "enquiries", value: updated }),
+      });
+    } catch (err) {
+      console.warn("Direct booking post notice:", err);
+    }
   };
 
   return (

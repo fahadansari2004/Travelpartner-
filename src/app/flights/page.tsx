@@ -41,7 +41,7 @@ export default function FlightsPage() {
     return matchesFrom && matchesTo && matchesClass;
   });
 
-  const handleFlightSubmit = (e: React.FormEvent) => {
+  const handleFlightSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!activeFlightModal) return;
 
@@ -54,7 +54,7 @@ export default function FlightsPage() {
       type: "Flight",
       subject: `Flight Booking: ${activeFlightModal.airlineName} (${activeFlightModal.fromCode} → ${activeFlightModal.toCode})`,
       message: `Airline: ${activeFlightModal.airlineName}\nRoute: ${activeFlightModal.fromCity} (${activeFlightModal.fromCode}) to ${activeFlightModal.toCity} (${activeFlightModal.toCode})\nClass: ${activeFlightModal.travelClass} (${activeFlightModal.tripType})\nTravel Date: ${flightDate || activeFlightModal.travelDate}\nPreferred Time Slot: ${flightTimeSlot}\nSeats: ${seatsRequested}`,
-      date: new Date().toISOString().replace("T", " ").slice(0, 16),
+      date: new Date().toISOString(),
       status: "New",
       preferredTime: flightTimeSlot,
       travelDate: flightDate || activeFlightModal.travelDate,
@@ -63,8 +63,20 @@ export default function FlightsPage() {
       totalAmount: activeFlightModal.farePrice * seatsRequested,
     };
 
-    setEnquiries([newReq, ...enquiries]);
+    const updated = [newReq, ...(enquiries || [])];
+    setEnquiries(updated);
     setFlightSuccessRef(refCode);
+
+    // Direct HTTP post to Supabase PostgreSQL
+    try {
+      await fetch("/api/store", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: "enquiries", value: updated }),
+      });
+    } catch (err) {
+      console.warn("Direct flight booking post notice:", err);
+    }
   };
 
   return (
