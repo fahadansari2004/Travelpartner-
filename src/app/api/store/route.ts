@@ -129,29 +129,21 @@ export async function POST(req: Request) {
           const clean: any = { ...item };
 
           if (tableName === "enquiries") {
-            clean.name = clean.name || clean.customerName || "Valued Client";
-            clean.email = clean.email || "guest@traveler.com";
-            clean.phone = clean.phone || "Not Provided";
-            clean.type = clean.type || "Flight";
-            clean.subject = clean.subject || clean.packageOrItemName || "Travel Booking";
-            clean.message = clean.message || clean.notes || "";
-            clean.travel_date = clean.travel_date || clean.travelDate || "";
-            clean.preferred_time = clean.preferred_time || clean.preferredTime || "";
-            clean.guests_count = Number(clean.guests_count || clean.guestsCount || clean.guests || 1);
-            clean.total_amount = Number(clean.total_amount || clean.totalAmount || 0);
-            clean.status = clean.status || "New";
-            clean.created_at = new Date().toISOString();
-
-            delete clean.customerName;
-            delete clean.packageOrItemName;
-            delete clean.packageName;
-            delete clean.guestsCount;
-            delete clean.guests;
-            delete clean.travelDate;
-            delete clean.preferredTime;
-            delete clean.totalAmount;
-            delete clean.date;
-            delete clean.notes;
+            return {
+              id: item.id || `enq-${Date.now()}`,
+              name: item.name || item.customerName || "Valued Client",
+              email: item.email || "guest@traveler.com",
+              phone: item.phone || "Not Provided",
+              type: item.type || "Package",
+              subject: item.subject || item.packageOrItemName || "Travel Booking",
+              message: item.message || item.notes || "",
+              travel_date: item.travel_date || item.travelDate || "",
+              preferred_time: item.preferred_time || item.preferredTime || "",
+              guests_count: Number(item.guests_count || item.guestsCount || item.guests || 1),
+              total_amount: Number(item.total_amount || item.totalAmount || 0),
+              status: item.status || "New",
+              created_at: item.created_at || new Date().toISOString(),
+            };
           }
 
           if (tableName === "packages") {
