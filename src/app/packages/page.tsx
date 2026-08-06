@@ -304,32 +304,58 @@ export default function PackagesPage() {
               </form>
             ) : (
               <>
-                <div className="space-y-4">
-                  <h4 className="text-sm font-bold uppercase tracking-wider text-amber-400">Day-by-Day Itinerary</h4>
-                  <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
-                    {(activePackageModal.itinerary || []).map((day) => (
-                      <div key={day.day} className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-1">
-                        <span className="text-xs font-bold text-amber-300">Day {day.day}: {day.title}</span>
-                        <p className="text-xs text-slate-300">{day.desc}</p>
-                      </div>
-                    ))}
-                  </div>
+                {(() => {
+                  const defaultIncluded = [
+                    "5-Star Luxury Resort Accommodation",
+                    "Daily Gourmet Breakfast & Dinner",
+                    "Private Limousine & Airport Transfers",
+                    "Guided Sightseeing Expeditions",
+                    "24/7 VIP Concierge Support"
+                  ];
+                  const defaultExcluded = [
+                    "International Airfare (Available upon request)",
+                    "Personal Shopping & Extra Expenses",
+                    "Travel Insurance & Visa Fees"
+                  ];
+                  const defaultItinerary = [
+                    { day: 1, title: "VIP Arrival & Luxury Resort Check-in", desc: "Private transfer to resort with welcome champagne reception." },
+                    { day: 2, title: "Guided Excursion & Sightseeing Tour", desc: "Full-day bespoke guided tour with private expert guide." },
+                    { day: 3, title: "Leisure & Fine Dining Experience", desc: "Relax at world-class spa facilities and private gourmet dining." }
+                  ];
 
-                  <div className="grid grid-cols-2 gap-4 pt-2">
-                    <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-                      <span className="text-xs font-bold text-emerald-400 uppercase">What&apos;s Included</span>
-                      <ul className="mt-2 space-y-1 text-xs text-slate-300">
-                        {(activePackageModal.included || []).map((inc, i) => <li key={i}>✓ {inc}</li>)}
-                      </ul>
+                  const incList = (activePackageModal.included && activePackageModal.included.length > 0) ? activePackageModal.included : defaultIncluded;
+                  const excList = (activePackageModal.excluded && activePackageModal.excluded.length > 0) ? activePackageModal.excluded : defaultExcluded;
+                  const itinList = (activePackageModal.itinerary && activePackageModal.itinerary.length > 0) ? activePackageModal.itinerary : defaultItinerary;
+
+                  return (
+                    <div className="space-y-4">
+                      <h4 className="text-sm font-bold uppercase tracking-wider text-amber-400">Day-by-Day Itinerary</h4>
+                      <div className="space-y-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                        {itinList.map((day) => (
+                          <div key={day.day} className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-1">
+                            <span className="text-xs font-bold text-amber-300">Day {day.day}: {day.title}</span>
+                            <p className="text-xs text-slate-300">{day.desc}</p>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                        <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+                          <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">What&apos;s Included</span>
+                          <ul className="mt-2 space-y-1.5 text-xs text-slate-300">
+                            {incList.map((inc, i) => <li key={i} className="flex items-center gap-1.5"><span className="text-emerald-400 font-bold">✓</span> {inc}</li>)}
+                          </ul>
+                        </div>
+                        <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+                          <span className="text-xs font-bold text-red-400 uppercase tracking-wider">What&apos;s Excluded</span>
+                          <ul className="mt-2 space-y-1.5 text-xs text-slate-300">
+                            {excList.map((exc, i) => <li key={i} className="flex items-center gap-1.5"><span className="text-red-400 font-bold">✕</span> {exc}</li>)}
+                          </ul>
+                        </div>
+                      </div>
                     </div>
-                    <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-                      <span className="text-xs font-bold text-red-400 uppercase">What&apos;s Excluded</span>
-                      <ul className="mt-2 space-y-1 text-xs text-slate-300">
-                        {(activePackageModal.excluded || []).map((exc, i) => <li key={i}>✕ {exc}</li>)}
-                      </ul>
-                    </div>
-                  </div>
-                </div>
+                  );
+                })()}
 
                 <div className="flex items-center justify-between pt-4 border-t border-white/10">
                   <div>

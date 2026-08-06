@@ -493,8 +493,15 @@ export function CinematicStorytelling() {
                 className="glass-card rounded-3xl overflow-hidden border border-white/15 bg-slate-900/70 space-y-4 flex flex-col justify-between p-5"
               >
                 <div className="space-y-3">
-                  <div className="relative aspect-video rounded-2xl overflow-hidden">
-                    <img src={pkg.image} alt={pkg.name} className="w-full h-full object-cover" />
+                  <div className="relative aspect-video rounded-2xl overflow-hidden bg-slate-950">
+                    <img 
+                      src={pkg.image || "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1200&q=80"} 
+                      alt="" 
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1200&q=80";
+                      }}
+                      className="w-full h-full object-cover" 
+                    />
                     <span className="absolute top-3 right-3 px-3 py-1 rounded-full bg-amber-500 text-slate-950 font-bold text-xs">
                       ${pkg.discountPrice || pkg.price}
                     </span>
