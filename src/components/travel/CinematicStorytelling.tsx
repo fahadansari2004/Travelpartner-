@@ -89,14 +89,15 @@ const SECTIONS: SectionItem[] = [
 /**
  * Scroll-Driven Smooth Parallax Background Animation Component
  */
-function AnimatedParallaxBackground({ mediaSrc }: { mediaSrc: string }) {
-  const [mediaUrl, setMediaUrl] = useState(mediaSrc);
+function AnimatedParallaxBackground({ mediaSrc, imageSrc }: { mediaSrc?: string; imageSrc?: string }) {
+  const initialSrc = mediaSrc || imageSrc || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=2000&q=85";
+  const [mediaUrl, setMediaUrl] = useState(initialSrc);
   const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
-    setMediaUrl(mediaSrc);
+    setMediaUrl(initialSrc);
     setHasError(false);
-  }, [mediaSrc]);
+  }, [initialSrc]);
 
   const isVideo = typeof mediaUrl === "string" && (
     mediaUrl.endsWith(".mp4") || 
