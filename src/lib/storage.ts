@@ -475,6 +475,7 @@ export function setStoredData<T>(key: string, value: T): void {
   lastMutationTimestamps[key] = Date.now();
   try {
     localStorage.setItem(`${STORE_KEY}_${key}`, JSON.stringify(value));
+    localStorage.setItem(`SEEDED_${key}`, "true");
     window.dispatchEvent(new Event("travel-store-update"));
     window.dispatchEvent(new CustomEvent("travel-store-key-update", { detail: { key, value } }));
   } catch (err: any) {
@@ -482,7 +483,7 @@ export function setStoredData<T>(key: string, value: T): void {
     window.dispatchEvent(new CustomEvent("travel-store-key-update", { detail: { key, value } }));
   }
 
-  // Fast background sync with Supabase cloud database
+  // Fast background sync with Supabase cloud database (handles additions, edits, and deletions)
   syncWithSupabase(key, value);
 }
 
@@ -536,10 +537,7 @@ export async function fetchKeyFromCloud(key: string, force = false): Promise<any
 export function useStoreData<T>(key: string, defaultValue: T): [T, (val: T) => void] {
   const [data, setData] = useState<T>(() => {
     const local = getStoredData(key, defaultValue);
-    if (Array.isArray(local) && local.length === 0 && Array.isArray(defaultValue) && defaultValue.length > 0) {
-      return defaultValue;
-    }
-    return local || defaultValue;
+    return local !== null && local !== undefined ? local : defaultValue;
   });
 
   useEffect(() => {
@@ -549,14 +547,20 @@ export function useStoreData<T>(key: string, defaultValue: T): [T, (val: T) => v
       if (isMounted) {
         if (cloudData !== null && cloudData !== undefined) {
           if (Array.isArray(cloudData) && cloudData.length === 0 && Array.isArray(defaultValue) && defaultValue.length > 0) {
-            // Seed defaults to Supabase if database table is currently empty
-            syncWithSupabase(key, defaultValue);
-            return;
+            const hasBeenSeeded = localStorage.getItem(`SEEDED_${key}`);
+            if (!hasBeenSeeded) {
+              localStorage.setItem(`SEEDED_${key}`, "true");
+              syncWithSupabase(key, defaultValue);
+              return;
+            }
           }
           setData(cloudData);
         } else if (defaultValue) {
-          // Seed defaults to Supabase
-          syncWithSupabase(key, defaultValue);
+          const hasBeenSeeded = localStorage.getItem(`SEEDED_${key}`);
+          if (!hasBeenSeeded) {
+            localStorage.setItem(`SEEDED_${key}`, "true");
+            syncWithSupabase(key, defaultValue);
+          }
         }
       }
     });
