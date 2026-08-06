@@ -94,6 +94,8 @@ export async function GET(req: Request) {
           } catch (e) {}
         }
 
+        let serviceDesc = item.short_desc || item.long_desc || item.shortDesc || item.longDesc || cleanDesc || "";
+
         return {
           ...item,
           name: item.name || item.customer_name || item.customerName || "Valued Client",
@@ -111,12 +113,12 @@ export async function GET(req: Request) {
           createdAt: item.created_at || item.createdAt || item.date || new Date().toISOString().slice(0, 10),
           date: item.created_at || item.createdAt || item.date || new Date().toISOString().slice(0, 10),
           coverImage: item.image || item.cover_image || item.coverImage,
-          shortDesc: cleanDesc,
-          description: cleanDesc,
+          shortDesc: serviceDesc,
+          description: serviceDesc,
+          longDesc: item.long_desc || serviceDesc,
           included: parsedIncluded.length > 0 ? parsedIncluded : item.included,
           excluded: parsedExcluded.length > 0 ? parsedExcluded : item.excluded,
           itinerary: parsedItinerary.length > 0 ? parsedItinerary : item.itinerary,
-          longDesc: cleanDesc,
           discountPrice: item.discount_price ?? item.discountPrice ?? item.price,
           uploadDate: item.upload_date || item.uploadDate,
           reviewsCount: item.reviews_count ?? item.reviewsCount ?? 10,
@@ -305,12 +307,13 @@ export async function POST(req: Request) {
           }
 
           if (tableName === "services") {
-            clean.name = clean.name || "Bespoke Service";
-            clean.short_desc = clean.short_desc || clean.shortDesc || "VIP Concierge Service.";
-            clean.long_desc = clean.long_desc || clean.longDesc || "VIP Concierge Service.";
-            clean.icon_name = clean.icon_name || clean.iconName || "Compass";
-            clean.cta_text = clean.cta_text || clean.ctaText || "Learn More";
-            clean.display_order = Number(clean.display_order ?? clean.displayOrder ?? 1);
+            const descVal = clean.shortDesc || clean.description || clean.short_desc || clean.longDesc || clean.long_desc || "VIP Concierge Service.";
+            clean.name = clean.name || clean.title || "Bespoke Service";
+            clean.short_desc = descVal;
+            clean.long_desc = clean.longDesc || clean.long_desc || descVal;
+            clean.icon_name = clean.iconName || clean.icon_name || "Compass";
+            clean.cta_text = clean.ctaText || clean.cta_text || "Learn More";
+            clean.display_order = Number(clean.displayOrder ?? clean.display_order ?? 1);
             clean.active = clean.active !== undefined ? Boolean(clean.active) : true;
 
             delete clean.iconName;

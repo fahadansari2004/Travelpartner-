@@ -1916,8 +1916,8 @@ export default function AdminDashboardPage() {
                 <label className="block uppercase text-slate-300 font-semibold mb-1">Description *</label>
                 <textarea
                   rows={3}
-                  value={editingService.shortDesc || ""}
-                  onChange={(e) => setEditingService({ ...editingService, shortDesc: e.target.value })}
+                  value={editingService.shortDesc || editingService.description || editingService.longDesc || ""}
+                  onChange={(e) => setEditingService({ ...editingService, shortDesc: e.target.value, longDesc: e.target.value, description: e.target.value })}
                   placeholder="Short service description..."
                   className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white resize-none"
                 />
@@ -1933,15 +1933,28 @@ export default function AdminDashboardPage() {
             <div className="flex justify-end gap-3 pt-2">
               <Button variant="ghost" size="sm" onClick={() => setEditingService(null)}>Cancel</Button>
               <Button variant="amber" size="sm" onClick={() => {
+                const descText = editingService.shortDesc || editingService.description || editingService.longDesc || "Custom travel concierge service.";
+                const titleText = editingService.title || editingService.name || "New Service";
+                
                 if (editingService.id) {
-                  setServices(services.map(s => s.id === editingService.id ? (editingService as ServiceItem) : s));
+                  const updatedSrv: ServiceItem = {
+                    ...(editingService as ServiceItem),
+                    name: titleText,
+                    title: titleText,
+                    shortDesc: descText,
+                    longDesc: editingService.longDesc || descText,
+                    description: descText,
+                  };
+                  setServices(services.map(s => s.id === editingService.id ? updatedSrv : s));
                 } else {
                   const newSrv: ServiceItem = {
                     id: `srv-${Date.now()}`,
-                    title: editingService.title || editingService.name || "New Service",
-                    name: editingService.title || editingService.name || "New Service",
+                    title: titleText,
+                    name: titleText,
                     category: editingService.category || "Concierge",
-                    shortDesc: editingService.shortDesc || "Custom travel concierge service.",
+                    shortDesc: descText,
+                    longDesc: descText,
+                    description: descText,
                     image: editingService.image || "https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=800&q=80",
                     active: true,
                   };
