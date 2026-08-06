@@ -461,18 +461,57 @@ export function setStoredData<T>(key: string, value: T): void {
   syncWithSupabase(key, value);
 }
 
+const activeKeyFetches = new Map<string, Promise<any>>();
+const lastKeyFetchTime: Record<string, number> = {};
+
+export async function fetchKeyFromCloud(key: string, force = false): Promise<any> {
+  if (typeof window === "undefined") return null;
+
+  const now = Date.now();
+  const lastFetch = lastKeyFetchTime[key] || 0;
+  const lastMut = lastMutationTimestamps[key] || 0;
+
+  // Don't refetch if mutated or fetched within last 8 seconds unless forced
+  if (!force && (now - lastFetch < 8000 || now - lastMut < 5000)) {
+    return getStoredData(key, null);
+  }
+
+  // Deduplicate inflight HTTP requests for the same key
+  if (activeKeyFetches.has(key)) {
+    return activeKeyFetches.get(key);
+  }
+
+  const promise = (async () => {
+    try {
+      lastKeyFetchTime[key] = Date.now();
+      const res = await fetch(`/api/store?key=${key}`);
+      const json = await res.json();
+      if (json.success && json.data !== null && json.data !== undefined) {
+        try {
+          localStorage.setItem(`${STORE_KEY}_${key}`, JSON.stringify(json.data));
+        } catch (e) {}
+        window.dispatchEvent(new CustomEvent("travel-store-key-update", { detail: { key, value: json.data } }));
+        return json.data;
+      }
+    } catch (err) {
+      // fallback
+    } finally {
+      activeKeyFetches.delete(key);
+    }
+    return null;
+  })();
+
+  activeKeyFetches.set(key, promise);
+  return promise;
+}
+
 /**
- * High-performance React Hook to consume reactive store data with instant local mutations & cloud revalidation
+ * Ultra high-performance React Hook to consume reactive store data with 0ms rendering and zero network flooding
  */
 export function useStoreData<T>(key: string, defaultValue: T): [T, (val: T) => void] {
   const [data, setData] = useState<T>(() => getStoredData(key, defaultValue));
 
   useEffect(() => {
-    const handleUpdate = () => {
-      const stored = getStoredData(key, defaultValue);
-      setData(stored);
-    };
-
     const handleKeyUpdate = (e: Event) => {
       const customEvent = e as CustomEvent;
       if (customEvent.detail && customEvent.detail.key === key) {
@@ -480,47 +519,24 @@ export function useStoreData<T>(key: string, defaultValue: T): [T, (val: T) => v
       }
     };
 
-    let isInitialFetch = true;
-
-    const fetchFromSupabase = async () => {
-      // Don't overwrite local mutations during background polling if mutated within last 3 seconds
-      if (!isInitialFetch) {
-        const lastMut = lastMutationTimestamps[key] || 0;
-        if (Date.now() - lastMut < 3000) return;
-      }
-      isInitialFetch = false;
-
-      try {
-        const res = await fetch(`/api/store?key=${key}`);
-        const json = await res.json();
-        if (json.success && json.data !== null && json.data !== undefined) {
-          try {
-            localStorage.setItem(`${STORE_KEY}_${key}`, JSON.stringify(json.data));
-          } catch (e) {}
-          setData(json.data as any);
-          return;
-        }
-      } catch (err) {
-        // fallback
-      }
+    const handleStorageUpdate = () => {
+      const stored = getStoredData(key, defaultValue);
+      setData(stored);
     };
 
-    fetchFromSupabase();
-    const intervalId = setInterval(fetchFromSupabase, 3000);
+    // Deduplicated, non-blocking background fetch
+    fetchKeyFromCloud(key);
 
-    window.addEventListener("storage", handleUpdate);
-    window.addEventListener("travel-store-update", handleUpdate);
+    window.addEventListener("storage", handleStorageUpdate);
+    window.addEventListener("travel-store-update", handleStorageUpdate);
     window.addEventListener("travel-store-key-update", handleKeyUpdate);
-    window.addEventListener("focus", fetchFromSupabase);
 
     return () => {
-      clearInterval(intervalId);
-      window.removeEventListener("storage", handleUpdate);
-      window.removeEventListener("travel-store-update", handleUpdate);
+      window.removeEventListener("storage", handleStorageUpdate);
+      window.removeEventListener("travel-store-update", handleStorageUpdate);
       window.removeEventListener("travel-store-key-update", handleKeyUpdate);
-      window.removeEventListener("focus", fetchFromSupabase);
     };
-  }, [key, defaultValue]);
+  }, [key]);
 
   const updateData = (newValue: T) => {
     setData(newValue);
