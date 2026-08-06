@@ -480,10 +480,15 @@ export function useStoreData<T>(key: string, defaultValue: T): [T, (val: T) => v
       }
     };
 
+    let isInitialFetch = true;
+
     const fetchFromSupabase = async () => {
-      // Don't overwrite local mutations if mutated within last 8 seconds
-      const lastMut = lastMutationTimestamps[key] || 0;
-      if (Date.now() - lastMut < 8000) return;
+      // Don't overwrite local mutations during background polling if mutated within last 8 seconds
+      if (!isInitialFetch) {
+        const lastMut = lastMutationTimestamps[key] || 0;
+        if (Date.now() - lastMut < 8000) return;
+      }
+      isInitialFetch = false;
 
       try {
         const res = await fetch(`/api/store?key=${key}`);
