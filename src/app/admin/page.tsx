@@ -171,6 +171,7 @@ export default function AdminDashboardPage() {
     { id: "media", label: "Media Library", icon: ImageIcon, count: mediaLibrary.length },
     { id: "testimonials", label: "Reviews", icon: Star, count: testimonials.filter(t => t.status === "Pending").length },
     { id: "mainpage", label: "Main Page", icon: Edit },
+    { id: "contact", label: "Contact Info", icon: Phone },
     { id: "footer", label: "Footer", icon: LinkIcon },
     { id: "packages", label: "Packages", icon: Sparkles, count: packages.length },
     { id: "flights", label: "Flights", icon: Plane, count: flights.length },
@@ -445,6 +446,9 @@ export default function AdminDashboardPage() {
                 </Button>
                 <Button variant="secondary" size="sm" leftIcon={<Edit size={14} />} onClick={() => setActiveTab("mainpage")}>
                   Edit Main Page
+                </Button>
+                <Button variant="secondary" size="sm" leftIcon={<Phone size={14} />} onClick={() => setActiveTab("contact")}>
+                  Edit Contact Info
                 </Button>
               </div>
             </div>
@@ -750,6 +754,101 @@ export default function AdminDashboardPage() {
               </div>
 
               <Button variant="amber" size="md" type="submit">Save Footer Settings</Button>
+            </form>
+          </div>
+        )}
+
+        {/* ── MODULE: CONTACT PAGE EDITOR ─────────────────────────────────── */}
+        {activeTab === "contact" && (
+          <div className="glass-card max-w-4xl p-8 rounded-3xl border border-white/10 space-y-6">
+            <div>
+              <h3 className="text-xl font-bold font-[family-name:var(--font-playfair)]">Contact Info & Concierge Desk Settings</h3>
+              <p className="text-xs text-slate-400 mt-1">Manage global concierge office details, phone numbers, email address, opening hours, and WhatsApp contact number.</p>
+            </div>
+
+            <form 
+              onSubmit={(e) => { 
+                e.preventDefault(); 
+                setContact({ ...contact }); 
+                setStoredData("contact", contact); 
+                alert("Contact details successfully updated & synced live across the site!"); 
+              }} 
+              className="space-y-6 text-xs"
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block uppercase text-slate-300 font-semibold mb-1">Concierge Email Address *</label>
+                  <input 
+                    type="email" 
+                    required
+                    value={contact.email || ""} 
+                    onChange={(e) => setContact({ ...contact, email: e.target.value })} 
+                    placeholder="info@travelpartner.com"
+                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-amber-400" 
+                  />
+                </div>
+                <div>
+                  <label className="block uppercase text-slate-300 font-semibold mb-1">VIP Concierge Phone / Hotline *</label>
+                  <input 
+                    type="text" 
+                    required
+                    value={contact.phone || ""} 
+                    onChange={(e) => setContact({ ...contact, phone: e.target.value })} 
+                    placeholder="+1 (800) 555-TRAVEL"
+                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-amber-400" 
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block uppercase text-slate-300 font-semibold mb-1">WhatsApp Support Number *</label>
+                  <input 
+                    type="text" 
+                    required
+                    value={contact.whatsappNumber || "7356044637"} 
+                    onChange={(e) => setContact({ ...contact, whatsappNumber: e.target.value })} 
+                    placeholder="7356044637"
+                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-amber-400" 
+                  />
+                </div>
+                <div>
+                  <label className="block uppercase text-slate-300 font-semibold mb-1">Desk Opening Hours</label>
+                  <input 
+                    type="text" 
+                    value={contact.openingHours || ""} 
+                    onChange={(e) => setContact({ ...contact, openingHours: e.target.value })} 
+                    placeholder="Mon - Sat: 9:00 AM - 8:00 PM EST"
+                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-amber-400" 
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block uppercase text-slate-300 font-semibold mb-1">Headquarters Office Address</label>
+                <textarea 
+                  rows={2} 
+                  value={contact.address || ""} 
+                  onChange={(e) => setContact({ ...contact, address: e.target.value })} 
+                  placeholder="123 Explorer Way, San Francisco, CA 94105"
+                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-amber-400" 
+                />
+              </div>
+
+              <div>
+                <label className="block uppercase text-slate-300 font-semibold mb-1">Google Maps Embed URL</label>
+                <input 
+                  type="text" 
+                  value={contact.mapEmbedUrl || ""} 
+                  onChange={(e) => setContact({ ...contact, mapEmbedUrl: e.target.value })} 
+                  placeholder="https://maps.google.com"
+                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-amber-400" 
+                />
+              </div>
+
+              <Button variant="amber" size="md" type="submit">
+                Save Contact Info Changes
+              </Button>
             </form>
           </div>
         )}
