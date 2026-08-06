@@ -5,8 +5,8 @@ import { MessageCircle, X } from "lucide-react";
 
 export function WhatsAppButton() {
   const [isOpen, setIsOpen] = useState(false);
-  const phoneNumber = "7356044637";
-  const formattedPhone = "+91 7356044637";
+  const phoneNumber = "9645185581";
+  const formattedPhone = "+91 9645185581";
   const whatsappUrl = `https://wa.me/91${phoneNumber}?text=${encodeURIComponent(
     "Hello travelPartner! I would like to enquire about travel packages and flight bookings."
   )}`;
@@ -65,7 +65,7 @@ export function WhatsAppButton() {
           target="_blank"
           rel="noopener noreferrer"
           className="relative flex items-center justify-center w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all duration-300 hover:scale-110 active:scale-95 group border border-emerald-400/50"
-          aria-label="Chat on WhatsApp 7356044637"
+          aria-label="Chat on WhatsApp 9645185581"
         >
           {/* Animated pulse ring */}
           <span className="absolute -inset-1 rounded-full bg-emerald-500/40 animate-ping pointer-events-none opacity-75" />

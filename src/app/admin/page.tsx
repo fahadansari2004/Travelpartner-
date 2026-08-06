@@ -806,9 +806,9 @@ export default function AdminDashboardPage() {
                   <input 
                     type="text" 
                     required
-                    value={contact.whatsappNumber || "7356044637"} 
+                    value={contact.whatsappNumber || "9645185581"} 
                     onChange={(e) => setContact({ ...contact, whatsappNumber: e.target.value })} 
-                    placeholder="7356044637"
+                    placeholder="9645185581"
                     className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-amber-400" 
                   />
                 </div>

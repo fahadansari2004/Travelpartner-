@@ -203,7 +203,7 @@ export default function ContactPage() {
             <div className="space-y-4 pt-2">
               {/* Phone Direct */}
               <a
-                href={`tel:${contactInfo.phone || "7356044637"}`}
+                href={`tel:${contactInfo.phone || "9645185581"}`}
                 className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all group active:scale-[0.99]"
               >
                 <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
@@ -212,14 +212,14 @@ export default function ContactPage() {
                 <div>
                   <span className="text-[10px] text-slate-400 uppercase font-semibold tracking-wider block">Call Direct Hotline</span>
                   <span className="text-lg sm:text-xl font-bold text-amber-400 group-hover:underline">
-                    {contactInfo.phone || "7356044637"}
+                    {contactInfo.phone || "9645185581"}
                   </span>
                 </div>
               </a>
 
               {/* WhatsApp Direct */}
               <a
-                href={`https://wa.me/91${(contactInfo.whatsappNumber || "7356044637").replace(/\D/g, "")}?text=Hello!%20I%20would%20like%20to%20enquire%20about%20travel%20packages.`}
+                href={`https://wa.me/91${(contactInfo.whatsappNumber || "9645185581").replace(/\D/g, "")}?text=Hello!%20I%20would%20like%20to%20enquire%20about%20travel%20packages.`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-4 p-4 rounded-2xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 transition-all group active:scale-[0.99]"
@@ -230,7 +230,7 @@ export default function ContactPage() {
                 <div>
                   <span className="text-[10px] text-emerald-300 uppercase font-semibold tracking-wider block">Instant WhatsApp Chat</span>
                   <span className="text-base sm:text-lg font-bold text-emerald-400 group-hover:underline">
-                    +{contactInfo.whatsappNumber || "91 7356044637"}
+                    +{contactInfo.whatsappNumber || "91 9645185581"}
                   </span>
                 </div>
               </a>
