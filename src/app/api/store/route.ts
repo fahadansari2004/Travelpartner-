@@ -112,15 +112,17 @@ export async function GET(req: Request) {
           totalAmount: item.total_amount || item.totalAmount || 0,
           createdAt: item.created_at || item.createdAt || item.date || new Date().toISOString().slice(0, 10),
           date: item.created_at || item.createdAt || item.date || new Date().toISOString().slice(0, 10),
-          coverImage: item.image || item.cover_image || item.coverImage,
-          shortDesc: serviceDesc,
-          description: serviceDesc,
-          longDesc: item.long_desc || serviceDesc,
+          coverImage: item.cover_image || item.coverImage || item.image || "https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99",
+          shortDesc: item.short_desc || item.shortDesc || item.description || serviceDesc,
+          description: item.short_desc || item.shortDesc || item.description || serviceDesc,
+          longDesc: item.long_desc || item.longDesc || serviceDesc,
+          images: Array.isArray(item.images) ? item.images : (item.images ? JSON.parse(item.images) : []),
+          videos: Array.isArray(item.videos) ? item.videos : (item.videos ? JSON.parse(item.videos) : []),
           included: parsedIncluded.length > 0 ? parsedIncluded : item.included,
           excluded: parsedExcluded.length > 0 ? parsedExcluded : item.excluded,
           itinerary: parsedItinerary.length > 0 ? parsedItinerary : item.itinerary,
           discountPrice: item.discount_price ?? item.discountPrice ?? item.price,
-          uploadDate: item.upload_date || item.uploadDate,
+          uploadDate: item.upload_date || item.uploadDate || item.created_at,
           reviewsCount: item.reviews_count ?? item.reviewsCount ?? 10,
           mapLocation: item.map_location || item.mapLocation,
           videoUrl: item.video_url || item.videoUrl,
@@ -139,7 +141,7 @@ export async function GET(req: Request) {
           pricePerNight: item.price_per_night ?? item.pricePerNight,
           iconName: item.icon_name || item.iconName,
           ctaText: item.cta_text || item.ctaText,
-          displayOrder: item.display_order ?? item.displayOrder,
+          displayOrder: item.display_order ?? item.displayOrder ?? 1,
         };
       });
 
@@ -298,12 +300,45 @@ export async function POST(req: Request) {
             clean.price_per_night = Number(clean.price_per_night ?? clean.pricePerNight ?? 500);
             clean.currency = clean.currency || "$";
             clean.description = clean.description || "5-star luxury stay.";
-            clean.booking_link = clean.booking_link || clean.bookingLink || "#book-hotel";
             clean.featured = Boolean(clean.featured);
             clean.active = clean.active !== undefined ? Boolean(clean.active) : true;
 
             delete clean.pricePerNight;
             delete clean.bookingLink;
+          }
+
+          if (tableName === "albums") {
+            clean.name = clean.name || "Luxury Album";
+            clean.destination = clean.destination || clean.location || "Destination";
+            clean.country = clean.country || "Global";
+            clean.category = clean.category || "Destinations";
+            clean.cover_image = clean.cover_image || clean.coverImage || clean.image || "https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99";
+            clean.short_desc = clean.short_desc || clean.shortDesc || clean.description || "Luxury travel photo album.";
+            clean.long_desc = clean.long_desc || clean.longDesc || clean.shortDesc || "";
+            clean.travel_date = clean.travel_date || clean.travelDate || "2026";
+            clean.display_order = Number(clean.display_order ?? clean.displayOrder ?? 1);
+            clean.featured = Boolean(clean.featured);
+            clean.active = clean.active !== undefined ? Boolean(clean.active) : true;
+            clean.images = Array.isArray(clean.images) ? clean.images : [];
+            clean.videos = Array.isArray(clean.videos) ? clean.videos : [];
+
+            delete clean.coverImage;
+            delete clean.shortDesc;
+            delete clean.longDesc;
+            delete clean.travelDate;
+            delete clean.displayOrder;
+          }
+
+          if (tableName === "media_library") {
+            clean.name = clean.name || clean.title || "Media Asset";
+            clean.url = clean.url || clean.imageUrl || clean.src || "";
+            clean.type = clean.type || "image";
+            clean.category = clean.category || "Gallery";
+            clean.upload_date = clean.upload_date || clean.uploadDate || new Date().toISOString().split("T")[0];
+
+            delete clean.uploadDate;
+            delete clean.imageUrl;
+            delete clean.src;
           }
 
           if (tableName === "services") {

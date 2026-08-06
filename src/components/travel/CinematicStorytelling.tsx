@@ -25,6 +25,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Footer } from "@/components/layout/Footer";
 import { TestimonialsSection } from "@/components/travel/TestimonialsSection";
+import { GallerySection } from "@/components/travel/GallerySection";
 import { useStoreData, INITIAL_SERVICES, INITIAL_PACKAGES, INITIAL_WHY_CHOOSE, WhyChooseSettings } from "@/lib/storage";
 
 const ICON_MAP: Record<string, any> = {
@@ -544,7 +545,17 @@ export function CinematicStorytelling() {
         </div>
       </section>
 
-      {/* ── 6. TESTIMONIALS SECTION ────────────────────────────────────────── */}
+      {/* ── 6. PHOTO GALLERY & ALBUMS SECTION ──────────────────────────────── */}
+      <section 
+        id="gallery-section" 
+        className="relative w-full min-h-screen flex items-center justify-center px-4 sm:px-8 lg:px-16 py-16 overflow-hidden bg-slate-950/80"
+      >
+        <div className="relative z-10 w-full max-w-7xl">
+          <GallerySection />
+        </div>
+      </section>
+
+      {/* ── 7. TESTIMONIALS SECTION ────────────────────────────────────────── */}
       <section 
         id="testimonials-section" 
         className="relative w-full min-h-screen flex items-center justify-center px-4 sm:px-8 lg:px-16 py-16 overflow-hidden"
