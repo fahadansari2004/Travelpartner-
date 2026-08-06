@@ -134,7 +134,15 @@ export default function AdminDashboardPage() {
 
   const filteredEnquiries = (enquiries || []).filter((e) => {
     if (!e) return false;
-    const matchesFilter = enquiryFilter === "All" || e.type === enquiryFilter || (enquiryFilter === "Flight" && (e.type === "Flight" || (e.message && e.message.toLowerCase().includes("flight"))));
+    const typeStr = (e.type || "").toLowerCase();
+    const filterStr = enquiryFilter.toLowerCase();
+    const matchesFilter =
+      enquiryFilter === "All" ||
+      typeStr === filterStr ||
+      (filterStr === "flight" && (typeStr === "flight" || (e.subject && e.subject.toLowerCase().includes("flight")) || (e.message && e.message.toLowerCase().includes("flight")))) ||
+      (filterStr === "package" && (typeStr === "package" || (e.subject && e.subject.toLowerCase().includes("package")) || (e.message && e.message.toLowerCase().includes("package")))) ||
+      (filterStr === "hotel" && (typeStr === "hotel" || (e.subject && e.subject.toLowerCase().includes("hotel")) || (e.message && e.message.toLowerCase().includes("hotel"))));
+
     const q = enquirySearch.toLowerCase();
     const nameStr = (e.name || (e as any).customerName || "").toLowerCase();
     const emailStr = (e.email || "").toLowerCase();
