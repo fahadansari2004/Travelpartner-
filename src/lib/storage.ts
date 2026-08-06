@@ -483,17 +483,17 @@ export function useStoreData<T>(key: string, defaultValue: T): [T, (val: T) => v
     let isInitialFetch = true;
 
     const fetchFromSupabase = async () => {
-      // Don't overwrite local mutations during background polling if mutated within last 8 seconds
+      // Don't overwrite local mutations during background polling if mutated within last 3 seconds
       if (!isInitialFetch) {
         const lastMut = lastMutationTimestamps[key] || 0;
-        if (Date.now() - lastMut < 8000) return;
+        if (Date.now() - lastMut < 3000) return;
       }
       isInitialFetch = false;
 
       try {
         const res = await fetch(`/api/store?key=${key}`);
         const json = await res.json();
-        if (json.success && Array.isArray(json.data)) {
+        if (json.success && json.data !== null && json.data !== undefined) {
           try {
             localStorage.setItem(`${STORE_KEY}_${key}`, JSON.stringify(json.data));
           } catch (e) {}
@@ -506,17 +506,19 @@ export function useStoreData<T>(key: string, defaultValue: T): [T, (val: T) => v
     };
 
     fetchFromSupabase();
-    const intervalId = setInterval(fetchFromSupabase, 12000);
+    const intervalId = setInterval(fetchFromSupabase, 3000);
 
     window.addEventListener("storage", handleUpdate);
     window.addEventListener("travel-store-update", handleUpdate);
     window.addEventListener("travel-store-key-update", handleKeyUpdate);
+    window.addEventListener("focus", fetchFromSupabase);
 
     return () => {
       clearInterval(intervalId);
       window.removeEventListener("storage", handleUpdate);
       window.removeEventListener("travel-store-update", handleUpdate);
       window.removeEventListener("travel-store-key-update", handleKeyUpdate);
+      window.removeEventListener("focus", fetchFromSupabase);
     };
   }, [key, defaultValue]);
 
