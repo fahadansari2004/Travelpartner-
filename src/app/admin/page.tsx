@@ -27,6 +27,8 @@ import {
   INITIAL_ALBUMS,
   INITIAL_MEDIA_LIBRARY,
   INITIAL_TESTIMONIALS,
+  INITIAL_WHY_CHOOSE,
+  WhyChooseSettings,
   ServiceItem,
   PackageItem,
   FlightFare,
@@ -76,6 +78,7 @@ export default function AdminDashboardPage() {
   const [seo, setSeo] = useStoreData<SeoSettings>("seo", INITIAL_SEO);
   const [footer, setFooter] = useStoreData<FooterSettings>("footerSettings", INITIAL_FOOTER);
   const [mainPage, setMainPage] = useStoreData<MainPageSettings>("mainPageSettings", INITIAL_MAIN_PAGE);
+  const [whyChoose, setWhyChoose] = useStoreData<WhyChooseSettings>("whyChoose", INITIAL_WHY_CHOOSE);
 
   // Search & Filter States
   const [enquirySearch, setEnquirySearch] = useState("");
@@ -171,6 +174,7 @@ export default function AdminDashboardPage() {
     { id: "media", label: "Media Library", icon: ImageIcon, count: mediaLibrary.length },
     { id: "testimonials", label: "Reviews", icon: Star, count: testimonials.filter(t => t.status === "Pending").length },
     { id: "mainpage", label: "Main Page", icon: Edit },
+    { id: "whychoose", label: "Why Choose Us", icon: ShieldCheck },
     { id: "contact", label: "Contact Info", icon: Phone },
     { id: "footer", label: "Footer", icon: LinkIcon },
     { id: "packages", label: "Packages", icon: Sparkles, count: packages.length },
@@ -710,6 +714,108 @@ export default function AdminDashboardPage() {
               </div>
 
               <Button variant="amber" size="md" type="submit">Save Main Page Changes</Button>
+            </form>
+          </div>
+        )}
+
+        {/* ── MODULE: WHY CHOOSE US EDITOR ─────────────────────────────────── */}
+        {activeTab === "whychoose" && (
+          <div className="glass-card max-w-4xl p-8 rounded-3xl border border-white/10 space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
+              <div>
+                <h3 className="text-xl font-bold font-[family-name:var(--font-playfair)]">Why Choose Us Section Management</h3>
+                <p className="text-xs text-slate-400 mt-1">Customize section headline and the 3 feature cards displayed on the home page.</p>
+              </div>
+              <Button
+                variant="amber"
+                size="sm"
+                leftIcon={<Plus size={14} />}
+                onClick={() => {
+                  const items = whyChoose?.items || INITIAL_WHY_CHOOSE.items;
+                  const newItem = { id: `wc-${Date.now()}`, title: "New Feature", desc: "Feature explanation..." };
+                  const updated = { ...whyChoose, items: [...items, newItem] };
+                  setWhyChoose(updated);
+                  setStoredData("whyChoose", updated);
+                }}
+              >
+                Add Feature Card
+              </Button>
+            </div>
+
+            <form 
+              onSubmit={(e) => { 
+                e.preventDefault(); 
+                setWhyChoose({ ...whyChoose }); 
+                setStoredData("whyChoose", whyChoose); 
+                alert("Why Choose Us section updated & published live!"); 
+              }} 
+              className="space-y-6 text-xs"
+            >
+              <div>
+                <label className="block uppercase text-slate-300 font-semibold mb-1">Section Main Headline</label>
+                <input 
+                  type="text" 
+                  value={whyChoose.sectionTitle || "Why Discerning Travelers Choose travelPartner"} 
+                  onChange={(e) => setWhyChoose({ ...whyChoose, sectionTitle: e.target.value })} 
+                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-amber-400" 
+                />
+              </div>
+
+              <div className="space-y-4">
+                <h4 className="text-sm font-bold text-amber-400 uppercase tracking-wider">Feature Cards List ({whyChoose.items?.length || 0})</h4>
+                
+                {(whyChoose.items || INITIAL_WHY_CHOOSE.items).map((item, idx) => (
+                  <div key={item.id || idx} className="p-5 rounded-2xl bg-white/5 border border-white/10 space-y-3 relative group">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-amber-400">Feature #{idx + 1}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updatedItems = whyChoose.items.filter((_, i) => i !== idx);
+                          const updated = { ...whyChoose, items: updatedItems };
+                          setWhyChoose(updated);
+                          setStoredData("whyChoose", updated);
+                        }}
+                        className="text-xs text-red-400 hover:underline"
+                      >
+                        Remove Feature
+                      </button>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="block text-slate-300 font-semibold">Title</label>
+                      <input
+                        type="text"
+                        value={item.title}
+                        onChange={(e) => {
+                          const newItems = [...whyChoose.items];
+                          newItems[idx] = { ...newItems[idx], title: e.target.value };
+                          setWhyChoose({ ...whyChoose, items: newItems });
+                        }}
+                        className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-white/10 text-white"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="block text-slate-300 font-semibold">Description</label>
+                      <textarea
+                        rows={2}
+                        value={item.desc}
+                        onChange={(e) => {
+                          const newItems = [...whyChoose.items];
+                          newItems[idx] = { ...newItems[idx], desc: e.target.value };
+                          setWhyChoose({ ...whyChoose, items: newItems });
+                        }}
+                        className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-white/10 text-white"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <Button variant="amber" size="md" type="submit">
+                Save Why Choose Us Changes
+              </Button>
             </form>
           </div>
         )}

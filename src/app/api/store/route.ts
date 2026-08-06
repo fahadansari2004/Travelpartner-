@@ -32,12 +32,13 @@ const tableMap: Record<string, string> = {
   about: "services",
   contact: "services",
   seo: "services",
+  whyChoose: "services",
 };
 
 const apiCache: Record<string, { timestamp: number; data: any }> = {};
 const CACHE_TTL_MS = 1000;
 
-const settingsKeys = ["mainPage", "footer", "about", "contact", "seo"];
+const settingsKeys = ["mainPage", "footer", "about", "contact", "seo", "whyChoose"];
 
 export async function GET(req: Request) {
   try {

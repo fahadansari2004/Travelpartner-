@@ -25,7 +25,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Footer } from "@/components/layout/Footer";
 import { TestimonialsSection } from "@/components/travel/TestimonialsSection";
-import { useStoreData, INITIAL_SERVICES, INITIAL_PACKAGES } from "@/lib/storage";
+import { useStoreData, INITIAL_SERVICES, INITIAL_PACKAGES, INITIAL_WHY_CHOOSE, WhyChooseSettings } from "@/lib/storage";
 
 const ICON_MAP: Record<string, any> = {
   Plane,
@@ -153,6 +153,7 @@ export function CinematicStorytelling() {
 
   const [services] = useStoreData("services", INITIAL_SERVICES);
   const [packages] = useStoreData("packages", INITIAL_PACKAGES);
+  const [whyChoose] = useStoreData<WhyChooseSettings>("whyChoose", INITIAL_WHY_CHOOSE);
   const [mainPage] = useStoreData<any>("mainPage", {
     heroHeadline: "Every Journey Begins With A Dream",
     heroSubtitle: "Handcrafted 5-star itineraries with private guides, luxury transfers, and exclusive VIP access.",
@@ -434,12 +435,9 @@ export function CinematicStorytelling() {
                   onClick={() => setActiveServiceModal(serv)}
                   className="snap-start shrink-0 w-[280px] sm:w-[360px] glass-card p-6 sm:p-8 rounded-3xl border border-white/15 bg-slate-900/60 hover:bg-slate-900/80 transition-all cursor-pointer group flex flex-col justify-between"
                 >
-                  <div className="space-y-4">
-                    <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 group-hover:scale-110 transition-transform">
-                      <Icon size={24} />
-                    </div>
+                  <div className="space-y-3">
                     <h3 className="text-xl font-bold font-[family-name:var(--font-playfair)]">{serv.name}</h3>
-                    <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">{serv.shortDesc}</p>
+                    <p className="text-xs sm:text-sm text-slate-300 leading-relaxed line-clamp-3">{serv.shortDesc || serv.longDesc || serv.description}</p>
                   </div>
                   <div className="pt-6 flex items-center text-xs font-bold text-amber-400 group-hover:translate-x-1 transition-transform">
                     <span>{serv.ctaText || "Learn More"}</span>
@@ -468,17 +466,13 @@ export function CinematicStorytelling() {
         >
           <div className="text-center space-y-2">
             <h2 className="text-3xl sm:text-4xl font-bold font-[family-name:var(--font-playfair)]">
-              Why Discerning Travelers Choose <span className="gradient-text">travelPartner</span>
+              {whyChoose?.sectionTitle || "Why Discerning Travelers Choose travelPartner"}
             </h2>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            {[
-              { title: "24/7 Dedicated Butler", desc: "A personal concierge assigned to your trip from takeoff to landing." },
-              { title: "Direct Tarmac Transfers", desc: "Private VIP jet handling and luxury sports car escorts." },
-              { title: "Unmatched Confidentiality", desc: "Discreet expedition management for high-profile explorers." },
-            ].map((item, idx) => (
-              <div key={idx} className="p-6 rounded-2xl bg-white/5 border border-white/10 space-y-3">
+            {(whyChoose?.items || INITIAL_WHY_CHOOSE.items).map((item, idx) => (
+              <div key={item.id || idx} className="p-6 rounded-2xl bg-white/5 border border-white/10 space-y-3">
                 <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold">
                   {idx + 1}
                 </div>
@@ -631,18 +625,20 @@ export function CinematicStorytelling() {
             >
               <div className="flex items-center justify-between border-b border-white/10 pb-4">
                 <h3 className="text-xl sm:text-2xl font-bold font-[family-name:var(--font-playfair)]">
-                  {activeServiceModal.name}
+                  {activeServiceModal.name || activeServiceModal.title || "Concierge Service"}
                 </h3>
                 <button onClick={() => setActiveServiceModal(null)} className="text-slate-400 hover:text-white p-2">✕</button>
               </div>
 
               <div className="space-y-4 text-xs sm:text-sm text-slate-300 leading-relaxed">
-                <p>{activeServiceModal.longDesc}</p>
+                <p>
+                  {activeServiceModal.longDesc || activeServiceModal.shortDesc || activeServiceModal.description || "Curated bespoke concierge service tailored to your exact travel requirements with 24/7 dedicated support."}
+                </p>
               </div>
 
               <Link href="/contact" onClick={() => setActiveServiceModal(null)}>
-                <Button variant="amber" size="lg" fullWidth className="min-h-[48px]">
-                  {activeServiceModal.ctaText}
+                <Button variant="amber" size="lg" fullWidth className="min-h-[48px] text-slate-950 font-bold">
+                  {activeServiceModal.ctaText || `Enquire About ${activeServiceModal.name || activeServiceModal.title || "Service"}`}
                 </Button>
               </Link>
             </motion.div>

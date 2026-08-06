@@ -197,6 +197,17 @@ export interface SeoSettings {
   twitterCard: string;
 }
 
+export interface WhyChooseItem {
+  id: string;
+  title: string;
+  desc: string;
+}
+
+export interface WhyChooseSettings {
+  sectionTitle: string;
+  items: WhyChooseItem[];
+}
+
 export interface MainPageSettings {
   heroHeadline: string;
   heroSubtitle: string;
@@ -341,8 +352,17 @@ export const INITIAL_CONTACT: ContactSettings = {
   phone: "+1 (800) 555-TRAVEL",
   address: "123 Explorer Way, San Francisco, CA 94105",
   openingHours: "Mon - Sat: 9:00 AM - 8:00 PM EST",
-  whatsappNumber: "+1 (800) 555-8728",
+  whatsappNumber: "9645185581",
   mapEmbedUrl: "https://maps.google.com",
+};
+
+export const INITIAL_WHY_CHOOSE: WhyChooseSettings = {
+  sectionTitle: "Why Discerning Travelers Choose travelPartner",
+  items: [
+    { id: "wc-1", title: "24/7 Dedicated Butler", desc: "A personal concierge assigned to your trip from takeoff to landing." },
+    { id: "wc-2", title: "Direct Tarmac Transfers", desc: "Private VIP jet handling and luxury sports car escorts." },
+    { id: "wc-3", title: "Unmatched Confidentiality", desc: "Discreet expedition management for high-profile explorers." },
+  ],
 };
 
 export const INITIAL_SEO: SeoSettings = {
