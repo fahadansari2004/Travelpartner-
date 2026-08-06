@@ -41,27 +41,30 @@ export async function GET(req: Request) {
     const { data, error } = await supabase.from(tableName).select("*");
     if (error) return NextResponse.json({ success: false, error: error.message, data: [] });
 
-    // Map snake_case database columns back to React camelCase properties
+    // Map PostgreSQL columns to React camelCase properties
     const mappedData = (data || []).map((item: any) => ({
       ...item,
-      name: item.customer_name || item.name || item.customerName || "Valued Client",
-      customerName: item.customer_name || item.customerName || item.name || "Valued Client",
-      packageOrItemName: item.package_name || item.packageOrItemName || item.packageName || item.subject || "Custom Booking",
-      packageName: item.package_name || item.packageName || item.packageOrItemName || item.subject || "Custom Booking",
-      subject: item.package_name || item.subject || item.packageOrItemName || "Custom Booking",
-      message: item.notes || item.message || "",
-      notes: item.notes || item.message || "",
-      guestsCount: item.guests || item.guestsCount || 1,
-      guests: item.guests || item.guestsCount || 1,
+      name: item.name || item.customer_name || item.customerName || "Valued Client",
+      customerName: item.name || item.customer_name || item.customerName || "Valued Client",
+      packageOrItemName: item.subject || item.package_name || item.packageOrItemName || "Travel Booking",
+      packageName: item.subject || item.package_name || item.packageName || "Travel Booking",
+      subject: item.subject || item.package_name || item.packageOrItemName || "Travel Booking",
+      message: item.message || item.notes || "",
+      notes: item.message || item.notes || "",
+      guestsCount: item.guests_count || item.guests || 1,
+      guests: item.guests_count || item.guests || 1,
       travelDate: item.travel_date || item.travelDate || "",
-      date: item.created_at || item.createdAt || item.date || new Date().toISOString().slice(0, 10),
+      preferredTime: item.preferred_time || item.preferredTime || "",
+      totalAmount: item.total_amount || item.totalAmount || 0,
       createdAt: item.created_at || item.createdAt || item.date || new Date().toISOString().slice(0, 10),
-      coverImage: item.cover_image || item.coverImage,
-      shortDesc: item.short_desc || item.shortDesc,
-      longDesc: item.long_desc || item.longDesc,
-      discountPrice: item.discount_price || item.discountPrice,
+      date: item.created_at || item.createdAt || item.date || new Date().toISOString().slice(0, 10),
+      coverImage: item.image || item.cover_image || item.coverImage,
+      shortDesc: item.description || item.short_desc || item.shortDesc,
+      description: item.description || item.short_desc || item.shortDesc,
+      longDesc: item.description || item.long_desc || item.longDesc,
+      discountPrice: item.discount_price ?? item.discountPrice ?? item.price,
       uploadDate: item.upload_date || item.uploadDate,
-      reviewsCount: item.reviews_count ?? item.reviewsCount,
+      reviewsCount: item.reviews_count ?? item.reviewsCount ?? 10,
       mapLocation: item.map_location || item.mapLocation,
       videoUrl: item.video_url || item.videoUrl,
       airlineName: item.airline_name || item.airlineName,
@@ -103,103 +106,154 @@ export async function POST(req: Request) {
       const safeRecords = value.map((item: any) => {
         const clean: any = { ...item };
 
-        // 1. Column snake_case mapping
         if (tableName === "enquiries") {
-          clean.customer_name = clean.customer_name || clean.name || clean.customerName || "Valued Client";
-          clean.package_name = clean.package_name || clean.packageOrItemName || clean.packageName || clean.subject || "Flight Booking";
-          clean.notes = clean.notes || clean.message || clean.subject || "";
-          clean.guests = clean.guests || clean.guestsCount || 1;
+          clean.name = clean.name || clean.customerName || "Valued Client";
+          clean.email = clean.email || "guest@traveler.com";
+          clean.phone = clean.phone || "Not Provided";
+          clean.type = clean.type || "Flight";
+          clean.subject = clean.subject || clean.packageOrItemName || "Travel Booking";
+          clean.message = clean.message || clean.notes || "";
           clean.travel_date = clean.travel_date || clean.travelDate || "";
-          clean.created_at = clean.created_at || clean.createdAt || clean.date || new Date().toISOString().slice(0, 10);
+          clean.preferred_time = clean.preferred_time || clean.preferredTime || "";
+          clean.guests_count = Number(clean.guests_count || clean.guestsCount || clean.guests || 1);
+          clean.total_amount = Number(clean.total_amount || clean.totalAmount || 0);
+          clean.status = clean.status || "New";
+          clean.created_at = clean.created_at || clean.createdAt || clean.date || new Date().toISOString();
 
-          const extraParts: string[] = [];
-          if (clean.preferredTime) { extraParts.push(`Time: ${clean.preferredTime}`); }
-          if (clean.totalAmount) { extraParts.push(`Total: $${clean.totalAmount}`); }
-          if (extraParts.length > 0) {
-            const extraStr = extraParts.join(" | ");
-            clean.notes = clean.notes ? `${clean.notes} (${extraStr})` : extraStr;
-          }
-
-          delete clean.name;
           delete clean.customerName;
-          delete clean.packageName;
           delete clean.packageOrItemName;
-          delete clean.subject;
-          delete clean.message;
+          delete clean.packageName;
           delete clean.guestsCount;
+          delete clean.guests;
+          delete clean.travelDate;
+          delete clean.preferredTime;
+          delete clean.totalAmount;
           delete clean.date;
+          delete clean.notes;
         }
 
-        // General Property Cleaning
-        if (clean.coverImage !== undefined) { clean.cover_image = clean.coverImage; }
-        if (clean.shortDesc !== undefined) { clean.short_desc = clean.shortDesc; }
-        if (clean.longDesc !== undefined) { clean.long_desc = clean.longDesc; }
-        if (clean.travelDate !== undefined) { clean.travel_date = clean.travelDate; }
-        if (clean.createdAt !== undefined) { clean.created_at = clean.createdAt; }
-        if (clean.discountPrice !== undefined) { clean.discount_price = clean.discountPrice; }
-        if (clean.uploadDate !== undefined) { clean.upload_date = clean.uploadDate; }
-        if (clean.reviewsCount !== undefined) { clean.reviews_count = clean.reviewsCount; }
-        if (clean.mapLocation !== undefined) { clean.map_location = clean.mapLocation; }
-        if (clean.videoUrl !== undefined) { clean.video_url = clean.videoUrl; }
-        if (clean.airlineName !== undefined) { clean.airline_name = clean.airlineName; }
-        if (clean.airlineLogo !== undefined) { clean.airline_logo = clean.airlineLogo; }
-        if (clean.fromCity !== undefined) { clean.from_city = clean.fromCity; }
-        if (clean.fromCode !== undefined) { clean.from_code = clean.fromCode; }
-        if (clean.toCity !== undefined) { clean.to_city = clean.toCity; }
-        if (clean.toCode !== undefined) { clean.to_code = clean.toCode; }
-        if (clean.tripType !== undefined) { clean.trip_type = clean.tripType; }
-        if (clean.travelClass !== undefined) { clean.travel_class = clean.travelClass; }
-        if (clean.farePrice !== undefined) { clean.fare_price = clean.farePrice; }
-        if (clean.offerBadge !== undefined) { clean.offer_badge = clean.offerBadge; }
-        if (clean.seatsAvailable !== undefined) { clean.seats_available = clean.seatsAvailable; }
-        if (clean.bookingLink !== undefined) { clean.booking_link = clean.bookingLink; }
-        if (clean.pricePerNight !== undefined) { clean.price_per_night = clean.pricePerNight; }
-        if (clean.iconName !== undefined) { clean.icon_name = clean.iconName; }
-        if (clean.ctaText !== undefined) { clean.cta_text = clean.ctaText; }
-        if (clean.displayOrder !== undefined) { clean.display_order = clean.displayOrder; }
+        if (tableName === "packages") {
+          clean.name = clean.name || "Luxury Tour Package";
+          clean.destination = clean.destination || "Global Destination";
+          clean.duration = clean.duration || "5 Days / 4 Nights";
+          clean.price = Number(clean.price || 1999);
+          clean.discount_price = Number(clean.discount_price ?? clean.discountPrice ?? clean.price);
+          clean.rating = Number(clean.rating || 4.9);
+          clean.reviews_count = Number(clean.reviews_count ?? clean.reviewsCount ?? 15);
+          clean.image = clean.image || "https://images.unsplash.com/photo-1502602898657-3e91760cbb34";
+          clean.description = clean.description || clean.shortDesc || "Bespoke luxury tour package.";
+          clean.featured = Boolean(clean.featured);
+          clean.active = clean.active !== undefined ? Boolean(clean.active) : true;
+          clean.created_at = clean.created_at || new Date().toISOString();
 
-        // 2. Strict deletion of non-PostgreSQL camelCase keys
-        delete clean.customerName;
-        delete clean.packageName;
-        delete clean.packageOrItemName;
-        delete clean.guestsCount;
-        delete clean.travelDate;
-        delete clean.createdAt;
-        delete clean.coverImage;
-        delete clean.shortDesc;
-        delete clean.longDesc;
-        delete clean.discountPrice;
-        delete clean.uploadDate;
-        delete clean.reviewsCount;
-        delete clean.mapLocation;
-        delete clean.videoUrl;
-        delete clean.airlineName;
-        delete clean.airlineLogo;
-        delete clean.fromCity;
-        delete clean.fromCode;
-        delete clean.toCity;
-        delete clean.toCode;
-        delete clean.tripType;
-        delete clean.travelClass;
-        delete clean.farePrice;
-        delete clean.offerBadge;
-        delete clean.seatsAvailable;
-        delete clean.bookingLink;
-        delete clean.pricePerNight;
-        delete clean.iconName;
-        delete clean.ctaText;
-        delete clean.displayOrder;
-        delete clean.preferredTime;
-        delete clean.totalAmount;
+          delete clean.discountPrice;
+          delete clean.reviewsCount;
+          delete clean.shortDesc;
+          delete clean.itinerary;
+          delete clean.gallery;
+          delete clean.included;
+          delete clean.excluded;
+          delete clean.mapLocation;
+          delete clean.videoUrl;
+        }
+
+        if (tableName === "testimonials") {
+          clean.name = clean.name || clean.customerName || "Valued Guest";
+          clean.role = clean.role || "Explorer";
+          clean.location = clean.location || "Global Guest";
+          clean.avatar = clean.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb";
+          clean.rating = Number(clean.rating || 5);
+          clean.trip = clean.trip || "Luxury Expedition";
+          clean.comment = clean.comment || clean.message || "";
+          clean.status = clean.status || "Pending";
+          clean.created_at = clean.created_at || clean.createdAt || clean.date || new Date().toISOString();
+
+          delete clean.customerName;
+          delete clean.packageOrItemName;
+          delete clean.packageName;
+          delete clean.subject;
+          delete clean.message;
+          delete clean.notes;
+          delete clean.guestsCount;
+          delete clean.guests;
+          delete clean.travelDate;
+          delete clean.date;
+          delete clean.createdAt;
+        }
+
+        if (tableName === "flights") {
+          clean.airline_name = clean.airline_name || clean.airlineName || "Vip Airline";
+          clean.airline_logo = clean.airline_logo || clean.airlineLogo || "✈️";
+          clean.from_city = clean.from_city || clean.fromCity || "New York";
+          clean.from_code = clean.from_code || clean.fromCode || "JFK";
+          clean.to_city = clean.to_city || clean.toCity || "Dubai";
+          clean.to_code = clean.to_code || clean.toCode || "DXB";
+          clean.trip_type = clean.trip_type || clean.tripType || "Round Trip";
+          clean.travel_class = clean.travel_class || clean.travelClass || "First Class";
+          clean.travel_date = clean.travel_date || clean.travelDate || "";
+          clean.duration = clean.duration || "8h 30m";
+          clean.fare_price = Number(clean.fare_price ?? clean.farePrice ?? 1000);
+          clean.currency = clean.currency || "$";
+          clean.offer_badge = clean.offer_badge || clean.offerBadge || "Special Rate";
+          clean.seats_available = Number(clean.seats_available ?? clean.seatsAvailable ?? 4);
+          clean.booking_link = clean.booking_link || clean.bookingLink || "#book-flight";
+          clean.featured = Boolean(clean.featured);
+          clean.active = clean.active !== undefined ? Boolean(clean.active) : true;
+
+          delete clean.airlineName;
+          delete clean.airlineLogo;
+          delete clean.fromCity;
+          delete clean.fromCode;
+          delete clean.toCity;
+          delete clean.toCode;
+          delete clean.tripType;
+          delete clean.travelClass;
+          delete clean.travelDate;
+          delete clean.farePrice;
+          delete clean.offerBadge;
+          delete clean.seatsAvailable;
+          delete clean.bookingLink;
+        }
+
+        if (tableName === "hotels") {
+          clean.name = clean.name || "Luxury Resort";
+          clean.location = clean.location || "Global Location";
+          clean.image = clean.image || "https://images.unsplash.com/photo-1566073771259-6a8506099945";
+          clean.rating = Number(clean.rating || 5);
+          clean.price_per_night = Number(clean.price_per_night ?? clean.pricePerNight ?? 500);
+          clean.currency = clean.currency || "$";
+          clean.description = clean.description || "5-star luxury stay.";
+          clean.booking_link = clean.booking_link || clean.bookingLink || "#book-hotel";
+          clean.featured = Boolean(clean.featured);
+          clean.active = clean.active !== undefined ? Boolean(clean.active) : true;
+
+          delete clean.pricePerNight;
+          delete clean.bookingLink;
+        }
+
+        if (tableName === "services") {
+          clean.name = clean.name || "Bespoke Service";
+          clean.short_desc = clean.short_desc || clean.shortDesc || "VIP Concierge Service.";
+          clean.long_desc = clean.long_desc || clean.longDesc || "VIP Concierge Service.";
+          clean.icon_name = clean.icon_name || clean.iconName || "Compass";
+          clean.cta_text = clean.cta_text || clean.ctaText || "Learn More";
+          clean.display_order = Number(clean.display_order ?? clean.displayOrder ?? 1);
+          clean.active = clean.active !== undefined ? Boolean(clean.active) : true;
+
+          delete clean.iconName;
+          delete clean.shortDesc;
+          delete clean.longDesc;
+          delete clean.ctaText;
+          delete clean.displayOrder;
+        }
 
         return clean;
       });
 
-      // 1. Upsert current active items with explicit onConflict key
+      // Upsert records into PostgreSQL
       const { error: upsertError } = await supabase.from(tableName).upsert(safeRecords, { onConflict: "id" });
       if (upsertError) {
         console.error(`Supabase server upsert error for ${tableName}:`, upsertError);
-        // Fallback: update status/fields record by record
         for (const rec of safeRecords) {
           const { error: updateErr } = await supabase.from(tableName).update(rec).eq("id", rec.id);
           if (updateErr) {
@@ -208,7 +262,7 @@ export async function POST(req: Request) {
         }
       }
 
-      // 2. Reconcile and delete missing items safely
+      // Reconcile deleted items safely
       const { data: dbRows } = await supabase.from(tableName).select("id");
       if (dbRows && dbRows.length > 0) {
         const currentIds = new Set(value.map((v: any) => v.id));

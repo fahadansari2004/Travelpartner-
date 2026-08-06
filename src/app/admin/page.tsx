@@ -1034,6 +1034,156 @@ export default function AdminDashboardPage() {
 
       </main>
 
+      {/* ── CREATE / EDIT PACKAGE MODAL ────────────────────────────────────── */}
+      {editingPackage && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="glass-card max-w-2xl w-full p-6 md:p-8 rounded-3xl border border-white/20 bg-slate-900 text-white space-y-4 my-auto">
+            <h3 className="text-xl font-bold font-[family-name:var(--font-playfair)]">
+              {editingPackage.id ? "Edit Tour Package" : "Create New Tour Package"}
+            </h3>
+
+            <div className="space-y-4 text-xs max-h-[75vh] overflow-y-auto custom-scrollbar pr-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block uppercase text-slate-300 font-semibold mb-1">Package Title *</label>
+                  <input
+                    type="text"
+                    value={editingPackage.name || ""}
+                    onChange={(e) => setEditingPackage({ ...editingPackage, name: e.target.value })}
+                    placeholder="e.g. Swiss Alps Luxury & Glacier Chalets"
+                    className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block uppercase text-slate-300 font-semibold mb-1">Destination *</label>
+                  <input
+                    type="text"
+                    value={editingPackage.destination || ""}
+                    onChange={(e) => setEditingPackage({ ...editingPackage, destination: e.target.value })}
+                    placeholder="e.g. Zermatt, Switzerland"
+                    className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block uppercase text-slate-300 font-semibold mb-1">Duration *</label>
+                  <input
+                    type="text"
+                    value={editingPackage.duration || ""}
+                    onChange={(e) => setEditingPackage({ ...editingPackage, duration: e.target.value })}
+                    placeholder="e.g. 7 Days / 6 Nights"
+                    className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block uppercase text-slate-300 font-semibold mb-1">Standard Price ($) *</label>
+                  <input
+                    type="number"
+                    value={editingPackage.price || 0}
+                    onChange={(e) => setEditingPackage({ ...editingPackage, price: Number(e.target.value) })}
+                    className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block uppercase text-slate-300 font-semibold mb-1">Discount Price ($)</label>
+                  <input
+                    type="number"
+                    value={editingPackage.discountPrice || editingPackage.price || 0}
+                    onChange={(e) => setEditingPackage({ ...editingPackage, discountPrice: Number(e.target.value) })}
+                    className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block uppercase text-slate-300 font-semibold mb-1">Cover Image URL *</label>
+                <input
+                  type="text"
+                  value={editingPackage.image || ""}
+                  onChange={(e) => setEditingPackage({ ...editingPackage, image: e.target.value })}
+                  placeholder="https://images.unsplash.com/..."
+                  className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block uppercase text-slate-300 font-semibold mb-1">Short Description</label>
+                <textarea
+                  value={editingPackage.shortDesc || editingPackage.description || ""}
+                  onChange={(e) => setEditingPackage({ ...editingPackage, shortDesc: e.target.value, description: e.target.value })}
+                  placeholder="Brief summary of the package experience..."
+                  rows={3}
+                  className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white"
+                />
+              </div>
+
+              <div className="flex items-center gap-6 pt-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={editingPackage.featured || false}
+                    onChange={(e) => setEditingPackage({ ...editingPackage, featured: e.target.checked })}
+                    className="w-4 h-4 accent-amber-500 rounded"
+                  />
+                  <span>Feature on Homepage</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={editingPackage.active !== false}
+                    onChange={(e) => setEditingPackage({ ...editingPackage, active: e.target.checked })}
+                    className="w-4 h-4 accent-amber-500 rounded"
+                  />
+                  <span>Publish & Active</span>
+                </label>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
+              <Button variant="ghost" size="sm" onClick={() => setEditingPackage(null)}>
+                Cancel
+              </Button>
+              <Button
+                variant="amber"
+                size="sm"
+                onClick={() => {
+                  if (!editingPackage.name || !editingPackage.destination) {
+                    alert("Please provide a package title and destination.");
+                    return;
+                  }
+                  const newPkgItem: PackageItem = {
+                    id: editingPackage.id || `pkg-${Date.now()}`,
+                    name: editingPackage.name,
+                    destination: editingPackage.destination,
+                    duration: editingPackage.duration || "5 Days / 4 Nights",
+                    price: editingPackage.price || 1999,
+                    discountPrice: editingPackage.discountPrice || editingPackage.price || 1999,
+                    image: editingPackage.image || "https://images.unsplash.com/photo-1502602898657-3e91760cbb34",
+                    rating: editingPackage.rating || 4.9,
+                    reviewsCount: editingPackage.reviewsCount || 45,
+                    featured: editingPackage.featured ?? true,
+                    active: editingPackage.active ?? true,
+                    shortDesc: editingPackage.shortDesc || editingPackage.description || "Luxury tour package",
+                    description: editingPackage.description || editingPackage.shortDesc || "Luxury tour package",
+                  };
+
+                  if (editingPackage.id) {
+                    setPackages(packages.map((p) => (p.id === editingPackage.id ? newPkgItem : p)));
+                  } else {
+                    setPackages([newPkgItem, ...packages]);
+                  }
+                  setEditingPackage(null);
+                }}
+              >
+                Save Package
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── CREATE / EDIT ALBUM MODAL ────────────────────────────────────── */}
       {editingAlbum && (
         <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
