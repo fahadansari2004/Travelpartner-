@@ -537,7 +537,10 @@ export async function fetchKeyFromCloud(key: string, force = false): Promise<any
 export function useStoreData<T>(key: string, defaultValue: T): [T, (val: T) => void] {
   const [data, setData] = useState<T>(() => {
     const local = getStoredData(key, defaultValue);
-    return local !== null && local !== undefined ? local : defaultValue;
+    if (Array.isArray(local) && local.length === 0 && Array.isArray(defaultValue) && defaultValue.length > 0) {
+      return defaultValue;
+    }
+    return (local !== null && local !== undefined) ? local : defaultValue;
   });
 
   useEffect(() => {
@@ -547,20 +550,14 @@ export function useStoreData<T>(key: string, defaultValue: T): [T, (val: T) => v
       if (isMounted) {
         if (cloudData !== null && cloudData !== undefined) {
           if (Array.isArray(cloudData) && cloudData.length === 0 && Array.isArray(defaultValue) && defaultValue.length > 0) {
-            const hasBeenSeeded = localStorage.getItem(`SEEDED_${key}`);
-            if (!hasBeenSeeded) {
-              localStorage.setItem(`SEEDED_${key}`, "true");
-              syncWithSupabase(key, defaultValue);
-              return;
-            }
+            setData(defaultValue);
+            syncWithSupabase(key, defaultValue);
+            return;
           }
           setData(cloudData);
         } else if (defaultValue) {
-          const hasBeenSeeded = localStorage.getItem(`SEEDED_${key}`);
-          if (!hasBeenSeeded) {
-            localStorage.setItem(`SEEDED_${key}`, "true");
-            syncWithSupabase(key, defaultValue);
-          }
+          setData(defaultValue);
+          syncWithSupabase(key, defaultValue);
         }
       }
     });
