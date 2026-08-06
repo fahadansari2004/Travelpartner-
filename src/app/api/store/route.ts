@@ -316,7 +316,6 @@ export async function POST(req: Request) {
             clean.short_desc = clean.short_desc || clean.shortDesc || clean.description || "Luxury travel photo album.";
             clean.long_desc = clean.long_desc || clean.longDesc || clean.shortDesc || "";
             clean.travel_date = clean.travel_date || clean.travelDate || "2026";
-            clean.display_order = Number(clean.display_order ?? clean.displayOrder ?? 1);
             clean.featured = Boolean(clean.featured);
             clean.active = clean.active !== undefined ? Boolean(clean.active) : true;
             clean.images = Array.isArray(clean.images) ? clean.images : [];
@@ -327,6 +326,13 @@ export async function POST(req: Request) {
             delete clean.longDesc;
             delete clean.travelDate;
             delete clean.displayOrder;
+            delete clean.display_order;
+            delete clean.location;
+            delete clean.image;
+            delete clean.description;
+            delete clean.seoTitle;
+            delete clean.seoDescription;
+            delete clean.relatedPackageId;
           }
 
           if (tableName === "media_library") {

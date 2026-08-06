@@ -332,8 +332,8 @@ export default function AdminDashboardPage() {
                     <Icon size={16} />
                     <span>{tab.label}</span>
                   </div>
-                  {tab.count !== undefined && tab.count > 0 && (
-                    <span className="px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 text-[10px] font-bold">
+                  {isMounted && tab.count !== undefined && tab.count > 0 && (
+                    <span suppressHydrationWarning className="px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 text-[10px] font-bold">
                       {tab.count}
                     </span>
                   )}
