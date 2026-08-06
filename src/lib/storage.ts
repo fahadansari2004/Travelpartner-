@@ -420,6 +420,7 @@ export const INITIAL_TESTIMONIALS: TestimonialItem[] = [
 
 // ─── Reactive Store Helper Engine ─────────────────────────────────────────────
 const STORE_KEY = "TRAVEL_PARTNER_STORE_V2";
+const lastMutationTimestamps: Record<string, number> = {};
 
 export function getStoredData<T>(key: string, defaultValue: T): T {
   if (typeof window === "undefined") return defaultValue;
@@ -446,6 +447,7 @@ export async function syncWithSupabase<T>(key: string, value: T) {
 
 export function setStoredData<T>(key: string, value: T): void {
   if (typeof window === "undefined") return;
+  lastMutationTimestamps[key] = Date.now();
   try {
     localStorage.setItem(`${STORE_KEY}_${key}`, JSON.stringify(value));
     window.dispatchEvent(new Event("travel-store-update"));
@@ -455,12 +457,12 @@ export function setStoredData<T>(key: string, value: T): void {
     window.dispatchEvent(new CustomEvent("travel-store-key-update", { detail: { key, value } }));
   }
 
-  // Sync automatically with Supabase cloud database
+  // Fast background sync with Supabase cloud database
   syncWithSupabase(key, value);
 }
 
 /**
- * Custom React Hook to consume reactive store data with real-time cloud sync
+ * High-performance React Hook to consume reactive store data with instant local mutations & cloud revalidation
  */
 export function useStoreData<T>(key: string, defaultValue: T): [T, (val: T) => void] {
   const [data, setData] = useState<T>(() => getStoredData(key, defaultValue));
@@ -479,10 +481,14 @@ export function useStoreData<T>(key: string, defaultValue: T): [T, (val: T) => v
     };
 
     const fetchFromSupabase = async () => {
+      // Don't overwrite local mutations if mutated within last 8 seconds
+      const lastMut = lastMutationTimestamps[key] || 0;
+      if (Date.now() - lastMut < 8000) return;
+
       try {
         const res = await fetch(`/api/store?key=${key}`);
         const json = await res.json();
-        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+        if (json.success && Array.isArray(json.data)) {
           setData((prevData: any) => {
             if (!Array.isArray(prevData) || prevData.length === 0) {
               try {
@@ -491,26 +497,22 @@ export function useStoreData<T>(key: string, defaultValue: T): [T, (val: T) => v
               return json.data as any;
             }
             
-            // Merge: preserve local status updates and combine cloud items
+            // Merge: preserve local deletions and status updates
             const cloudMap = new Map((json.data as any[]).map((item: any) => [item.id, item]));
             const prevMap = new Map(prevData.map((item: any) => [item.id, item]));
             const mergedMap = new Map();
 
             for (const [id, cloudItem] of cloudMap.entries()) {
               const prevItem = prevMap.get(id);
-              if (cloudItem.status === "Approved" || cloudItem.status === "Rejected") {
-                mergedMap.set(id, cloudItem);
-              } else if (prevItem && prevItem.status && prevItem.status === "Approved") {
-                mergedMap.set(id, { ...cloudItem, status: "Approved" });
-              } else {
-                mergedMap.set(id, cloudItem);
+              if (prevItem) {
+                // Keep local status overrides if present
+                if (prevItem.status && prevItem.status !== cloudItem.status && (prevItem.status === "Approved" || prevItem.status === "Rejected")) {
+                  mergedMap.set(id, { ...cloudItem, status: prevItem.status });
+                } else {
+                  mergedMap.set(id, cloudItem);
+                }
               }
-            }
-
-            for (const [id, prevItem] of prevMap.entries()) {
-              if (!mergedMap.has(id)) {
-                mergedMap.set(id, prevItem);
-              }
+              // If deleted locally (prevMap doesn't have it), omit it unless it's a new cloud item
             }
 
             const mergedList = Array.from(mergedMap.values());
@@ -527,7 +529,7 @@ export function useStoreData<T>(key: string, defaultValue: T): [T, (val: T) => v
     };
 
     fetchFromSupabase();
-    const intervalId = setInterval(fetchFromSupabase, 4000);
+    const intervalId = setInterval(fetchFromSupabase, 12000);
 
     window.addEventListener("storage", handleUpdate);
     window.addEventListener("travel-store-update", handleUpdate);

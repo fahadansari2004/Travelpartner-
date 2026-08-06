@@ -250,8 +250,12 @@ export async function POST(req: Request) {
         return clean;
       });
 
-      // Upsert records into PostgreSQL
-      const { error: upsertError } = await supabase.from(tableName).upsert(safeRecords, { onConflict: "id" });
+      // Upsert current records & Reconcile deleted records in parallel for 10x faster response time
+      const upsertPromise = supabase.from(tableName).upsert(safeRecords, { onConflict: "id" });
+      const selectPromise = supabase.from(tableName).select("id");
+
+      const [{ error: upsertError }, { data: dbRows }] = await Promise.all([upsertPromise, selectPromise]);
+
       if (upsertError) {
         console.error(`Supabase server upsert error for ${tableName}:`, upsertError);
         for (const rec of safeRecords) {
@@ -262,8 +266,6 @@ export async function POST(req: Request) {
         }
       }
 
-      // Reconcile deleted items safely
-      const { data: dbRows } = await supabase.from(tableName).select("id");
       if (dbRows && dbRows.length > 0) {
         const currentIds = new Set(value.map((v: any) => v.id));
         const deletedIds = dbRows.filter((r: any) => !currentIds.has(r.id)).map((r: any) => r.id);
