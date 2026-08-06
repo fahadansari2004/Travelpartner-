@@ -125,8 +125,16 @@ export default function PackagesPage() {
               className="glass-card rounded-3xl overflow-hidden border border-white/10 bg-slate-900/60 hover:border-amber-500/40 transition-all duration-300 hover:-translate-y-2 group shadow-2xl flex flex-col justify-between"
             >
               <div>
-                <div className="relative h-64 overflow-hidden bg-slate-800">
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-black/30 z-10" />
+                <div className="relative h-64 overflow-hidden bg-slate-950">
+                  <img
+                    src={pkg.image && pkg.image.trim() !== "" ? pkg.image : "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1200&q=80"}
+                    alt={pkg.name || "Package"}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1200&q=80";
+                    }}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-black/30 z-10 pointer-events-none" />
                   <div className="absolute top-4 left-4 z-20 px-3 py-1 rounded-full bg-amber-500 text-slate-950 text-xs font-bold uppercase tracking-wider">
                     {pkg.destination}
                   </div>
