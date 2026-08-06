@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/Button";
-import { Mail, Phone, MapPin, Sparkles, Send, ShieldCheck, Clock } from "lucide-react";
+import { Mail, Phone, MapPin, Sparkles, Send, ShieldCheck, Clock, MessageCircle } from "lucide-react";
 import { useStoreData, INITIAL_ENQUIRIES, INITIAL_CONTACT, EnquiryItem, ContactSettings } from "@/lib/storage";
 
 export default function ContactPage() {
@@ -173,43 +173,101 @@ export default function ContactPage() {
           )}
         </div>
 
-        {/* Global Concierge Desks */}
-        <div className="space-y-8">
-          <div>
-            <h2 className="text-2xl font-bold font-[family-name:var(--font-playfair)]">Global Concierge Offices</h2>
-            <p className="text-xs text-slate-400 mt-1">Direct hotlines and flagship headquarters.</p>
-          </div>
+        {/* Enhanced 24/7 VIP Concierge Card */}
+        <div className="relative glass-card p-6 sm:p-10 rounded-3xl border border-amber-500/30 bg-gradient-to-br from-slate-900/90 via-slate-950/95 to-amber-950/30 shadow-2xl space-y-6 flex flex-col justify-between overflow-hidden">
+          {/* Subtle background glow */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="p-6 rounded-2xl bg-slate-900/60 border border-white/10 space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
-                <MapPin size={20} />
+          <div className="relative z-10 space-y-6">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-5">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 shrink-0">
+                  <Clock size={24} />
+                </div>
+                <div>
+                  <h3 className="text-xl sm:text-2xl font-bold text-white font-[family-name:var(--font-playfair)]">
+                    24/7 VIP Direct Concierge
+                  </h3>
+                  <span className="text-[11px] text-amber-400 font-semibold tracking-wider uppercase flex items-center gap-1.5 mt-0.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" /> Always Online & Ready
+                  </span>
+                </div>
               </div>
-              <h3 className="font-bold text-white">New York Headquarters</h3>
-              <p className="text-xs text-slate-400 leading-relaxed">555 Fifth Avenue, Suite 2400<br />New York, NY 10017, USA</p>
             </div>
 
-            <div className="p-6 rounded-2xl bg-slate-900/60 border border-white/10 space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
-                <MapPin size={20} />
-              </div>
-              <h3 className="font-bold text-white">London Concierge</h3>
-              <p className="text-xs text-slate-400 leading-relaxed">10 Mayfair Square, 4th Floor<br />London W1J 8AJ, UK</p>
-            </div>
-          </div>
-
-          <div className="p-8 rounded-3xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 space-y-4">
-            <div className="flex items-center gap-3">
-              <Clock size={24} className="text-amber-400" />
-              <h3 className="text-lg font-bold text-white">24/7 VIP Hotline</h3>
-            </div>
-            <p className="text-xs text-slate-300 leading-relaxed">
-              For urgent itinerary modifications, flight changes, or emergency assistance during your travels:
+            <p className="text-xs sm:text-sm text-slate-300 font-light leading-relaxed">
+              For immediate assistance, customized flight itineraries, hotel upgrades, or urgent journey modifications, reach out to our dedicated concierge desk anytime.
             </p>
-            <div className="flex flex-col gap-2 pt-2">
-              <a href={`tel:${contactInfo.phone}`} className="text-xl font-bold text-amber-400 hover:underline">{contactInfo.phone}</a>
-              <a href={`mailto:${contactInfo.email}`} className="text-xs text-slate-300 hover:text-white">{contactInfo.email}</a>
-              <span className="text-xs text-slate-400">{contactInfo.address}</span>
+
+            {/* Direct Contact Links Grid */}
+            <div className="space-y-4 pt-2">
+              {/* Phone Direct */}
+              <a
+                href={`tel:${contactInfo.phone || "7356044637"}`}
+                className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all group active:scale-[0.99]"
+              >
+                <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                  <Phone size={20} />
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400 uppercase font-semibold tracking-wider block">Call Direct Hotline</span>
+                  <span className="text-lg sm:text-xl font-bold text-amber-400 group-hover:underline">
+                    {contactInfo.phone || "7356044637"}
+                  </span>
+                </div>
+              </a>
+
+              {/* WhatsApp Direct */}
+              <a
+                href={`https://wa.me/91${(contactInfo.whatsappNumber || "7356044637").replace(/\D/g, "")}?text=Hello!%20I%20would%20like%20to%20enquire%20about%20travel%20packages.`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-4 p-4 rounded-2xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 transition-all group active:scale-[0.99]"
+              >
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                  <MessageCircle size={20} />
+                </div>
+                <div>
+                  <span className="text-[10px] text-emerald-300 uppercase font-semibold tracking-wider block">Instant WhatsApp Chat</span>
+                  <span className="text-base sm:text-lg font-bold text-emerald-400 group-hover:underline">
+                    +{contactInfo.whatsappNumber || "91 7356044637"}
+                  </span>
+                </div>
+              </a>
+
+              {/* Email Direct */}
+              <a
+                href={`mailto:${contactInfo.email}`}
+                className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all group active:scale-[0.99]"
+              >
+                <div className="w-10 h-10 rounded-xl bg-sky-500/20 text-sky-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                  <Mail size={20} />
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400 uppercase font-semibold tracking-wider block">Official Support Email</span>
+                  <span className="text-sm sm:text-base font-bold text-slate-200 group-hover:text-white">
+                    {contactInfo.email}
+                  </span>
+                </div>
+              </a>
+
+              {/* Address Details */}
+              <div className="flex items-start gap-4 p-4 rounded-2xl bg-white/5 border border-white/10">
+                <div className="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center shrink-0 mt-0.5">
+                  <MapPin size={20} />
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400 uppercase font-semibold tracking-wider block">Headquarters Address</span>
+                  <span className="text-xs sm:text-sm text-slate-300 font-light leading-relaxed block mt-0.5">
+                    {contactInfo.address}
+                  </span>
+                  {contactInfo.openingHours && (
+                    <span className="text-[11px] text-amber-400 font-medium block mt-1">
+                      Desk Hours: {contactInfo.openingHours}
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>
