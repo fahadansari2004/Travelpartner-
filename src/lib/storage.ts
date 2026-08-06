@@ -448,7 +448,11 @@ export function getStoredData<T>(key: string, defaultValue: T): T {
   try {
     const raw = localStorage.getItem(`${STORE_KEY}_${key}`);
     if (!raw) return defaultValue;
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed) && parsed.length === 0 && Array.isArray(defaultValue) && defaultValue.length > 0) {
+      return defaultValue;
+    }
+    return parsed;
   } catch (err) {
     return defaultValue;
   }
@@ -530,9 +534,33 @@ export async function fetchKeyFromCloud(key: string, force = false): Promise<any
  * Ultra high-performance React Hook to consume reactive store data with 0ms rendering and zero network flooding
  */
 export function useStoreData<T>(key: string, defaultValue: T): [T, (val: T) => void] {
-  const [data, setData] = useState<T>(() => getStoredData(key, defaultValue));
+  const [data, setData] = useState<T>(() => {
+    const local = getStoredData(key, defaultValue);
+    if (Array.isArray(local) && local.length === 0 && Array.isArray(defaultValue) && defaultValue.length > 0) {
+      return defaultValue;
+    }
+    return local || defaultValue;
+  });
 
   useEffect(() => {
+    let isMounted = true;
+
+    fetchKeyFromCloud(key).then((cloudData) => {
+      if (isMounted) {
+        if (cloudData !== null && cloudData !== undefined) {
+          if (Array.isArray(cloudData) && cloudData.length === 0 && Array.isArray(defaultValue) && defaultValue.length > 0) {
+            // Seed defaults to Supabase if database table is currently empty
+            syncWithSupabase(key, defaultValue);
+            return;
+          }
+          setData(cloudData);
+        } else if (defaultValue) {
+          // Seed defaults to Supabase
+          syncWithSupabase(key, defaultValue);
+        }
+      }
+    });
+
     const handleKeyUpdate = (e: Event) => {
       const customEvent = e as CustomEvent;
       if (customEvent.detail && customEvent.detail.key === key) {
