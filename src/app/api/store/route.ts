@@ -78,7 +78,7 @@ export async function GET(req: Request) {
     const tableName = tableMap[key];
     if (!tableName) return NextResponse.json({ success: false, error: "Invalid key", data: [] });
 
-    // Check fast in-memory cache (sub-millisecond response time)
+    // Check fast in-memory cache
     const cached = apiCache[key];
     if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
       return NextResponse.json(
@@ -107,45 +107,78 @@ export async function GET(req: Request) {
     const mappedData = (data || [])
       .filter((item: any) => !item.id?.startsWith("setting_"))
       .map((item: any) => {
-        // Parse the packed description JSON (used for packages)
+        if (tableName === "packages") {
+          let rawDesc = item.description || "";
+          let cleanTextStr = item.short_desc || "";
+          let inc: string[] = Array.isArray(item.included) ? item.included : [];
+          let exc: string[] = Array.isArray(item.excluded) ? item.excluded : [];
+          let itin: any[] = Array.isArray(item.itinerary) ? item.itinerary : [];
+
+          if (typeof rawDesc === "string" && rawDesc.trim().startsWith("{") && rawDesc.trim().endsWith("}")) {
+            try {
+              const parsed = JSON.parse(rawDesc);
+              if (!cleanTextStr) cleanTextStr = parsed.text || parsed.description || "";
+              if (inc.length === 0 && Array.isArray(parsed.included)) inc = parsed.included;
+              if (exc.length === 0 && Array.isArray(parsed.excluded)) exc = parsed.excluded;
+              if (itin.length === 0 && Array.isArray(parsed.itinerary)) itin = parsed.itinerary;
+            } catch (e) {}
+          } else if (rawDesc && !cleanTextStr) {
+            cleanTextStr = rawDesc;
+          }
+
+          if (!cleanTextStr || cleanTextStr.trim().startsWith("{")) {
+            cleanTextStr = "Bespoke luxury tour package.";
+          }
+
+          const galleryUrls = Array.isArray(item.gallery) ? item.gallery : [];
+
+          return {
+            id: String(item.id),
+            name: item.name || "Luxury Tour Package",
+            destination: item.destination || "Global Destination",
+            duration: item.duration || "5 Days / 4 Nights",
+            price: Number(item.price || 1999),
+            discountPrice: Number(item.discount_price ?? item.price ?? 1999),
+            image: item.image || "https://images.unsplash.com/photo-1502602898657-3e91760cbb34",
+            rating: Number(item.rating || 4.9),
+            reviewsCount: Number(item.reviews_count ?? 15),
+            featured: Boolean(item.featured),
+            active: item.active !== undefined ? Boolean(item.active) : true,
+            shortDesc: cleanTextStr,
+            description: cleanTextStr,
+            itinerary: itin,
+            gallery: galleryUrls,
+            included: inc,
+            excluded: exc,
+            mapLocation: item.map_location,
+            videoUrl: item.video_url,
+            createdAt: item.created_at || new Date().toISOString(),
+          };
+        }
+
+        // Generic fallback for other tables
         let rawDesc = item.description || "";
-        let parsedIncluded: string[] = [];
-        let parsedExcluded: string[] = [];
-        let parsedItinerary: any[] = [];
         let cleanDesc = item.short_desc || item.shortDesc || "";
 
         if (typeof rawDesc === "string" && rawDesc.trim().startsWith("{") && rawDesc.trim().endsWith("}")) {
           try {
             const parsed = JSON.parse(rawDesc);
-            cleanDesc = parsed.text || parsed.description || cleanDesc || "Bespoke luxury tour package.";
-            if (Array.isArray(parsed.included)) parsedIncluded = parsed.included;
-            if (Array.isArray(parsed.excluded)) parsedExcluded = parsed.excluded;
-            if (Array.isArray(parsed.itinerary)) parsedItinerary = parsed.itinerary;
+            cleanDesc = parsed.text || parsed.description || cleanDesc;
           } catch (e) {}
         } else if (rawDesc) {
           cleanDesc = rawDesc;
         }
 
-        if (!cleanDesc || cleanDesc.trim().startsWith("{")) {
-          cleanDesc = "Bespoke luxury tour package.";
-        }
-
         let serviceDesc = item.short_desc || item.long_desc || item.shortDesc || item.longDesc || cleanDesc || "";
-
-        // Parse gallery (stored as JSONB array of strings)
         const gallery = safeParseJson(item.gallery, []);
-        const galleryUrls = Array.isArray(gallery) ? gallery : [];
-
-        // Parse images (stored as JSONB array — could be strings or objects)
         let imagesArr = safeParseJson(item.images, []);
         if (!Array.isArray(imagesArr)) imagesArr = [];
-
-        // Parse videos (stored as JSONB array)
         let videosArr = safeParseJson(item.videos, []);
         if (!Array.isArray(videosArr)) videosArr = [];
 
         return {
           ...item,
+          id: String(item.id),
           name: item.name || item.customer_name || item.customerName || "Valued Client",
           customerName: item.name || item.customer_name || item.customerName || "Valued Client",
           packageOrItemName: item.subject || item.package_name || item.packageOrItemName || "Travel Booking",
@@ -164,14 +197,9 @@ export async function GET(req: Request) {
           shortDesc: cleanDesc,
           description: cleanDesc,
           longDesc: item.long_desc || item.longDesc || serviceDesc,
-          // gallery as array of URL strings
-          gallery: galleryUrls,
-          // images/videos as arrays (may be objects or strings)
+          gallery: Array.isArray(gallery) ? gallery : [],
           images: imagesArr,
           videos: videosArr,
-          included: parsedIncluded.length > 0 ? parsedIncluded : (Array.isArray(item.included) ? item.included : safeParseJson(item.included, [])),
-          excluded: parsedExcluded.length > 0 ? parsedExcluded : (Array.isArray(item.excluded) ? item.excluded : safeParseJson(item.excluded, [])),
-          itinerary: parsedItinerary.length > 0 ? parsedItinerary : safeParseJson(item.itinerary, []),
           discountPrice: item.discount_price ?? item.discountPrice ?? item.price,
           uploadDate: item.upload_date || item.uploadDate || item.created_at,
           reviewsCount: item.reviews_count ?? item.reviewsCount ?? 10,
@@ -231,282 +259,204 @@ export async function POST(req: Request) {
 
     if (Array.isArray(value)) {
       if (value.length > 0) {
-        const safeRecords = value.map((item: any) => {
-          const clean: any = { ...item };
+        const safeRecords = value
+          .map((item: any) => {
+            if (!item || typeof item !== "object") return null;
 
-          if (tableName === "enquiries") {
-            return {
-              id: item.id || `enq-${Date.now()}`,
-              name: item.name || item.customerName || "Valued Client",
-              email: item.email || "guest@traveler.com",
-              phone: item.phone || "Not Provided",
-              type: item.type || "Package",
-              subject: item.subject || item.packageOrItemName || "Travel Booking",
-              message: item.message || item.notes || "",
-              travel_date: item.travel_date || item.travelDate || "",
-              preferred_time: item.preferred_time || item.preferredTime || "",
-              guests_count: Number(item.guests_count || item.guestsCount || item.guests || 1),
-              total_amount: Number(item.total_amount || item.totalAmount || 0),
-              status: item.status || "New",
-              created_at: item.created_at || new Date().toISOString(),
-            };
-          }
-
-          if (tableName === "packages") {
-            let rawText = clean.shortDesc || clean.short_desc || clean.description || "Bespoke luxury tour package.";
-            if (typeof rawText === "string" && rawText.trim().startsWith("{") && rawText.trim().endsWith("}")) {
-              try {
-                const parsed = JSON.parse(rawText);
-                rawText = parsed.text || parsed.description || "Bespoke luxury tour package.";
-              } catch (e) {}
+            if (tableName === "enquiries") {
+              return {
+                id: String(item.id || `enq-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`),
+                name: item.name || item.customerName || "Valued Client",
+                email: item.email || "guest@traveler.com",
+                phone: item.phone || "Not Provided",
+                type: item.type || "Package",
+                subject: item.subject || item.packageOrItemName || "Travel Booking",
+                message: item.message || item.notes || "",
+                travel_date: item.travel_date || item.travelDate || "",
+                preferred_time: item.preferred_time || item.preferredTime || "",
+                guests_count: Number(item.guests_count || item.guestsCount || item.guests || 1),
+                total_amount: Number(item.total_amount || item.totalAmount || 0),
+                status: item.status || "New",
+                created_at: item.created_at || item.createdAt || new Date().toISOString(),
+              };
             }
 
-            const packageMetadata = {
-              text: rawText,
-              included: Array.isArray(clean.included) ? clean.included : [],
-              excluded: Array.isArray(clean.excluded) ? clean.excluded : [],
-              itinerary: Array.isArray(clean.itinerary) ? clean.itinerary : [],
-            };
+            if (tableName === "packages") {
+              let rawText = item.shortDesc || item.short_desc || item.description || "Bespoke luxury tour package.";
+              if (typeof rawText === "string" && rawText.trim().startsWith("{") && rawText.trim().endsWith("}")) {
+                try {
+                  const parsed = JSON.parse(rawText);
+                  rawText = parsed.text || parsed.description || "Bespoke luxury tour package.";
+                } catch (e) {}
+              }
 
-            clean.name = clean.name || "Luxury Tour Package";
-            clean.destination = clean.destination || "Global Destination";
-            clean.duration = clean.duration || "5 Days / 4 Nights";
-            clean.price = Number(clean.price || 1999);
-            clean.discount_price = Number(clean.discount_price ?? clean.discountPrice ?? clean.price);
-            clean.rating = Number(clean.rating || 4.9);
-            clean.reviews_count = Number(clean.reviews_count ?? clean.reviewsCount ?? 15);
-            // Keep image URL (filter base64 just in case)
-            clean.image = filterUrl(clean.image) || "https://images.unsplash.com/photo-1502602898657-3e91760cbb34";
-            clean.short_desc = rawText;
-            clean.description = JSON.stringify(packageMetadata);
-            clean.featured = Boolean(clean.featured);
-            clean.active = clean.active !== undefined ? Boolean(clean.active) : true;
-            clean.created_at = clean.created_at || new Date().toISOString();
+              const incArr = Array.isArray(item.included) ? item.included.map(String) : [];
+              const excArr = Array.isArray(item.excluded) ? item.excluded.map(String) : [];
+              const itinArr = Array.isArray(item.itinerary) ? item.itinerary : [];
 
-            // Preserve gallery as JSONB array of URL strings
-            const galleryArr = Array.isArray(clean.gallery) ? clean.gallery : [];
-            clean.gallery = filterUrlArray(galleryArr);
+              const packageMetadata = {
+                text: rawText,
+                included: incArr,
+                excluded: excArr,
+                itinerary: itinArr,
+              };
 
-            // Map camelCase → snake_case and remove camelCase duplicates
-            clean.map_location = clean.mapLocation || clean.map_location || null;
-            clean.video_url = filterUrl(clean.videoUrl || clean.video_url) || null;
+              const galleryArr = Array.isArray(item.gallery) ? item.gallery : [];
 
-            delete clean.discountPrice;
-            delete clean.reviewsCount;
-            delete clean.shortDesc;
-            delete clean.itinerary;
-            delete clean.included;
-            delete clean.excluded;
-            delete clean.mapLocation;
-            delete clean.videoUrl;
+              return {
+                id: String(item.id || `pkg-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`),
+                name: item.name || "Luxury Tour Package",
+                destination: item.destination || "Global Destination",
+                duration: item.duration || "5 Days / 4 Nights",
+                price: Number(item.price || 1999),
+                discount_price: Number(item.discount_price ?? item.discountPrice ?? item.price ?? 1999),
+                image: filterUrl(item.image) || "https://images.unsplash.com/photo-1502602898657-3e91760cbb34",
+                rating: Number(item.rating || 4.9),
+                reviews_count: Number(item.reviews_count ?? item.reviewsCount ?? 15),
+                featured: Boolean(item.featured),
+                active: item.active !== undefined ? Boolean(item.active) : true,
+                short_desc: rawText,
+                description: JSON.stringify(packageMetadata),
+                itinerary: itinArr,
+                gallery: filterUrlArray(galleryArr),
+                included: incArr,
+                excluded: excArr,
+                map_location: item.map_location || item.mapLocation || null,
+                video_url: filterUrl(item.video_url || item.videoUrl) || null,
+                created_at: item.created_at || item.createdAt || new Date().toISOString(),
+              };
+            }
 
-            return clean;
-          }
+            if (tableName === "testimonials") {
+              return {
+                id: String(item.id || `test-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`),
+                name: item.name || item.customerName || "Valued Guest",
+                role: item.role || "Explorer",
+                location: item.location || "Global Guest",
+                avatar: filterUrl(item.avatar) || "https://images.unsplash.com/photo-1534528741775-53994a69daeb",
+                rating: Number(item.rating || 5),
+                trip: item.trip || "Luxury Expedition",
+                comment: item.comment || item.message || "",
+                status: item.status || "Pending",
+                created_at: item.created_at || item.createdAt || item.date || new Date().toISOString(),
+              };
+            }
 
-          if (tableName === "testimonials") {
-            clean.name = clean.name || clean.customerName || "Valued Guest";
-            clean.role = clean.role || "Explorer";
-            clean.location = clean.location || "Global Guest";
-            clean.avatar = filterUrl(clean.avatar) || "https://images.unsplash.com/photo-1534528741775-53994a69daeb";
-            clean.rating = Number(clean.rating || 5);
-            clean.trip = clean.trip || "Luxury Expedition";
-            clean.comment = clean.comment || clean.message || "";
-            clean.status = clean.status || "Pending";
-            clean.created_at = clean.created_at || clean.createdAt || clean.date || new Date().toISOString();
+            if (tableName === "flights") {
+              return {
+                id: String(item.id || `flt-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`),
+                airline_name: item.airline_name || item.airlineName || "VIP Airline",
+                airline_logo: item.airline_logo || item.airlineLogo || "✈️",
+                from_city: item.from_city || item.fromCity || "New York",
+                from_code: item.from_code || item.fromCode || "JFK",
+                to_city: item.to_city || item.toCity || "Dubai",
+                to_code: item.to_code || item.toCode || "DXB",
+                trip_type: item.trip_type || item.tripType || "Round Trip",
+                travel_class: item.travel_class || item.travelClass || "First Class",
+                travel_date: item.travel_date || item.travelDate || "",
+                duration: item.duration || "8h 30m",
+                fare_price: Number(item.fare_price ?? item.farePrice ?? 1000),
+                currency: item.currency || "$",
+                offer_badge: item.offer_badge || item.offerBadge || "Special Rate",
+                seats_available: Number(item.seats_available ?? item.seatsAvailable ?? 4),
+                booking_link: item.booking_link || item.bookingLink || "#book-flight",
+                featured: Boolean(item.featured),
+                active: item.active !== undefined ? Boolean(item.active) : true,
+              };
+            }
 
-            delete clean.customerName;
-            delete clean.packageOrItemName;
-            delete clean.packageName;
-            delete clean.subject;
-            delete clean.message;
-            delete clean.notes;
-            delete clean.guestsCount;
-            delete clean.guests;
-            delete clean.travelDate;
-            delete clean.date;
-            delete clean.createdAt;
-          }
+            if (tableName === "albums") {
+              const rawImages = Array.isArray(item.images) ? item.images : [];
+              const cleanImages = rawImages
+                .map((img: any) => {
+                  if (typeof img === "string") {
+                    const url = filterUrl(img);
+                    return url ? { id: `img-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`, url, type: "image", title: "", caption: "", displayOrder: 0 } : null;
+                  }
+                  if (img && typeof img === "object") {
+                    const url = filterUrl(img.url);
+                    if (!url) return null;
+                    return { ...img, url };
+                  }
+                  return null;
+                })
+                .filter(Boolean);
 
-          if (tableName === "flights") {
-            clean.airline_name = clean.airline_name || clean.airlineName || "Vip Airline";
-            clean.airline_logo = clean.airline_logo || clean.airlineLogo || "✈️";
-            clean.from_city = clean.from_city || clean.fromCity || "New York";
-            clean.from_code = clean.from_code || clean.fromCode || "JFK";
-            clean.to_city = clean.to_city || clean.toCity || "Dubai";
-            clean.to_code = clean.to_code || clean.toCode || "DXB";
-            clean.trip_type = clean.trip_type || clean.tripType || "Round Trip";
-            clean.travel_class = clean.travel_class || clean.travelClass || "First Class";
-            clean.travel_date = clean.travel_date || clean.travelDate || "";
-            clean.duration = clean.duration || "8h 30m";
-            clean.fare_price = Number(clean.fare_price ?? clean.farePrice ?? 1000);
-            clean.currency = clean.currency || "$";
-            clean.offer_badge = clean.offer_badge || clean.offerBadge || "Special Rate";
-            clean.seats_available = Number(clean.seats_available ?? clean.seatsAvailable ?? 4);
-            clean.booking_link = clean.booking_link || clean.bookingLink || "#book-flight";
-            clean.featured = Boolean(clean.featured);
-            clean.active = clean.active !== undefined ? Boolean(clean.active) : true;
+              const rawVideos = Array.isArray(item.videos) ? item.videos : [];
+              const cleanVideos = rawVideos
+                .map((vid: any) => {
+                  if (typeof vid === "string") {
+                    const url = filterUrl(vid);
+                    return url ? { id: `vid-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`, url, type: "video", title: "", caption: "", displayOrder: 0 } : null;
+                  }
+                  if (vid && typeof vid === "object") {
+                    const url = filterUrl(vid.url);
+                    if (!url) return null;
+                    return { ...vid, url };
+                  }
+                  return null;
+                })
+                .filter(Boolean);
 
-            delete clean.airlineName;
-            delete clean.airlineLogo;
-            delete clean.fromCity;
-            delete clean.fromCode;
-            delete clean.toCity;
-            delete clean.toCode;
-            delete clean.tripType;
-            delete clean.travelClass;
-            delete clean.travelDate;
-            delete clean.farePrice;
-            delete clean.offerBadge;
-            delete clean.seatsAvailable;
-            delete clean.bookingLink;
-          }
+              return {
+                id: String(item.id || `alb-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`),
+                name: item.name || "Luxury Album",
+                destination: item.destination || item.location || "Destination",
+                country: item.country || "Global",
+                category: item.category || "Destinations",
+                cover_image: filterUrl(item.cover_image || item.coverImage || item.image) || "https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99",
+                short_desc: item.short_desc || item.shortDesc || item.description || "Luxury travel photo album.",
+                long_desc: item.long_desc || item.longDesc || "",
+                travel_date: item.travel_date || item.travelDate || "2026",
+                featured: Boolean(item.featured),
+                active: item.active !== undefined ? Boolean(item.active) : true,
+                images: cleanImages,
+                videos: cleanVideos,
+              };
+            }
 
-          if (tableName === "hotels") {
-            clean.name = clean.name || "Luxury Resort";
-            clean.location = clean.location || "Global Location";
-            // Use real URL only (filter base64)
-            const mainImg = filterUrl(clean.image) ||
-              (Array.isArray(clean.images) ? filterUrl(clean.images[0]) : "") ||
-              "https://images.unsplash.com/photo-1566073771259-6a8506099945";
-            clean.image = mainImg;
-            // Store images array as JSONB with only real URLs
-            const imagesArr = Array.isArray(clean.images) ? clean.images : (mainImg ? [mainImg] : []);
-            clean.images = filterUrlArray(imagesArr.map((i: any) => (typeof i === "string" ? i : i?.url || "")));
-            if (clean.images.length === 0 && mainImg) clean.images = [mainImg];
-            clean.rating = Number(clean.rating || 5);
-            clean.price_per_night = Number(clean.price_per_night ?? clean.pricePerNight ?? 500);
-            clean.currency = clean.currency || "$";
-            clean.description = clean.description || "5-star luxury stay.";
-            clean.booking_link = clean.booking_link || clean.bookingLink || "#book-hotel";
-            clean.featured = Boolean(clean.featured);
-            clean.active = clean.active !== undefined ? Boolean(clean.active) : true;
+            if (tableName === "services") {
+              const descVal = item.short_desc || item.shortDesc || item.description || item.long_desc || item.longDesc || "VIP Concierge Service.";
+              return {
+                id: String(item.id || `srv-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`),
+                name: item.name || item.title || "Bespoke Service",
+                title: item.title || item.name || "Bespoke Service",
+                category: item.category || "Concierge",
+                icon_name: item.icon_name || item.iconName || "Compass",
+                image: filterUrl(item.image) || "",
+                short_desc: descVal,
+                long_desc: item.long_desc || item.longDesc || descVal,
+                cta_text: item.cta_text || item.ctaText || "Learn More",
+                display_order: Number(item.display_order ?? item.displayOrder ?? 1),
+                active: item.active !== undefined ? Boolean(item.active) : true,
+              };
+            }
 
-            delete clean.pricePerNight;
-            delete clean.bookingLink;
-          }
+            return item;
+          })
+          .filter(Boolean);
 
-          if (tableName === "albums") {
-            clean.name = clean.name || "Luxury Album";
-            clean.destination = clean.destination || clean.location || "Destination";
-            clean.country = clean.country || "Global";
-            clean.category = clean.category || "Destinations";
-            const coverImg = filterUrl(clean.cover_image || clean.coverImage || clean.image) ||
-              "https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99";
-            clean.cover_image = coverImg;
-            clean.short_desc = clean.short_desc || clean.shortDesc || clean.description || "Luxury travel photo album.";
-            clean.long_desc = clean.long_desc || clean.longDesc || clean.shortDesc || "";
-            clean.travel_date = clean.travel_date || clean.travelDate || "2026";
-            clean.featured = Boolean(clean.featured);
-            clean.active = clean.active !== undefined ? Boolean(clean.active) : true;
-
-            // FIX: Store images as JSONB array of objects {id, title, url, type, caption, displayOrder}
-            // Filter out any base64 URLs from image objects
-            const rawImages = Array.isArray(clean.images) ? clean.images : [];
-            clean.images = rawImages
-              .map((img: any) => {
-                if (typeof img === "string") {
-                  const url = filterUrl(img);
-                  return url ? { id: `img-${Date.now()}-${Math.random()}`, url, type: "image", title: "", caption: "", displayOrder: 0 } : null;
-                }
-                if (img && typeof img === "object") {
-                  const url = filterUrl(img.url);
-                  if (!url) return null;
-                  return { ...img, url };
-                }
-                return null;
-              })
-              .filter(Boolean);
-
-            const rawVideos = Array.isArray(clean.videos) ? clean.videos : [];
-            clean.videos = rawVideos
-              .map((vid: any) => {
-                if (typeof vid === "string") {
-                  const url = filterUrl(vid);
-                  return url ? { id: `vid-${Date.now()}-${Math.random()}`, url, type: "video", title: "", caption: "", displayOrder: 0 } : null;
-                }
-                if (vid && typeof vid === "object") {
-                  const url = filterUrl(vid.url);
-                  if (!url) return null;
-                  return { ...vid, url };
-                }
-                return null;
-              })
-              .filter(Boolean);
-
-            delete clean.coverImage;
-            delete clean.shortDesc;
-            delete clean.longDesc;
-            delete clean.travelDate;
-            delete clean.displayOrder;
-            delete clean.display_order;
-            delete clean.location;
-            delete clean.image;
-            delete clean.description;
-            delete clean.seoTitle;
-            delete clean.seoDescription;
-            delete clean.relatedPackageId;
-          }
-
-          if (tableName === "media_library") {
-            clean.name = clean.name || clean.title || "Media Asset";
-            // Only store real URLs — filter base64
-            clean.url = filterUrl(clean.url || clean.imageUrl || clean.src) || "";
-            clean.type = clean.type || "image";
-            clean.category = clean.category || "Gallery";
-            clean.upload_date = clean.upload_date || clean.uploadDate || new Date().toISOString().split("T")[0];
-
-            delete clean.uploadDate;
-            delete clean.imageUrl;
-            delete clean.src;
-
-            // Skip records with no valid URL
-            if (!clean.url) return null;
-          }
-
-          if (tableName === "services") {
-            const descVal = clean.shortDesc || clean.description || clean.short_desc || clean.longDesc || clean.long_desc || "VIP Concierge Service.";
-            clean.name = clean.name || clean.title || "Bespoke Service";
-            clean.short_desc = descVal;
-            clean.long_desc = clean.longDesc || clean.long_desc || descVal;
-            clean.icon_name = clean.iconName || clean.icon_name || "Compass";
-            clean.image = filterUrl(clean.image) || "";
-            clean.cta_text = clean.ctaText || clean.cta_text || "Learn More";
-            clean.display_order = Number(clean.displayOrder ?? clean.display_order ?? 1);
-            clean.active = clean.active !== undefined ? Boolean(clean.active) : true;
-
-            delete clean.iconName;
-            delete clean.shortDesc;
-            delete clean.longDesc;
-            delete clean.ctaText;
-            delete clean.displayOrder;
-          }
-
-          return clean;
-        }).filter(Boolean); // Remove null records (e.g. media items with no URL)
-
-        // Step 1: Upsert remaining active records
+        // Step 1: Upsert clean records
         if (safeRecords.length > 0) {
           const { error: upsertError } = await supabase.from(tableName).upsert(safeRecords, { onConflict: "id" });
           if (upsertError) {
-            console.error(`Supabase upsert warning for ${tableName}:`, upsertError);
+            console.error(`Supabase upsert failure for ${tableName}:`, upsertError);
+            return NextResponse.json({ success: false, error: upsertError.message });
           }
         }
       }
 
-      // Step 2: Reconcile & Delete removed IDs sequentially after upsert
+      // Step 2: Reconcile & Delete removed IDs sequentially after successful upsert
       const { data: dbRows } = await supabase.from(tableName).select("id");
       if (dbRows && dbRows.length > 0) {
-        const currentIds = new Set(value.map((v: any) => v.id));
+        const currentIds = new Set(value.map((v: any) => String(v.id)));
         const deletedIds = dbRows
-          .filter((r: any) => !currentIds.has(r.id) && !r.id.startsWith("setting_"))
+          .filter((r: any) => !currentIds.has(String(r.id)) && !String(r.id).startsWith("setting_"))
           .map((r: any) => r.id);
         if (deletedIds.length > 0) {
           const { error: deleteErr } = await supabase.from(tableName).delete().in("id", deletedIds);
           if (deleteErr) {
             console.error(`Supabase deletion warning for ${tableName}:`, deleteErr);
-            for (const delId of deletedIds) {
-              await supabase.from(tableName).delete().eq("id", delId);
-            }
           }
         }
       } else if (value.length === 0) {
