@@ -168,10 +168,22 @@ export default function AdminDashboardPage() {
     setIsMounted(true);
   }, []);
 
+  function cleanText(val: any): string {
+    if (!val) return "";
+    if (typeof val === "string" && val.trim().startsWith("{") && val.trim().endsWith("}")) {
+      try {
+        const parsed = JSON.parse(val);
+        return parsed.text || parsed.description || "Bespoke luxury tour package.";
+      } catch {
+        return val;
+      }
+    }
+    return String(val);
+  }
+
   const NAV_TABS = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
     { id: "albums", label: "Albums", icon: Sparkles, count: albums.length },
-    { id: "media", label: "Media Library", icon: ImageIcon, count: mediaLibrary.length },
     { id: "testimonials", label: "Reviews", icon: Star, count: testimonials.filter(t => t.status === "Pending").length },
     { id: "mainpage", label: "Main Page", icon: Edit },
     { id: "whychoose", label: "Why Choose Us", icon: ShieldCheck },
@@ -1107,7 +1119,7 @@ export default function AdminDashboardPage() {
                         {pkg.destination} • {pkg.duration}
                       </span>
                       <h4 className="text-lg font-bold font-[family-name:var(--font-playfair)] text-white">{pkg.name}</h4>
-                      <p className="text-xs text-slate-400 line-clamp-2 mt-1">{pkg.description}</p>
+                      <p className="text-xs text-slate-400 line-clamp-2 mt-1">{cleanText(pkg.shortDesc || pkg.description)}</p>
                     </div>
                   </div>
 
@@ -1334,7 +1346,7 @@ export default function AdminDashboardPage() {
               <div>
                 <label className="block uppercase text-slate-300 font-semibold mb-1">Short Description</label>
                 <textarea
-                  value={editingPackage.shortDesc || editingPackage.description || ""}
+                  value={cleanText(editingPackage.shortDesc || editingPackage.description || "")}
                   onChange={(e) => setEditingPackage({ ...editingPackage, shortDesc: e.target.value, description: e.target.value })}
                   placeholder="Brief summary of the package experience..."
                   rows={3}

@@ -112,16 +112,22 @@ export async function GET(req: Request) {
         let parsedIncluded: string[] = [];
         let parsedExcluded: string[] = [];
         let parsedItinerary: any[] = [];
-        let cleanDesc = rawDesc;
+        let cleanDesc = item.short_desc || item.shortDesc || "";
 
         if (typeof rawDesc === "string" && rawDesc.trim().startsWith("{") && rawDesc.trim().endsWith("}")) {
           try {
             const parsed = JSON.parse(rawDesc);
-            cleanDesc = parsed.text || parsed.description || cleanDesc;
+            cleanDesc = parsed.text || parsed.description || cleanDesc || "Bespoke luxury tour package.";
             if (Array.isArray(parsed.included)) parsedIncluded = parsed.included;
             if (Array.isArray(parsed.excluded)) parsedExcluded = parsed.excluded;
             if (Array.isArray(parsed.itinerary)) parsedItinerary = parsed.itinerary;
           } catch (e) {}
+        } else if (rawDesc) {
+          cleanDesc = rawDesc;
+        }
+
+        if (!cleanDesc || cleanDesc.trim().startsWith("{")) {
+          cleanDesc = "Bespoke luxury tour package.";
         }
 
         let serviceDesc = item.short_desc || item.long_desc || item.shortDesc || item.longDesc || cleanDesc || "";
@@ -155,8 +161,8 @@ export async function GET(req: Request) {
           createdAt: item.created_at || item.createdAt || item.date || new Date().toISOString().slice(0, 10),
           date: item.created_at || item.createdAt || item.date || new Date().toISOString().slice(0, 10),
           coverImage: item.cover_image || item.coverImage || item.image || "",
-          shortDesc: item.short_desc || item.shortDesc || item.description || serviceDesc,
-          description: item.short_desc || item.shortDesc || item.description || serviceDesc,
+          shortDesc: cleanDesc,
+          description: cleanDesc,
           longDesc: item.long_desc || item.longDesc || serviceDesc,
           // gallery as array of URL strings
           gallery: galleryUrls,
@@ -247,7 +253,14 @@ export async function POST(req: Request) {
           }
 
           if (tableName === "packages") {
-            const rawText = clean.description || clean.shortDesc || "Bespoke luxury tour package.";
+            let rawText = clean.shortDesc || clean.short_desc || clean.description || "Bespoke luxury tour package.";
+            if (typeof rawText === "string" && rawText.trim().startsWith("{") && rawText.trim().endsWith("}")) {
+              try {
+                const parsed = JSON.parse(rawText);
+                rawText = parsed.text || parsed.description || "Bespoke luxury tour package.";
+              } catch (e) {}
+            }
+
             const packageMetadata = {
               text: rawText,
               included: Array.isArray(clean.included) ? clean.included : [],
@@ -264,12 +277,13 @@ export async function POST(req: Request) {
             clean.reviews_count = Number(clean.reviews_count ?? clean.reviewsCount ?? 15);
             // Keep image URL (filter base64 just in case)
             clean.image = filterUrl(clean.image) || "https://images.unsplash.com/photo-1502602898657-3e91760cbb34";
+            clean.short_desc = rawText;
             clean.description = JSON.stringify(packageMetadata);
             clean.featured = Boolean(clean.featured);
             clean.active = clean.active !== undefined ? Boolean(clean.active) : true;
             clean.created_at = clean.created_at || new Date().toISOString();
 
-            // FIX: Preserve gallery as JSONB array of URL strings (was previously deleted!)
+            // Preserve gallery as JSONB array of URL strings
             const galleryArr = Array.isArray(clean.gallery) ? clean.gallery : [];
             clean.gallery = filterUrlArray(galleryArr);
 
