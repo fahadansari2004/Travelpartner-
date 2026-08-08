@@ -7,6 +7,16 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "images.unsplash.com",
       },
+      {
+        // Supabase Storage CDN for uploaded images/videos
+        protocol: "https",
+        hostname: "ciixxtmneichewgjujbe.supabase.co",
+      },
+      {
+        // Supabase Storage alternative CDN
+        protocol: "https",
+        hostname: "*.supabase.co",
+      },
     ],
   },
   // Enterprise Security Headers

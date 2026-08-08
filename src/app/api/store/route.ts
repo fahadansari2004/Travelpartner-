@@ -40,6 +40,35 @@ const CACHE_TTL_MS = 1000;
 
 const settingsKeys = ["mainPage", "footer", "about", "contact", "seo", "whyChoose"];
 
+/** Safely parse JSON that may or may not be a string */
+function safeParseJson(val: any, fallback: any = null) {
+  if (val === null || val === undefined) return fallback;
+  if (typeof val === "object") return val;
+  if (typeof val === "string") {
+    try {
+      return JSON.parse(val);
+    } catch {
+      return fallback;
+    }
+  }
+  return fallback;
+}
+
+/** Filter out base64 data URLs — only keep real URLs */
+function filterUrl(url: string | null | undefined): string {
+  if (!url) return "";
+  if (url.startsWith("data:")) return ""; // strip base64
+  return url;
+}
+
+/** Filter an array, removing base64 or empty URLs */
+function filterUrlArray(arr: any[]): string[] {
+  if (!Array.isArray(arr)) return [];
+  return arr
+    .map((item) => (typeof item === "string" ? filterUrl(item) : ""))
+    .filter(Boolean);
+}
+
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
@@ -78,6 +107,7 @@ export async function GET(req: Request) {
     const mappedData = (data || [])
       .filter((item: any) => !item.id?.startsWith("setting_"))
       .map((item: any) => {
+        // Parse the packed description JSON (used for packages)
         let rawDesc = item.description || "";
         let parsedIncluded: string[] = [];
         let parsedExcluded: string[] = [];
@@ -96,6 +126,18 @@ export async function GET(req: Request) {
 
         let serviceDesc = item.short_desc || item.long_desc || item.shortDesc || item.longDesc || cleanDesc || "";
 
+        // Parse gallery (stored as JSONB array of strings)
+        const gallery = safeParseJson(item.gallery, []);
+        const galleryUrls = Array.isArray(gallery) ? gallery : [];
+
+        // Parse images (stored as JSONB array — could be strings or objects)
+        let imagesArr = safeParseJson(item.images, []);
+        if (!Array.isArray(imagesArr)) imagesArr = [];
+
+        // Parse videos (stored as JSONB array)
+        let videosArr = safeParseJson(item.videos, []);
+        if (!Array.isArray(videosArr)) videosArr = [];
+
         return {
           ...item,
           name: item.name || item.customer_name || item.customerName || "Valued Client",
@@ -112,15 +154,18 @@ export async function GET(req: Request) {
           totalAmount: item.total_amount || item.totalAmount || 0,
           createdAt: item.created_at || item.createdAt || item.date || new Date().toISOString().slice(0, 10),
           date: item.created_at || item.createdAt || item.date || new Date().toISOString().slice(0, 10),
-          coverImage: item.cover_image || item.coverImage || item.image || "https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99",
+          coverImage: item.cover_image || item.coverImage || item.image || "",
           shortDesc: item.short_desc || item.shortDesc || item.description || serviceDesc,
           description: item.short_desc || item.shortDesc || item.description || serviceDesc,
           longDesc: item.long_desc || item.longDesc || serviceDesc,
-          images: Array.isArray(item.images) ? item.images : (item.images ? JSON.parse(item.images) : []),
-          videos: Array.isArray(item.videos) ? item.videos : (item.videos ? JSON.parse(item.videos) : []),
-          included: parsedIncluded.length > 0 ? parsedIncluded : item.included,
-          excluded: parsedExcluded.length > 0 ? parsedExcluded : item.excluded,
-          itinerary: parsedItinerary.length > 0 ? parsedItinerary : item.itinerary,
+          // gallery as array of URL strings
+          gallery: galleryUrls,
+          // images/videos as arrays (may be objects or strings)
+          images: imagesArr,
+          videos: videosArr,
+          included: parsedIncluded.length > 0 ? parsedIncluded : (Array.isArray(item.included) ? item.included : safeParseJson(item.included, [])),
+          excluded: parsedExcluded.length > 0 ? parsedExcluded : (Array.isArray(item.excluded) ? item.excluded : safeParseJson(item.excluded, [])),
+          itinerary: parsedItinerary.length > 0 ? parsedItinerary : safeParseJson(item.itinerary, []),
           discountPrice: item.discount_price ?? item.discountPrice ?? item.price,
           uploadDate: item.upload_date || item.uploadDate || item.created_at,
           reviewsCount: item.reviews_count ?? item.reviewsCount ?? 10,
@@ -217,28 +262,38 @@ export async function POST(req: Request) {
             clean.discount_price = Number(clean.discount_price ?? clean.discountPrice ?? clean.price);
             clean.rating = Number(clean.rating || 4.9);
             clean.reviews_count = Number(clean.reviews_count ?? clean.reviewsCount ?? 15);
-            clean.image = clean.image || "https://images.unsplash.com/photo-1502602898657-3e91760cbb34";
+            // Keep image URL (filter base64 just in case)
+            clean.image = filterUrl(clean.image) || "https://images.unsplash.com/photo-1502602898657-3e91760cbb34";
             clean.description = JSON.stringify(packageMetadata);
             clean.featured = Boolean(clean.featured);
             clean.active = clean.active !== undefined ? Boolean(clean.active) : true;
             clean.created_at = clean.created_at || new Date().toISOString();
 
+            // FIX: Preserve gallery as JSONB array of URL strings (was previously deleted!)
+            const galleryArr = Array.isArray(clean.gallery) ? clean.gallery : [];
+            clean.gallery = filterUrlArray(galleryArr);
+
+            // Map camelCase → snake_case and remove camelCase duplicates
+            clean.map_location = clean.mapLocation || clean.map_location || null;
+            clean.video_url = filterUrl(clean.videoUrl || clean.video_url) || null;
+
             delete clean.discountPrice;
             delete clean.reviewsCount;
             delete clean.shortDesc;
             delete clean.itinerary;
-            delete clean.gallery;
             delete clean.included;
             delete clean.excluded;
             delete clean.mapLocation;
             delete clean.videoUrl;
+
+            return clean;
           }
 
           if (tableName === "testimonials") {
             clean.name = clean.name || clean.customerName || "Valued Guest";
             clean.role = clean.role || "Explorer";
             clean.location = clean.location || "Global Guest";
-            clean.avatar = clean.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb";
+            clean.avatar = filterUrl(clean.avatar) || "https://images.unsplash.com/photo-1534528741775-53994a69daeb";
             clean.rating = Number(clean.rating || 5);
             clean.trip = clean.trip || "Luxury Expedition";
             clean.comment = clean.comment || clean.message || "";
@@ -295,11 +350,20 @@ export async function POST(req: Request) {
           if (tableName === "hotels") {
             clean.name = clean.name || "Luxury Resort";
             clean.location = clean.location || "Global Location";
-            clean.image = clean.image || "https://images.unsplash.com/photo-1566073771259-6a8506099945";
+            // Use real URL only (filter base64)
+            const mainImg = filterUrl(clean.image) ||
+              (Array.isArray(clean.images) ? filterUrl(clean.images[0]) : "") ||
+              "https://images.unsplash.com/photo-1566073771259-6a8506099945";
+            clean.image = mainImg;
+            // Store images array as JSONB with only real URLs
+            const imagesArr = Array.isArray(clean.images) ? clean.images : (mainImg ? [mainImg] : []);
+            clean.images = filterUrlArray(imagesArr.map((i: any) => (typeof i === "string" ? i : i?.url || "")));
+            if (clean.images.length === 0 && mainImg) clean.images = [mainImg];
             clean.rating = Number(clean.rating || 5);
             clean.price_per_night = Number(clean.price_per_night ?? clean.pricePerNight ?? 500);
             clean.currency = clean.currency || "$";
             clean.description = clean.description || "5-star luxury stay.";
+            clean.booking_link = clean.booking_link || clean.bookingLink || "#book-hotel";
             clean.featured = Boolean(clean.featured);
             clean.active = clean.active !== undefined ? Boolean(clean.active) : true;
 
@@ -312,14 +376,48 @@ export async function POST(req: Request) {
             clean.destination = clean.destination || clean.location || "Destination";
             clean.country = clean.country || "Global";
             clean.category = clean.category || "Destinations";
-            clean.cover_image = clean.cover_image || clean.coverImage || clean.image || "https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99";
+            const coverImg = filterUrl(clean.cover_image || clean.coverImage || clean.image) ||
+              "https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99";
+            clean.cover_image = coverImg;
             clean.short_desc = clean.short_desc || clean.shortDesc || clean.description || "Luxury travel photo album.";
             clean.long_desc = clean.long_desc || clean.longDesc || clean.shortDesc || "";
             clean.travel_date = clean.travel_date || clean.travelDate || "2026";
             clean.featured = Boolean(clean.featured);
             clean.active = clean.active !== undefined ? Boolean(clean.active) : true;
-            clean.images = Array.isArray(clean.images) ? clean.images : [];
-            clean.videos = Array.isArray(clean.videos) ? clean.videos : [];
+
+            // FIX: Store images as JSONB array of objects {id, title, url, type, caption, displayOrder}
+            // Filter out any base64 URLs from image objects
+            const rawImages = Array.isArray(clean.images) ? clean.images : [];
+            clean.images = rawImages
+              .map((img: any) => {
+                if (typeof img === "string") {
+                  const url = filterUrl(img);
+                  return url ? { id: `img-${Date.now()}-${Math.random()}`, url, type: "image", title: "", caption: "", displayOrder: 0 } : null;
+                }
+                if (img && typeof img === "object") {
+                  const url = filterUrl(img.url);
+                  if (!url) return null;
+                  return { ...img, url };
+                }
+                return null;
+              })
+              .filter(Boolean);
+
+            const rawVideos = Array.isArray(clean.videos) ? clean.videos : [];
+            clean.videos = rawVideos
+              .map((vid: any) => {
+                if (typeof vid === "string") {
+                  const url = filterUrl(vid);
+                  return url ? { id: `vid-${Date.now()}-${Math.random()}`, url, type: "video", title: "", caption: "", displayOrder: 0 } : null;
+                }
+                if (vid && typeof vid === "object") {
+                  const url = filterUrl(vid.url);
+                  if (!url) return null;
+                  return { ...vid, url };
+                }
+                return null;
+              })
+              .filter(Boolean);
 
             delete clean.coverImage;
             delete clean.shortDesc;
@@ -337,7 +435,8 @@ export async function POST(req: Request) {
 
           if (tableName === "media_library") {
             clean.name = clean.name || clean.title || "Media Asset";
-            clean.url = clean.url || clean.imageUrl || clean.src || "";
+            // Only store real URLs — filter base64
+            clean.url = filterUrl(clean.url || clean.imageUrl || clean.src) || "";
             clean.type = clean.type || "image";
             clean.category = clean.category || "Gallery";
             clean.upload_date = clean.upload_date || clean.uploadDate || new Date().toISOString().split("T")[0];
@@ -345,6 +444,9 @@ export async function POST(req: Request) {
             delete clean.uploadDate;
             delete clean.imageUrl;
             delete clean.src;
+
+            // Skip records with no valid URL
+            if (!clean.url) return null;
           }
 
           if (tableName === "services") {
@@ -353,6 +455,7 @@ export async function POST(req: Request) {
             clean.short_desc = descVal;
             clean.long_desc = clean.longDesc || clean.long_desc || descVal;
             clean.icon_name = clean.iconName || clean.icon_name || "Compass";
+            clean.image = filterUrl(clean.image) || "";
             clean.cta_text = clean.ctaText || clean.cta_text || "Learn More";
             clean.display_order = Number(clean.displayOrder ?? clean.display_order ?? 1);
             clean.active = clean.active !== undefined ? Boolean(clean.active) : true;
@@ -365,12 +468,14 @@ export async function POST(req: Request) {
           }
 
           return clean;
-        });
+        }).filter(Boolean); // Remove null records (e.g. media items with no URL)
 
         // Step 1: Upsert remaining active records
-        const { error: upsertError } = await supabase.from(tableName).upsert(safeRecords, { onConflict: "id" });
-        if (upsertError) {
-          console.error(`Supabase upsert warning for ${tableName}:`, upsertError);
+        if (safeRecords.length > 0) {
+          const { error: upsertError } = await supabase.from(tableName).upsert(safeRecords, { onConflict: "id" });
+          if (upsertError) {
+            console.error(`Supabase upsert warning for ${tableName}:`, upsertError);
+          }
         }
       }
 

@@ -46,7 +46,7 @@ import {
   TestimonialItem
 } from "@/lib/storage";
 
-import { FileInputOrUrl, MultiFileInputOrUrl } from "@/components/ui/FileInputOrUrl";
+import { FileInputOrUrl, MultiFileInputOrUrl, uploadFileToStorage } from "@/components/ui/FileInputOrUrl";
 
 export default function AdminDashboardPage() {
   const router = useRouter();
@@ -1327,36 +1327,12 @@ export default function AdminDashboardPage() {
               </div>
 
               <div>
-                <label className="block uppercase text-slate-300 font-semibold mb-1">Cover Image URL / Local File *</label>
-                <div className="flex flex-col sm:flex-row gap-2 items-center">
-                  <input
-                    type="text"
-                    value={editingPackage.image || ""}
-                    onChange={(e) => setEditingPackage({ ...editingPackage, image: e.target.value })}
-                    placeholder="https://images.unsplash.com/... or upload file"
-                    className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs"
-                  />
-                  <label className="shrink-0 w-full sm:w-auto px-4 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-bold text-xs cursor-pointer flex items-center justify-center gap-1.5 transition-all">
-                    <span>📁 Upload Image</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          const reader = new FileReader();
-                          reader.onloadend = () => {
-                            if (typeof reader.result === "string") {
-                              setEditingPackage({ ...editingPackage, image: reader.result });
-                            }
-                          };
-                          reader.readAsDataURL(file);
-                        }
-                      }}
-                    />
-                  </label>
-                </div>
+                <FileInputOrUrl
+                label="Cover Image URL / Local File *"
+                value={editingPackage.image || ""}
+                onChange={(val) => setEditingPackage({ ...editingPackage, image: val })}
+                accept="image/*"
+              />
               </div>
 
               <div>

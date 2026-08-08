@@ -6,15 +6,27 @@
 -- 1. Create Database Tables
 CREATE TABLE IF NOT EXISTS public.albums (
   id text PRIMARY KEY,
-  title text,
+  name text,
+  destination text,
+  country text,
+  category text,
   cover_image text,
   short_desc text,
   long_desc text,
   travel_date text,
-  photos text[],
   featured boolean default false,
-  active boolean default true
+  active boolean default true,
+  images jsonb default '[]'::jsonb,
+  videos jsonb default '[]'::jsonb
 );
+
+-- Add new columns if upgrading from old schema
+ALTER TABLE public.albums ADD COLUMN IF NOT EXISTS name text;
+ALTER TABLE public.albums ADD COLUMN IF NOT EXISTS destination text;
+ALTER TABLE public.albums ADD COLUMN IF NOT EXISTS country text;
+ALTER TABLE public.albums ADD COLUMN IF NOT EXISTS category text;
+ALTER TABLE public.albums ADD COLUMN IF NOT EXISTS images jsonb DEFAULT '[]'::jsonb;
+ALTER TABLE public.albums ADD COLUMN IF NOT EXISTS videos jsonb DEFAULT '[]'::jsonb;
 
 CREATE TABLE IF NOT EXISTS public.testimonials (
   id text PRIMARY KEY,
@@ -31,14 +43,16 @@ CREATE TABLE IF NOT EXISTS public.testimonials (
 
 CREATE TABLE IF NOT EXISTS public.enquiries (
   id text PRIMARY KEY,
-  type text default 'Package',
-  package_name text,
-  customer_name text,
+  name text,
   email text,
   phone text,
+  type text default 'Package',
+  subject text,
+  message text,
   travel_date text,
-  guests integer default 1,
-  notes text,
+  preferred_time text,
+  guests_count integer default 1,
+  total_amount numeric default 0,
   status text default 'New',
   created_at text
 );
@@ -58,12 +72,17 @@ CREATE TABLE IF NOT EXISTS public.packages (
   short_desc text,
   description text,
   itinerary jsonb,
-  gallery text[],
+  gallery jsonb default '[]'::jsonb,
   included text[],
   excluded text[],
   map_location text,
   video_url text
 );
+
+-- Add gallery column if upgrading from old schema
+ALTER TABLE public.packages ADD COLUMN IF NOT EXISTS gallery jsonb DEFAULT '[]'::jsonb;
+ALTER TABLE public.packages ADD COLUMN IF NOT EXISTS map_location text;
+ALTER TABLE public.packages ADD COLUMN IF NOT EXISTS video_url text;
 
 CREATE TABLE IF NOT EXISTS public.media_library (
   id text PRIMARY KEY,
@@ -100,7 +119,7 @@ CREATE TABLE IF NOT EXISTS public.hotels (
   name text,
   location text,
   image text,
-  images text[],
+  images jsonb default '[]'::jsonb,
   rating numeric default 5.0,
   price_per_night numeric,
   currency text default '$',
@@ -110,6 +129,10 @@ CREATE TABLE IF NOT EXISTS public.hotels (
   featured boolean default false,
   active boolean default true
 );
+
+-- Add jsonb images column if upgrading
+ALTER TABLE public.hotels ADD COLUMN IF NOT EXISTS images jsonb DEFAULT '[]'::jsonb;
+ALTER TABLE public.hotels ADD COLUMN IF NOT EXISTS booking_link text;
 
 CREATE TABLE IF NOT EXISTS public.services (
   id text PRIMARY KEY,
@@ -145,7 +168,7 @@ DROP POLICY IF EXISTS "Full Access Flights" ON public.flights;
 DROP POLICY IF EXISTS "Full Access Hotels" ON public.hotels;
 DROP POLICY IF EXISTS "Full Access Services" ON public.services;
 
--- 4. Create Full Access Policies
+-- 4. Create Full Access Policies (anon can read + write — admin panel uses anon key)
 CREATE POLICY "Full Access Albums" ON public.albums FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Full Access Testimonials" ON public.testimonials FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Full Access Enquiries" ON public.enquiries FOR ALL USING (true) WITH CHECK (true);
@@ -154,3 +177,44 @@ CREATE POLICY "Full Access Media" ON public.media_library FOR ALL USING (true) W
 CREATE POLICY "Full Access Flights" ON public.flights FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Full Access Hotels" ON public.hotels FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Full Access Services" ON public.services FOR ALL USING (true) WITH CHECK (true);
+
+-- 5. Storage Bucket & Policies
+-- The bucket is auto-created by the upload API, but run this to ensure policies are set:
+-- Note: This uses the Supabase Storage API directly — run via SQL editor or REST
+
+-- Allow public READ of all objects in the media bucket
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+  'media',
+  'media',
+  true,
+  52428800,
+  ARRAY['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'image/avif', 'video/mp4', 'video/webm']
+)
+ON CONFLICT (id) DO UPDATE SET public = true, file_size_limit = 52428800;
+
+-- Drop existing storage policies
+DROP POLICY IF EXISTS "Public read media" ON storage.objects;
+DROP POLICY IF EXISTS "Anon upload media" ON storage.objects;
+DROP POLICY IF EXISTS "Anon update media" ON storage.objects;
+DROP POLICY IF EXISTS "Anon delete media" ON storage.objects;
+
+-- Allow anyone to read
+CREATE POLICY "Public read media"
+  ON storage.objects FOR SELECT
+  USING (bucket_id = 'media');
+
+-- Allow anon to upload
+CREATE POLICY "Anon upload media"
+  ON storage.objects FOR INSERT
+  WITH CHECK (bucket_id = 'media');
+
+-- Allow anon to update
+CREATE POLICY "Anon update media"
+  ON storage.objects FOR UPDATE
+  USING (bucket_id = 'media');
+
+-- Allow anon to delete
+CREATE POLICY "Anon delete media"
+  ON storage.objects FOR DELETE
+  USING (bucket_id = 'media');
