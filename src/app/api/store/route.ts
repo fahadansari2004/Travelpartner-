@@ -107,6 +107,31 @@ export async function GET(req: Request) {
     const mappedData = (data || [])
       .filter((item: any) => !item.id?.startsWith("setting_"))
       .map((item: any) => {
+        if (tableName === "albums") {
+          const rawImages = safeParseJson(item.images, []);
+          const imagesArr = Array.isArray(rawImages) ? rawImages : [];
+
+          const rawVideos = safeParseJson(item.videos, []);
+          const videosArr = Array.isArray(rawVideos) ? rawVideos : [];
+
+          return {
+            id: String(item.id),
+            name: item.name || "Luxury Album",
+            destination: item.destination || item.location || "Destination",
+            country: item.country || "Global",
+            category: item.category || "Destinations",
+            coverImage: filterUrl(item.cover_image || item.coverImage || item.image) || "https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99",
+            shortDesc: item.short_desc || item.shortDesc || "Luxury travel photo album.",
+            longDesc: item.long_desc || item.longDesc || "",
+            travelDate: item.travel_date || item.travelDate || "2026",
+            featured: Boolean(item.featured),
+            active: item.active !== undefined ? Boolean(item.active) : true,
+            displayOrder: Number(item.display_order ?? item.displayOrder ?? 1),
+            images: imagesArr,
+            videos: videosArr,
+          };
+        }
+
         if (tableName === "packages") {
           let rawDesc = item.description || "";
           let cleanTextStr = item.short_desc || "";
