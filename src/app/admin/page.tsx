@@ -179,7 +179,6 @@ export default function AdminDashboardPage() {
     { id: "footer", label: "Footer", icon: LinkIcon },
     { id: "packages", label: "Packages", icon: Sparkles, count: packages.length },
     { id: "flights", label: "Flights", icon: Plane, count: flights.length },
-    { id: "hotels", label: "Hotels", icon: Hotel, count: hotels.length },
     { id: "services", label: "Services", icon: Compass, count: services.length },
     { id: "enquiries", label: "Bookings", icon: Inbox, count: enquiries.filter(e => e.status === "New").length },
     { id: "seo", label: "SEO", icon: Settings },
@@ -435,9 +434,6 @@ export default function AdminDashboardPage() {
                 </Button>
                 <Button variant="secondary" size="sm" leftIcon={<Plane size={14} />} onClick={() => setActiveTab("flights")}>
                   Flight Deals ({flights.length})
-                </Button>
-                <Button variant="secondary" size="sm" leftIcon={<Hotel size={14} />} onClick={() => setActiveTab("hotels")}>
-                  Hotel Listings ({hotels.length})
                 </Button>
                 <Button variant="secondary" size="sm" leftIcon={<Sparkles size={14} />} onClick={() => setActiveTab("packages")}>
                   Tour Packages ({packages.length})

@@ -304,22 +304,7 @@ export const INITIAL_FLIGHTS: FlightFare[] = [
   }
 ];
 
-export const INITIAL_HOTELS: HotelItem[] = [
-  {
-    id: "htl-1",
-    name: "The Ritz-Carlton Maldives, Fari Islands",
-    location: "Maldives Atoll",
-    images: ["https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&w=1200&q=80"],
-    rating: 5.0,
-    pricePerNight: 1650,
-    currency: "$",
-    facilities: ["Private Pool", "Underwater Dining", "24/7 Butler", "Luxury Spa"],
-    description: "Iconic ocean villas with floor-to-ceiling glass doors and personal infinity pools.",
-    bookingLink: "#book-hotel",
-    featured: true,
-    active: true,
-  }
-];
+export const INITIAL_HOTELS: HotelItem[] = [];
 
 export const INITIAL_GALLERY: GalleryItem[] = [];
 
@@ -441,6 +426,7 @@ export const INITIAL_TESTIMONIALS: TestimonialItem[] = [
 
 // ─── Reactive Store Helper Engine ─────────────────────────────────────────────
 const STORE_KEY = "TRAVEL_PARTNER_STORE_V2";
+// In-memory mutation timestamps (resets on page navigation — that's intentional)
 const lastMutationTimestamps: Record<string, number> = {};
 
 /** Returns stored data. Never replaces with defaults if a value was explicitly saved. */
@@ -461,13 +447,36 @@ function hasAdminSavedData(key: string): boolean {
   return localStorage.getItem(`HAS_DATA_${key}`) === "true";
 }
 
+/** Get the localStorage-persisted mutation timestamp for a key */
+function getLastMutTime(key: string): number {
+  if (typeof window === "undefined") return 0;
+  try {
+    const t = localStorage.getItem(`MUT_TIME_${key}`);
+    return t ? Number(t) : 0;
+  } catch {
+    return 0;
+  }
+}
+
+/** Store the mutation timestamp in localStorage so it persists across navigation */
+function setLastMutTime(key: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(`MUT_TIME_${key}`, String(Date.now()));
+  } catch {}
+}
+
 export async function syncWithSupabase<T>(key: string, value: T) {
   try {
-    await fetch("/api/store", {
+    const res = await fetch("/api/store", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ key, value }),
     });
+    const json = await res.json();
+    if (!json.success) {
+      console.warn(`Supabase sync issue for ${key}:`, json.error || json.message);
+    }
   } catch (err) {
     console.warn(`Supabase sync notice for ${key}:`, err);
   }
@@ -476,6 +485,7 @@ export async function syncWithSupabase<T>(key: string, value: T) {
 export function setStoredData<T>(key: string, value: T): void {
   if (typeof window === "undefined") return;
   lastMutationTimestamps[key] = Date.now();
+  setLastMutTime(key); // persist mutation timestamp across navigation!
   try {
     localStorage.setItem(`${STORE_KEY}_${key}`, JSON.stringify(value));
     // Mark that admin has explicitly saved data for this key
@@ -499,10 +509,14 @@ export async function fetchKeyFromCloud(key: string, force = false): Promise<any
 
   const now = Date.now();
   const lastFetch = lastKeyFetchTime[key] || 0;
-  const lastMut = lastMutationTimestamps[key] || 0;
+  // Check BOTH in-memory AND localStorage-persisted mutation time
+  const lastMutMem = lastMutationTimestamps[key] || 0;
+  const lastMutStorage = getLastMutTime(key);
+  const lastMut = Math.max(lastMutMem, lastMutStorage);
 
-  // Don't refetch if mutated or fetched within last 8 seconds unless forced
-  if (!force && (now - lastFetch < 8000 || now - lastMut < 5000)) {
+  // Don't refetch if mutated within last 30 seconds (protects against nav-away race)
+  // or fetched within last 8 seconds
+  if (!force && (now - lastFetch < 8000 || now - lastMut < 30000)) {
     return getStoredData(key, null);
   }
 
@@ -517,18 +531,35 @@ export async function fetchKeyFromCloud(key: string, force = false): Promise<any
       const res = await fetch(`/api/store?key=${key}`);
       const json = await res.json();
       if (json.success && json.data !== null && json.data !== undefined) {
+        const localData = getStoredData(key, null);
+        const cloudData = json.data;
+
+        // Safety check: if cloud returned LESS items than local, and mutation was recent,
+        // keep local data (Supabase sync might still be in progress)
+        const cloudIsEmpty = Array.isArray(cloudData) && cloudData.length === 0;
+        const localHasData = Array.isArray(localData) && (localData as any[]).length > 0;
+        const mutWasRecent = now - lastMut < 60000; // within 1 minute
+
+        if (cloudIsEmpty && localHasData && mutWasRecent) {
+          // Cloud is empty but local has items and was recently mutated
+          // Trust local, re-sync to cloud
+          console.log(`[store] Cloud empty for ${key} but local has ${(localData as any[]).length} items. Re-syncing...`);
+          syncWithSupabase(key, localData);
+          return localData;
+        }
+
         try {
-          localStorage.setItem(`${STORE_KEY}_${key}`, JSON.stringify(json.data));
-          // If cloud returned real data, mark as saved
-          if (Array.isArray(json.data) ? json.data.length > 0 : json.data !== null) {
+          localStorage.setItem(`${STORE_KEY}_${key}`, JSON.stringify(cloudData));
+          if (Array.isArray(cloudData) ? cloudData.length > 0 : cloudData !== null) {
             localStorage.setItem(`HAS_DATA_${key}`, "true");
           }
         } catch (e) {}
-        window.dispatchEvent(new CustomEvent("travel-store-key-update", { detail: { key, value: json.data } }));
-        return json.data;
+
+        window.dispatchEvent(new CustomEvent("travel-store-key-update", { detail: { key, value: cloudData } }));
+        return cloudData;
       }
     } catch (err) {
-      // fallback
+      // fallback to local
     } finally {
       activeKeyFetches.delete(key);
     }
@@ -545,6 +576,7 @@ export async function fetchKeyFromCloud(key: string, force = false): Promise<any
  * Priority logic:
  * 1. If admin has saved data before (HAS_DATA flag) → always use stored/cloud (even if [])
  * 2. If never saved before → show defaults and seed Supabase on first visit
+ * 3. Never overwrite recently-mutated local data with empty cloud data
  */
 export function useStoreData<T>(key: string, defaultValue: T): [T, (val: T) => void] {
   const [data, setData] = useState<T>(() => {
@@ -570,13 +602,12 @@ export function useStoreData<T>(key: string, defaultValue: T): [T, (val: T) => v
           localStorage.setItem(`HAS_DATA_${key}`, "true");
           setData(defaultValue);
           syncWithSupabase(key, defaultValue);
-        } else {
-          // Admin has data in cloud (or intentionally cleared) → trust cloud
-          if (!isEmptyArray) {
-            localStorage.setItem(`HAS_DATA_${key}`, "true");
-          }
+        } else if (!isEmptyArray) {
+          // Cloud has real data → use it
+          localStorage.setItem(`HAS_DATA_${key}`, "true");
           setData(cloudData);
         }
+        // If cloudData is empty array but HAS_DATA is set → don't overwrite (handled in fetchKeyFromCloud)
       } else {
         // Cloud returned null/error
         if (!hasAdminSavedData(key)) {
@@ -602,7 +633,7 @@ export function useStoreData<T>(key: string, defaultValue: T): [T, (val: T) => v
       }
     };
 
-    // Non-blocking deferred background fetch
+    // Non-blocking deferred background fetch (100ms to not block initial render)
     const timer = setTimeout(() => {
       fetchKeyFromCloud(key);
     }, 100);
@@ -612,6 +643,7 @@ export function useStoreData<T>(key: string, defaultValue: T): [T, (val: T) => v
     window.addEventListener("travel-store-key-update", handleKeyUpdate);
 
     return () => {
+      isMounted = false;
       clearTimeout(timer);
       window.removeEventListener("storage", handleStorageUpdate);
       window.removeEventListener("travel-store-update", handleStorageUpdate);
