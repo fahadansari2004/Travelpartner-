@@ -382,14 +382,16 @@ export default function AdminDashboardPage() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => {
-                if (confirm("Reset local storage cache to free up memory? Your website will reload with fresh storage.")) {
-                  localStorage.clear();
+                if (confirm("Clear local cache and reload fresh data from Supabase cloud? (Your saved data in the cloud will NOT be lost.)")) {
+                  // Only clear the V3 cache keys, not session/auth data
+                  const keysToRemove = Object.keys(localStorage).filter(k => k.startsWith("TRAVEL_PARTNER_STORE_V"));
+                  keysToRemove.forEach(k => localStorage.removeItem(k));
                   window.location.reload();
                 }
               }}
               className="text-xs text-amber-300 hover:text-white bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 px-3 py-1.5 rounded-full transition-all"
             >
-              ⚡ Reset Storage Cache
+              ⚡ Reload from Cloud
             </button>
             <span className="text-xs text-emerald-400 flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/30 px-3 py-1.5 rounded-full">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" /> System Live

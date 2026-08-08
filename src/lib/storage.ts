@@ -388,24 +388,7 @@ export const INITIAL_MAIN_PAGE: MainPageSettings = {
   faqSubtitle: "Everything you need to know about booking and luxury concierge services.",
 };
 
-export const INITIAL_ALBUMS: AlbumItem[] = [
-  {
-    id: "alb-switzerland",
-    name: "Switzerland Luxury Tour",
-    destination: "Zermatt & Zurich",
-    country: "Switzerland",
-    category: "Mountains",
-    coverImage: "https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?auto=format&fit=crop&w=1200&q=80",
-    shortDesc: "Majestic Matterhorn vistas, scenic Glacier Express trains, and private alpine chalets.",
-    longDesc: "Experience Switzerland at its highest pinnacle.",
-    travelDate: "Dec 2025",
-    featured: true,
-    active: true,
-    displayOrder: 1,
-    images: [],
-    videos: []
-  }
-];
+export const INITIAL_ALBUMS: AlbumItem[] = [];
 
 export const INITIAL_MEDIA_LIBRARY: MediaLibraryItem[] = [];
 
@@ -425,11 +408,10 @@ export const INITIAL_TESTIMONIALS: TestimonialItem[] = [
 ];
 
 // ─── Reactive Store Helper Engine ─────────────────────────────────────────────
-const STORE_KEY = "TRAVEL_PARTNER_STORE_V2";
-// In-memory mutation timestamps (resets on page navigation — that's intentional)
-const lastMutationTimestamps: Record<string, number> = {};
+// Bumped to V3 to clear stale V2 cache that had incorrect seeding behavior
+const STORE_KEY = "TRAVEL_PARTNER_STORE_V3";
 
-/** Returns stored data. Never replaces with defaults if a value was explicitly saved. */
+/** Returns stored data from localStorage cache layer. */
 export function getStoredData<T>(key: string, defaultValue: T): T {
   if (typeof window === "undefined") return defaultValue;
   try {
@@ -441,29 +423,12 @@ export function getStoredData<T>(key: string, defaultValue: T): T {
   }
 }
 
-/** Returns true if admin has ever explicitly saved data for this key */
-function hasAdminSavedData(key: string): boolean {
-  if (typeof window === "undefined") return false;
-  return localStorage.getItem(`HAS_DATA_${key}`) === "true";
-}
-
-/** Get the localStorage-persisted mutation timestamp for a key */
-function getLastMutTime(key: string): number {
-  if (typeof window === "undefined") return 0;
-  try {
-    const t = localStorage.getItem(`MUT_TIME_${key}`);
-    return t ? Number(t) : 0;
-  } catch {
-    return 0;
-  }
-}
-
-/** Store the mutation timestamp in localStorage so it persists across navigation */
-function setLastMutTime(key: string): void {
+/** Save to localStorage as cache layer */
+function saveToLocal<T>(key: string, value: T): void {
   if (typeof window === "undefined") return;
   try {
-    localStorage.setItem(`MUT_TIME_${key}`, String(Date.now()));
-  } catch {}
+    localStorage.setItem(`${STORE_KEY}_${key}`, JSON.stringify(value));
+  } catch (e) {}
 }
 
 export async function syncWithSupabase<T>(key: string, value: T) {
@@ -484,40 +449,33 @@ export async function syncWithSupabase<T>(key: string, value: T) {
 
 export function setStoredData<T>(key: string, value: T): void {
   if (typeof window === "undefined") return;
-  lastMutationTimestamps[key] = Date.now();
-  setLastMutTime(key); // persist mutation timestamp across navigation!
+  saveToLocal(key, value);
   try {
-    localStorage.setItem(`${STORE_KEY}_${key}`, JSON.stringify(value));
-    // Mark that admin has explicitly saved data for this key
-    localStorage.setItem(`HAS_DATA_${key}`, "true");
     window.dispatchEvent(new Event("travel-store-update"));
     window.dispatchEvent(new CustomEvent("travel-store-key-update", { detail: { key, value } }));
-  } catch (err: any) {
-    window.dispatchEvent(new Event("travel-store-update"));
-    window.dispatchEvent(new CustomEvent("travel-store-key-update", { detail: { key, value } }));
-  }
-
-  // Sync to Supabase cloud database (additions, edits, and deletions)
+  } catch (e) {}
+  // Sync to Supabase cloud database (additions, edits, deletions)
   syncWithSupabase(key, value);
 }
 
+// In-flight fetch deduplication
 const activeKeyFetches = new Map<string, Promise<any>>();
-const lastKeyFetchTime: Record<string, number> = {};
+// Simple in-memory cache to avoid hammering the API — 5 second TTL per key
+const fetchCache: Record<string, { ts: number; data: any }> = {};
+const FETCH_CACHE_TTL = 5000;
 
+/**
+ * Fetches the latest data from Supabase cloud.
+ * Uses a 5-second in-memory cache to deduplicate rapid re-renders,
+ * but NEVER blocks the fetch with localStorage mutation timestamps.
+ */
 export async function fetchKeyFromCloud(key: string, force = false): Promise<any> {
   if (typeof window === "undefined") return null;
 
   const now = Date.now();
-  const lastFetch = lastKeyFetchTime[key] || 0;
-  // Check BOTH in-memory AND localStorage-persisted mutation time
-  const lastMutMem = lastMutationTimestamps[key] || 0;
-  const lastMutStorage = getLastMutTime(key);
-  const lastMut = Math.max(lastMutMem, lastMutStorage);
-
-  // Don't refetch if mutated within last 30 seconds (protects against nav-away race)
-  // or fetched within last 8 seconds
-  if (!force && (now - lastFetch < 8000 || now - lastMut < 30000)) {
-    return getStoredData(key, null);
+  // Short in-memory cache only (5s) — prevents rapid re-render hammering
+  if (!force && fetchCache[key] && now - fetchCache[key].ts < FETCH_CACHE_TTL) {
+    return fetchCache[key].data;
   }
 
   // Deduplicate inflight HTTP requests for the same key
@@ -527,39 +485,20 @@ export async function fetchKeyFromCloud(key: string, force = false): Promise<any
 
   const promise = (async () => {
     try {
-      lastKeyFetchTime[key] = Date.now();
       const res = await fetch(`/api/store?key=${key}`);
       const json = await res.json();
       if (json.success && json.data !== null && json.data !== undefined) {
-        const localData = getStoredData(key, null);
         const cloudData = json.data;
-
-        // Safety check: if cloud returned LESS items than local, and mutation was recent,
-        // keep local data (Supabase sync might still be in progress)
-        const cloudIsEmpty = Array.isArray(cloudData) && cloudData.length === 0;
-        const localHasData = Array.isArray(localData) && (localData as any[]).length > 0;
-        const mutWasRecent = now - lastMut < 60000; // within 1 minute
-
-        if (cloudIsEmpty && localHasData && mutWasRecent) {
-          // Cloud is empty but local has items and was recently mutated
-          // Trust local, re-sync to cloud
-          console.log(`[store] Cloud empty for ${key} but local has ${(localData as any[]).length} items. Re-syncing...`);
-          syncWithSupabase(key, localData);
-          return localData;
-        }
-
-        try {
-          localStorage.setItem(`${STORE_KEY}_${key}`, JSON.stringify(cloudData));
-          if (Array.isArray(cloudData) ? cloudData.length > 0 : cloudData !== null) {
-            localStorage.setItem(`HAS_DATA_${key}`, "true");
-          }
-        } catch (e) {}
-
+        // Update in-memory cache
+        fetchCache[key] = { ts: Date.now(), data: cloudData };
+        // Save to localStorage as cache layer for fast subsequent renders
+        saveToLocal(key, cloudData);
+        // Notify all listeners
         window.dispatchEvent(new CustomEvent("travel-store-key-update", { detail: { key, value: cloudData } }));
         return cloudData;
       }
     } catch (err) {
-      // fallback to local
+      console.warn(`[store] Cloud fetch failed for ${key}:`, err);
     } finally {
       activeKeyFetches.delete(key);
     }
@@ -573,88 +512,57 @@ export async function fetchKeyFromCloud(key: string, force = false): Promise<any
 /**
  * React Hook to consume reactive store data.
  *
- * Priority logic:
- * 1. If admin has saved data before (HAS_DATA flag) → always use stored/cloud (even if [])
- * 2. If never saved before → show defaults and seed Supabase on first visit
- * 3. Never overwrite recently-mutated local data with empty cloud data
+ * Priority:
+ * 1. Show localStorage cached data immediately (fast initial render)
+ * 2. Fetch from Supabase cloud on mount and update state with real data
+ * 3. NEVER auto-seed defaults to Supabase — only explicit admin saves write to cloud
  */
 export function useStoreData<T>(key: string, defaultValue: T): [T, (val: T) => void] {
   const [data, setData] = useState<T>(() => {
-    // On first render: if admin has previously saved, use stored value (even if [])
-    if (hasAdminSavedData(key)) {
-      return getStoredData(key, defaultValue);
+    // Initial render: use localStorage cache for fast render, fallback to defaults
+    const cached = getStoredData<T | null>(key, null);
+    if (cached !== null && cached !== undefined) {
+      return cached;
     }
-    // First-ever visit: show defaults
     return defaultValue;
   });
 
   useEffect(() => {
     let isMounted = true;
 
+    // Always fetch from Supabase cloud on mount
     fetchKeyFromCloud(key).then((cloudData) => {
       if (!isMounted) return;
-
+      // If cloud has data (including empty array which means admin cleared it), use it
       if (cloudData !== null && cloudData !== undefined) {
-        const isEmptyArray = Array.isArray(cloudData) && cloudData.length === 0;
-
-        if (isEmptyArray && !hasAdminSavedData(key)) {
-          // Cloud empty + admin never saved → seed defaults once
-          localStorage.setItem(`HAS_DATA_${key}`, "true");
-          setData(defaultValue);
-          syncWithSupabase(key, defaultValue);
-        } else if (!isEmptyArray) {
-          // Cloud has real data → use it
-          localStorage.setItem(`HAS_DATA_${key}`, "true");
-          setData(cloudData);
-        }
-        // If cloudData is empty array but HAS_DATA is set → don't overwrite (handled in fetchKeyFromCloud)
-      } else {
-        // Cloud returned null/error
-        if (!hasAdminSavedData(key)) {
-          // First visit - seed defaults
-          localStorage.setItem(`HAS_DATA_${key}`, "true");
-          syncWithSupabase(key, defaultValue);
-          // Keep showing defaultValue from initial state
-        }
+        setData(cloudData as T);
       }
+      // If cloud returns null (network error), keep showing cached/default data
+      // IMPORTANT: We NEVER write defaults to cloud — only admin actions write to Supabase
     });
 
     const handleKeyUpdate = (e: Event) => {
       const customEvent = e as CustomEvent;
       if (customEvent.detail && customEvent.detail.key === key) {
-        setData(customEvent.detail.value);
+        if (isMounted) setData(customEvent.detail.value as T);
       }
     };
 
-    const handleStorageUpdate = () => {
-      if (hasAdminSavedData(key)) {
-        const stored = getStoredData(key, defaultValue);
-        setData(stored);
-      }
-    };
-
-    // Non-blocking deferred background fetch (100ms to not block initial render)
-    const timer = setTimeout(() => {
-      fetchKeyFromCloud(key);
-    }, 100);
-
-    window.addEventListener("storage", handleStorageUpdate);
-    window.addEventListener("travel-store-update", handleStorageUpdate);
     window.addEventListener("travel-store-key-update", handleKeyUpdate);
 
     return () => {
       isMounted = false;
-      clearTimeout(timer);
-      window.removeEventListener("storage", handleStorageUpdate);
-      window.removeEventListener("travel-store-update", handleStorageUpdate);
       window.removeEventListener("travel-store-key-update", handleKeyUpdate);
     };
-  }, [key]);
+  }, [key]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const updateData = (newValue: T) => {
     setData(newValue);
     setStoredData(key, newValue);
+    // Invalidate fetch cache so next component mount gets fresh cloud data
+    delete fetchCache[key];
   };
 
   return [data, updateData];
 }
+

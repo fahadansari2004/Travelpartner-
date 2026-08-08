@@ -435,6 +435,7 @@ export async function POST(req: Request) {
                 travel_date: item.travel_date || item.travelDate || "2026",
                 featured: Boolean(item.featured),
                 active: item.active !== undefined ? Boolean(item.active) : true,
+                display_order: Number(item.display_order ?? item.displayOrder ?? 1),
                 images: cleanImages,
                 videos: cleanVideos,
               };

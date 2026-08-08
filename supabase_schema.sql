@@ -27,6 +27,8 @@ ALTER TABLE public.albums ADD COLUMN IF NOT EXISTS country text;
 ALTER TABLE public.albums ADD COLUMN IF NOT EXISTS category text;
 ALTER TABLE public.albums ADD COLUMN IF NOT EXISTS images jsonb DEFAULT '[]'::jsonb;
 ALTER TABLE public.albums ADD COLUMN IF NOT EXISTS videos jsonb DEFAULT '[]'::jsonb;
+ALTER TABLE public.albums ADD COLUMN IF NOT EXISTS display_order integer DEFAULT 1;
+
 
 CREATE TABLE IF NOT EXISTS public.testimonials (
   id text PRIMARY KEY,
