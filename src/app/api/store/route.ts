@@ -340,12 +340,8 @@ export async function POST(req: Request) {
                 reviews_count: Number(item.reviews_count ?? item.reviewsCount ?? 15),
                 featured: Boolean(item.featured),
                 active: item.active !== undefined ? Boolean(item.active) : true,
-                short_desc: rawText,
                 description: JSON.stringify(packageMetadata),
-                itinerary: itinArr,
                 gallery: filterUrlArray(galleryArr),
-                included: incArr,
-                excluded: excArr,
                 map_location: item.map_location || item.mapLocation || null,
                 video_url: filterUrl(item.video_url || item.videoUrl) || null,
                 created_at: item.created_at || item.createdAt || new Date().toISOString(),
@@ -455,6 +451,38 @@ export async function POST(req: Request) {
                 cta_text: item.cta_text || item.ctaText || "Learn More",
                 display_order: Number(item.display_order ?? item.displayOrder ?? 1),
                 active: item.active !== undefined ? Boolean(item.active) : true,
+              };
+            }
+
+            if (tableName === "hotels") {
+              const imagesArr = Array.isArray(item.images) ? item.images : [];
+              const facilitiesArr = Array.isArray(item.facilities) ? item.facilities : [];
+              return {
+                id: String(item.id || `htl-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`),
+                name: item.name || "Luxury Hotel",
+                location: item.location || "Global Location",
+                image: filterUrl(item.image) || "https://images.unsplash.com/photo-1566073771259-6a8506099945",
+                images: filterUrlArray(imagesArr),
+                rating: Number(item.rating || 5.0),
+                price_per_night: Number(item.price_per_night ?? item.pricePerNight ?? 500),
+                currency: item.currency || "$",
+                facilities: facilitiesArr,
+                description: item.description || "",
+                booking_link: item.booking_link || item.bookingLink || "",
+                featured: Boolean(item.featured),
+                active: item.active !== undefined ? Boolean(item.active) : true,
+              };
+            }
+
+            if (tableName === "media_library") {
+              return {
+                id: String(item.id || `med-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`),
+                name: item.name || "Media Asset",
+                url: filterUrl(item.url) || "",
+                type: item.type || "image",
+                category: item.category || "Gallery",
+                upload_date: item.upload_date || item.uploadDate || new Date().toISOString().split("T")[0],
+                created_at: item.created_at || new Date().toISOString(),
               };
             }
 
