@@ -437,6 +437,7 @@ export async function syncWithSupabase<T>(key: string, value: T) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ key, value }),
+      cache: "no-store",
     });
     const json = await res.json();
     if (!json.success) {
@@ -485,7 +486,7 @@ export async function fetchKeyFromCloud(key: string, force = false): Promise<any
 
   const promise = (async () => {
     try {
-      const res = await fetch(`/api/store?key=${key}`);
+      const res = await fetch(`/api/store?key=${key}`, { cache: "no-store" });
       const json = await res.json();
       if (json.success && json.data !== null && json.data !== undefined) {
         const cloudData = json.data;

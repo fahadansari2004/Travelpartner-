@@ -83,7 +83,7 @@ export async function GET(req: Request) {
     if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
       return NextResponse.json(
         { success: true, data: cached.data },
-        { headers: { "Cache-Control": "public, max-age=5, stale-while-revalidate=30" } }
+        { headers: { "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0" } }
       );
     }
 
@@ -94,7 +94,7 @@ export async function GET(req: Request) {
         try {
           const parsed = JSON.parse(settingRow.short_desc);
           apiCache[key] = { timestamp: Date.now(), data: parsed };
-          return NextResponse.json({ success: true, data: parsed }, { headers: { "Cache-Control": "public, max-age=5, stale-while-revalidate=30" } });
+          return NextResponse.json({ success: true, data: parsed }, { headers: { "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0" } });
         } catch (e) {}
       }
       return NextResponse.json({ success: true, data: null });
@@ -253,7 +253,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json(
       { success: true, data: mappedData },
-      { headers: { "Cache-Control": "public, max-age=5, stale-while-revalidate=30" } }
+      { headers: { "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0" } }
     );
   } catch (err: any) {
     return NextResponse.json({ success: false, error: err.message, data: [] });
