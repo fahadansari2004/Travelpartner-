@@ -63,10 +63,10 @@ export function GallerySection() {
         </Link>
       </div>
 
-      {/* Pinterest-Style Masonry Grid */}
+      {/* Desktop Pinterest-Style Masonry Grid */}
       <div
         ref={containerRef}
-        className="columns-1 sm:columns-2 lg:columns-3 gap-6 space-y-6 max-w-7xl mx-auto"
+        className="hidden sm:columns-2 lg:columns-3 gap-6 space-y-6 max-w-7xl mx-auto"
       >
         {displayPhotos.map((item) => (
           <div
@@ -99,6 +99,41 @@ export function GallerySection() {
                   </p>
                 </div>
               </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Mobile Horizontal Touch-Swipeable Card Carousel */}
+      <div className="sm:hidden flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-none pb-4 -mx-4 px-4 touch-pan-x">
+        {displayPhotos.map((item) => (
+          <div
+            key={`m-${item.id}`}
+            onClick={() => setSelectedImage(item)}
+            className="snap-start shrink-0 w-[270px] glass-card rounded-3xl overflow-hidden cursor-pointer border border-white/15 bg-slate-950 shadow-xl flex flex-col justify-between"
+          >
+            <div className="relative aspect-[4/3] w-full overflow-hidden">
+              <img
+                src={item.url}
+                alt={item.title}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute top-3 right-3">
+                <span className="w-8 h-8 rounded-full glass flex items-center justify-center text-white bg-black/50 border border-white/20">
+                  <Maximize2 size={14} />
+                </span>
+              </div>
+            </div>
+            <div className="p-4 space-y-1 bg-slate-900/90">
+              <span className="text-[10px] text-amber-400 font-semibold tracking-wide flex items-center gap-1">
+                <MapPin size={10} /> {item.location}
+              </span>
+              <h4 className="text-base font-bold text-white font-[family-name:var(--font-playfair)] line-clamp-1">
+                {item.title}
+              </h4>
+              <p className="text-[11px] text-slate-400 flex items-center gap-1">
+                <Camera size={10} /> {item.photographer}
+              </p>
             </div>
           </div>
         ))}

@@ -27,7 +27,9 @@ export default function PackagesPage() {
   const [bookingSuccessId, setBookingSuccessId] = useState<string | null>(null);
 
   const openWhatsApp = (message: string) => {
-    const phone = (contact?.whatsappNumber || "9645185581").replace(/[^0-9]/g, "");
+    let phone = (contact?.whatsappNumber || "9645185581").replace(/[^0-9]/g, "");
+    if (!phone) phone = "9645185581";
+    if (phone.length === 10) phone = `91${phone}`;
     const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
     window.open(url, "_blank");
   };

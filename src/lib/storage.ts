@@ -335,7 +335,7 @@ export const INITIAL_ABOUT: AboutSettings = {
 
 export const INITIAL_CONTACT: ContactSettings = {
   email: "info@travelpartner.com",
-  phone: "+1 (800) 555-TRAVEL",
+  phone: "+91 9645185581",
   address: "123 Explorer Way, San Francisco, CA 94105",
   openingHours: "Mon - Sat: 9:00 AM - 8:00 PM EST",
   whatsappNumber: "9645185581",

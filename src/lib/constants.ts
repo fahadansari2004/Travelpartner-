@@ -9,7 +9,7 @@ export const SITE_CONFIG = {
   url: "https://travelpartner.com",
   contact: {
     email: "info@travelpartner.com",
-    phone: "+1 (800) 555-TRAVEL",
+    phone: "+91 9645185581",
     address: "123 Explorer Way, San Francisco, CA 94105",
   },
   social: {

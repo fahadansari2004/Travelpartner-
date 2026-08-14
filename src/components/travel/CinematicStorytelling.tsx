@@ -172,7 +172,9 @@ export function CinematicStorytelling() {
   const activeFlights = (flights || []).filter((f: any) => f && (f.active === undefined || f.active));
 
   const openWhatsApp = (message: string) => {
-    const phone = (contact?.whatsappNumber || "9645185581").replace(/[^0-9]/g, "");
+    let phone = (contact?.whatsappNumber || "9645185581").replace(/[^0-9]/g, "");
+    if (!phone) phone = "9645185581";
+    if (phone.length === 10) phone = `91${phone}`;
     const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
     window.open(url, "_blank");
   };
@@ -563,43 +565,41 @@ export function CinematicStorytelling() {
             ))}
           </div>
 
-          {/* Mobile: Infinite Auto-Scroll Carousel */}
-          <div className="md:hidden overflow-hidden relative">
-            <div className="flex gap-5 carousel-auto-scroll" style={{ width: "max-content" }}>
-              {[...(packages || []).slice(0, 6), ...(packages || []).slice(0, 6)].map((pkg, idx) => (
-                <div
-                  key={`pkg-m-${idx}`}
-                  className="glass-card rounded-3xl overflow-hidden border border-white/15 bg-slate-900/70 flex flex-col justify-between p-5 shrink-0 w-[280px]"
-                >
-                  <div className="space-y-3">
-                    <div className="relative aspect-video rounded-2xl overflow-hidden bg-slate-950">
-                      <img
-                        src={pkg.image || "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=80"}
-                        alt={pkg.name}
-                        onError={(e) => { (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=80"; }}
-                        className="w-full h-full object-cover"
-                      />
-                      <span className="absolute top-3 right-3 px-3 py-1 rounded-full bg-amber-500 text-slate-950 font-bold text-xs">
-                        ₹{(pkg.discountPrice || pkg.price).toLocaleString("en-IN")}
-                      </span>
-                    </div>
-                    <span className="text-xs text-amber-400 font-semibold uppercase">{pkg.destination}</span>
-                    <h3 className="text-base font-bold font-[family-name:var(--font-playfair)] text-white">{pkg.name}</h3>
-                    <p className="text-xs text-slate-300 line-clamp-2">{pkg.shortDesc || pkg.description}</p>
+          {/* Mobile: Horizontal Touch-Swipeable Card Carousel */}
+          <div className="md:hidden flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-none pb-4 -mx-4 px-4 touch-pan-x">
+            {(packages || []).map((pkg, idx) => (
+              <div
+                key={`pkg-m-${idx}`}
+                className="snap-start shrink-0 w-[275px] glass-card rounded-3xl overflow-hidden border border-white/15 bg-slate-900/80 flex flex-col justify-between p-5 shadow-xl"
+              >
+                <div className="space-y-3">
+                  <div className="relative aspect-video rounded-2xl overflow-hidden bg-slate-950">
+                    <img
+                      src={pkg.image || "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=80"}
+                      alt={pkg.name}
+                      onError={(e) => { (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=80"; }}
+                      className="w-full h-full object-cover"
+                    />
+                    <span className="absolute top-3 right-3 px-3 py-1 rounded-full bg-amber-500 text-slate-950 font-bold text-xs">
+                      ₹{(pkg.discountPrice || pkg.price).toLocaleString("en-IN")}
+                    </span>
                   </div>
-                  <button
-                    onClick={() => {
-                      const msg = `Hi! I'm interested in the *${pkg.name}* package to ${pkg.destination}.\n\n📅 Duration: ${pkg.duration}\n💰 Price: ₹${(pkg.discountPrice || pkg.price).toLocaleString("en-IN")}\n\nPlease share more details.`;
-                      openWhatsApp(msg);
-                    }}
-                    className="w-full mt-3 px-4 py-2.5 rounded-2xl bg-green-600 hover:bg-green-500 text-white text-xs font-bold flex items-center justify-center gap-2 transition-all"
-                  >
-                    <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
-                    Book via WhatsApp
-                  </button>
+                  <span className="text-xs text-amber-400 font-semibold uppercase">{pkg.destination}</span>
+                  <h3 className="text-base font-bold font-[family-name:var(--font-playfair)] text-white">{pkg.name}</h3>
+                  <p className="text-xs text-slate-300 line-clamp-2">{pkg.shortDesc || pkg.description}</p>
                 </div>
-              ))}
-            </div>
+                <button
+                  onClick={() => {
+                    const msg = `Hi! I'm interested in the *${pkg.name}* package to ${pkg.destination}.\n\n📅 Duration: ${pkg.duration}\n💰 Price: ₹${(pkg.discountPrice || pkg.price).toLocaleString("en-IN")}\n\nPlease share more details.`;
+                    openWhatsApp(msg);
+                  }}
+                  className="w-full mt-3 px-4 py-2.5 rounded-2xl bg-green-600 hover:bg-green-500 text-white text-xs font-bold flex items-center justify-center gap-2 transition-all"
+                >
+                  <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+                  Book via WhatsApp
+                </button>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -679,30 +679,28 @@ export function CinematicStorytelling() {
             )}
           </div>
 
-          {/* Mobile: Infinite Auto-Scroll Carousel */}
-          <div className="md:hidden overflow-hidden relative">
+          {/* Mobile: Horizontal Touch-Swipeable Card Carousel */}
+          <div className="md:hidden flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-none pb-4 -mx-4 px-4 touch-pan-x">
             {activeFlights.length > 0 ? (
-              <div className="flex gap-5 carousel-auto-scroll carousel-slow" style={{ width: "max-content" }}>
-                {[...activeFlights, ...activeFlights].map((flt: any, idx: number) => (
-                  <div key={`flt-m-${idx}`} className="snap-start shrink-0 w-[280px] glass-card p-5 rounded-3xl border border-white/15 bg-slate-900/70 flex flex-col gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-lg">{flt.airlineLogo || "✈️"}</div>
-                      <div><h3 className="font-bold text-white text-xs">{flt.airlineName}</h3><span className="text-[10px] text-slate-400">{flt.travelClass}</span></div>
-                    </div>
-                    <div className="flex items-center justify-between px-2 py-2 rounded-xl bg-white/5 border border-white/10">
-                      <div className="text-center"><span className="text-base font-bold text-white">{flt.fromCode}</span><p className="text-[9px] text-slate-400">{flt.fromCity}</p></div>
-                      <Plane size={12} className="text-sky-400" />
-                      <div className="text-center"><span className="text-base font-bold text-white">{flt.toCode}</span><p className="text-[9px] text-slate-400">{flt.toCity}</p></div>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-lg font-bold text-amber-400">₹{flt.farePrice.toLocaleString("en-IN")}</span>
-                      <button onClick={() => { const msg = `Hi! ✈️ *${flt.airlineName}* ${flt.fromCode}→${flt.toCode}\n📌 ${flt.travelClass}\n💰 ₹${flt.farePrice.toLocaleString("en-IN")}\nPlease confirm availability.`; openWhatsApp(msg); }} className="px-3 py-1.5 rounded-xl bg-green-600 text-white text-[10px] font-bold">Book</button>
-                    </div>
+              activeFlights.map((flt: any, idx: number) => (
+                <div key={`flt-m-${idx}`} className="snap-start shrink-0 w-[275px] glass-card p-5 rounded-3xl border border-white/15 bg-slate-900/80 flex flex-col justify-between gap-3 shadow-xl">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-lg">{flt.airlineLogo || "✈️"}</div>
+                    <div><h3 className="font-bold text-white text-xs">{flt.airlineName}</h3><span className="text-[10px] text-slate-400">{flt.travelClass}</span></div>
                   </div>
-                ))}
-              </div>
+                  <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-white/5 border border-white/10">
+                    <div className="text-center"><span className="text-base font-bold text-white">{flt.fromCode}</span><p className="text-[9px] text-slate-400">{flt.fromCity}</p></div>
+                    <Plane size={12} className="text-sky-400" />
+                    <div className="text-center"><span className="text-base font-bold text-white">{flt.toCode}</span><p className="text-[9px] text-slate-400">{flt.toCity}</p></div>
+                  </div>
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-lg font-bold text-amber-400">₹{flt.farePrice.toLocaleString("en-IN")}</span>
+                    <button onClick={() => { const msg = `Hi! ✈️ *${flt.airlineName}* ${flt.fromCode}→${flt.toCode}\n📌 ${flt.travelClass}\n💰 ₹${flt.farePrice.toLocaleString("en-IN")}\nPlease confirm availability.`; openWhatsApp(msg); }} className="px-3.5 py-2 rounded-xl bg-green-600 hover:bg-green-500 text-white text-xs font-bold flex items-center gap-1">Book</button>
+                  </div>
+                </div>
+              ))
             ) : (
-              <div className="text-center py-10 text-slate-400 text-sm">
+              <div className="text-center py-10 text-slate-400 text-sm w-full">
                 <Plane size={32} className="mx-auto mb-3 opacity-30" />
                 <Link href="/flights" className="text-amber-400 underline">Check special flights</Link>
               </div>
