@@ -52,7 +52,7 @@ export interface FlightFare {
   travelClass: "Economy" | "Business" | "First Class";
   travelDate?: string;
   duration?: string;
-  farePrice: number;
+  farePrice?: number;
   currency?: string;
   offerBadge?: string;
   seatsAvailable?: number;

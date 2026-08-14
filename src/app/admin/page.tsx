@@ -1193,7 +1193,7 @@ export default function AdminDashboardPage() {
                     <h4 className="text-xl font-bold font-[family-name:var(--font-playfair)] text-white">
                       {flt.fromCity} ({flt.fromCode}) → {flt.toCity} ({flt.toCode})
                     </h4>
-                    <p className="text-xs text-slate-400">Fare: <span className="text-amber-300 font-bold">${flt.farePrice}</span> • Duration: {flt.duration || "Direct"}</p>
+                    <p className="text-xs text-slate-400">Fare: <span className="text-amber-300 font-bold">{flt.farePrice ? `₹${flt.farePrice.toLocaleString("en-IN")}` : "Price on Request"}</span> • Duration: {flt.duration || "Direct"}</p>
                   </div>
 
                   <div className="flex items-center justify-between pt-3 border-t border-white/10 gap-2">
@@ -1996,11 +1996,12 @@ export default function AdminDashboardPage() {
                   />
                 </div>
                 <div>
-                  <label className="block uppercase text-slate-300 font-semibold mb-1">Fare Price ($) *</label>
+                  <label className="block uppercase text-slate-300 font-semibold mb-1">Fare Price (₹) (Optional)</label>
                   <input
                     type="number"
-                    value={editingFlight.farePrice || 850}
-                    onChange={(e) => setEditingFlight({ ...editingFlight, farePrice: Number(e.target.value) })}
+                    value={editingFlight.farePrice !== undefined && editingFlight.farePrice !== null ? editingFlight.farePrice : ""}
+                    onChange={(e) => setEditingFlight({ ...editingFlight, farePrice: e.target.value ? Number(e.target.value) : undefined })}
+                    placeholder="Leave blank for Price on Request"
                     className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white"
                   />
                 </div>
