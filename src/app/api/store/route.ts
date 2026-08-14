@@ -111,6 +111,64 @@ export async function GET(req: Request) {
     const { data, error } = await supabase.from(tableName).select("*");
     if (error) return NextResponse.json({ success: false, error: error.message, data: [] });
 
+    // Explicit mapping & auto-seeding for services table
+    if (tableName === "services") {
+      let servicesList = (data || [])
+        .filter((item: any) => !item.id?.startsWith("setting_"))
+        .map((item: any) => ({
+          id: String(item.id),
+          name: item.name || item.title || "Travel Service",
+          category: item.category || "Concierge",
+          iconName: item.icon_name || item.iconName || "Compass",
+          image: item.image || "",
+          shortDesc: item.short_desc || item.shortDesc || item.description || "Travel service.",
+          longDesc: item.long_desc || item.longDesc || item.short_desc || "",
+          ctaText: item.cta_text || item.ctaText || "Learn More",
+          displayOrder: Number(item.display_order ?? item.displayOrder ?? 1),
+          active: item.active !== undefined ? Boolean(item.active) : true,
+        }));
+
+      // If database has fewer than 10 services, seed all 10 custom services into Supabase!
+      if (servicesList.length < 10) {
+        const DEFAULT_10_SERVICES = [
+          { id: "srv-1", name: "Visit Visa", category: "Visa & Travel Documents", icon_name: "FileText", image: "", short_desc: "Fast-track tourist & business visit visa processing for major destinations worldwide.", long_desc: "Expert guidance for tourist and business visas with step-by-step document check, appointment scheduling, and high approval rate.", cta_text: "Apply Visa", display_order: 1, active: true },
+          { id: "srv-2", name: "Visa Stamping", category: "Visa & Travel Documents", icon_name: "FileCheck", image: "", short_desc: "Complete consulate & embassy visa stamping services with verified document submission.", long_desc: "Hassle-free visa endorsement and embassy stamping for employment, residence, and family visas.", cta_text: "Get Stamped", display_order: 2, active: true },
+          { id: "srv-3", name: "Flight Tickets", category: "Flight & Travel", icon_name: "Plane", image: "", short_desc: "Exclusive domestic & international flight ticket bookings at best rate guarantee.", long_desc: "Instant ticket issuance across global airlines, seat selection, extra baggage assistance, and 24/7 rebooking support.", cta_text: "Book Flights", display_order: 3, active: true },
+          { id: "srv-4", name: "Hotel Booking", category: "Accommodations", icon_name: "Building", image: "", short_desc: "Premium hotel reservations, luxury resorts, and boutique stay accommodations worldwide.", long_desc: "Curated 3-star to 5-star hotel stays with free breakfast options, early check-in perks, and flexible cancellation policies.", cta_text: "Book Hotel", display_order: 4, active: true },
+          { id: "srv-5", name: "Train Tickets", category: "Transportation", icon_name: "Train", image: "", short_desc: "Seamless IRCTC & international rail ticket reservations with instant confirmation.", long_desc: "Confirmed train seat reservations, sleeper, AC 3-tier, 2-tier, and executive class bookings with express assistance.", cta_text: "Book Train", display_order: 5, active: true },
+          { id: "srv-6", name: "Holiday Packages", category: "Tours & Holidays", icon_name: "Luggage", image: "", short_desc: "Customized domestic & international holiday tour packages crafted for your budget.", long_desc: "All-inclusive tour packages including flights, luxury stays, guided sightseeing, transfers, and custom travel itineraries.", cta_text: "View Packages", display_order: 6, active: true },
+          { id: "srv-7", name: "Emigration Clearance Service", category: "Government Services", icon_name: "ShieldCheck", image: "", short_desc: "Hassle-free ECR/ECNR emigration clearance assistance for overseas employment & travel.", long_desc: "Official Ministry of External Affairs emigration clearance processing for workers and travellers travelling abroad.", cta_text: "Get Clearance", display_order: 7, active: true },
+          { id: "srv-8", name: "Certificate Attestation", category: "Government Services", icon_name: "Award", image: "", short_desc: "HRD, MEA, Apostille & Embassy certificate attestation for educational and commercial documents.", long_desc: "Verified degree, birth, marriage, and commercial certificate attestation from state departments, MEA, and foreign embassies.", cta_text: "Attest Certificate", display_order: 8, active: true },
+          { id: "srv-9", name: "Passport Application", category: "Government Services", icon_name: "BookOpen", image: "", short_desc: "Fresh passport applications, renewal, address change, and tatkal appointment assistance.", long_desc: "End-to-end Passport Seva Kendra application filing, document verification, appointment booking, and tatkal support.", cta_text: "Apply Passport", display_order: 9, active: true },
+          { id: "srv-10", name: "Pancard Service", category: "Government Services", icon_name: "CreditCard", image: "", short_desc: "New PAN card application, correction, and instant e-PAN card processing services.", long_desc: "Fast PAN card processing for resident & NRI applicants, name/address corrections, and physical card delivery.", cta_text: "Apply PAN", display_order: 10, active: true },
+        ];
+        await supabase.from("services").upsert(DEFAULT_10_SERVICES, { onConflict: "id" });
+        const { data: freshRows } = await supabase.from("services").select("*");
+        if (freshRows && freshRows.length > 0) {
+          servicesList = freshRows
+            .filter((item: any) => !item.id?.startsWith("setting_"))
+            .map((item: any) => ({
+              id: String(item.id),
+              name: item.name || item.title || "Travel Service",
+              category: item.category || "Concierge",
+              iconName: item.icon_name || item.iconName || "Compass",
+              image: item.image || "",
+              shortDesc: item.short_desc || item.shortDesc || item.description || "Travel service.",
+              longDesc: item.long_desc || item.longDesc || item.short_desc || "",
+              ctaText: item.cta_text || item.ctaText || "Learn More",
+              displayOrder: Number(item.display_order ?? item.displayOrder ?? 1),
+              active: item.active !== undefined ? Boolean(item.active) : true,
+            }));
+        }
+      }
+
+      apiCache[key] = { timestamp: Date.now(), data: servicesList };
+      return NextResponse.json(
+        { success: true, data: servicesList },
+        { headers: { "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0" } }
+      );
+    }
+
     // Map PostgreSQL columns to React camelCase properties
     const mappedData = (data || [])
       .filter((item: any) => !item.id?.startsWith("setting_"))
@@ -118,10 +176,8 @@ export async function GET(req: Request) {
         if (tableName === "albums") {
           const rawImages = safeParseJson(item.images, []);
           const imagesArr = Array.isArray(rawImages) ? rawImages : [];
-
           const rawVideos = safeParseJson(item.videos, []);
           const videosArr = Array.isArray(rawVideos) ? rawVideos : [];
-
           return {
             id: String(item.id),
             name: item.name || "Luxury Album",
@@ -188,6 +244,74 @@ export async function GET(req: Request) {
             createdAt: item.created_at || new Date().toISOString(),
           };
         }
+
+        // Generic fallback for other tables
+        let rawDesc = item.description || "";
+        let cleanDesc = item.short_desc || item.shortDesc || "";
+
+        if (typeof rawDesc === "string" && rawDesc.trim().startsWith("{") && rawDesc.trim().endsWith("}")) {
+          try {
+            const parsed = JSON.parse(rawDesc);
+            cleanDesc = parsed.text || parsed.description || cleanDesc;
+          } catch (e) {}
+        } else if (rawDesc) {
+          cleanDesc = rawDesc;
+        }
+
+        let serviceDesc = item.short_desc || item.long_desc || item.shortDesc || item.longDesc || cleanDesc || "";
+        const gallery = safeParseJson(item.gallery, []);
+        let imagesArr = safeParseJson(item.images, []);
+        if (!Array.isArray(imagesArr)) imagesArr = [];
+        let videosArr = safeParseJson(item.videos, []);
+        if (!Array.isArray(videosArr)) videosArr = [];
+
+        return {
+          ...item,
+          id: String(item.id),
+          name: item.name || item.customer_name || item.customerName || "Valued Client",
+          customerName: item.name || item.customer_name || item.customerName || "Valued Client",
+          packageOrItemName: item.subject || item.package_name || item.packageOrItemName || "Travel Booking",
+          packageName: item.subject || item.package_name || item.packageName || "Travel Booking",
+          subject: item.subject || item.package_name || item.packageOrItemName || "Travel Booking",
+          message: item.message || item.notes || "",
+          notes: item.message || item.notes || "",
+          guestsCount: item.guests_count || item.guests || 1,
+          guests: item.guests_count || item.guests || 1,
+          travelDate: item.travel_date || item.travelDate || "",
+          preferredTime: item.preferred_time || item.preferredTime || "",
+          totalAmount: item.total_amount || item.totalAmount || 0,
+          createdAt: item.created_at || item.createdAt || item.date || new Date().toISOString().slice(0, 10),
+          date: item.created_at || item.createdAt || item.date || new Date().toISOString().slice(0, 10),
+          coverImage: item.cover_image || item.coverImage || item.image || "",
+          shortDesc: cleanDesc,
+          description: cleanDesc,
+          longDesc: item.long_desc || item.longDesc || serviceDesc,
+          gallery: Array.isArray(gallery) ? gallery : [],
+          images: imagesArr,
+          videos: videosArr,
+          discountPrice: item.discount_price ?? item.discountPrice ?? item.price,
+          uploadDate: item.upload_date || item.uploadDate || item.created_at,
+          reviewsCount: item.reviews_count ?? item.reviewsCount ?? 10,
+          mapLocation: item.map_location || item.mapLocation,
+          videoUrl: item.video_url || item.videoUrl,
+          airlineName: item.airline_name || item.airlineName,
+          airlineLogo: item.airline_logo || item.airlineLogo,
+          fromCity: item.from_city || item.fromCity,
+          fromCode: item.from_code || item.fromCode,
+          toCity: item.to_city || item.toCity,
+          toCode: item.to_code || item.toCode,
+          tripType: item.trip_type || item.tripType,
+          travelClass: item.travel_class || item.travelClass,
+          farePrice: Number(item.fare_price ?? item.farePrice ?? 0),
+          offerBadge: item.offer_badge || item.offerBadge,
+          seatsAvailable: item.seats_available ?? item.seatsAvailable,
+          bookingLink: item.booking_link || item.bookingLink,
+          pricePerNight: item.price_per_night ?? item.pricePerNight,
+          iconName: item.icon_name || item.iconName,
+          ctaText: item.cta_text || item.ctaText,
+          displayOrder: item.display_order ?? item.displayOrder ?? 1,
+        };
+      });
 
     return NextResponse.json(
       { success: true, data: mappedData },
