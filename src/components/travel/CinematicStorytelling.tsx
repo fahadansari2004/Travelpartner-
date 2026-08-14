@@ -20,7 +20,15 @@ import {
   Shield,
   Car,
   FileCheck,
-  ChevronRight
+  ChevronRight,
+  FileText,
+  Building,
+  Train,
+  Luggage,
+  ShieldCheck,
+  Award,
+  BookOpen,
+  CreditCard
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Footer } from "@/components/layout/Footer";
@@ -41,6 +49,14 @@ const ICON_MAP: Record<string, any> = {
   Sparkles,
   Shield,
   Car,
+  FileText,
+  Building,
+  Train,
+  Luggage,
+  ShieldCheck,
+  Award,
+  BookOpen,
+  CreditCard,
 };
 
 interface SectionItem {
@@ -454,7 +470,10 @@ export function CinematicStorytelling() {
                   onClick={() => setActiveServiceModal(serv)}
                   className="snap-start shrink-0 w-[280px] sm:w-[360px] glass-card p-6 sm:p-8 rounded-3xl border border-white/15 bg-slate-900/60 hover:bg-slate-900/80 transition-all cursor-pointer group flex flex-col justify-between"
                 >
-                  <div className="space-y-3">
+                  <div className="space-y-4">
+                    <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 group-hover:scale-110 group-hover:bg-amber-500 group-hover:text-slate-950 transition-all duration-300">
+                      <Icon size={22} />
+                    </div>
                     <h3 className="text-xl font-bold font-[family-name:var(--font-playfair)]">{serv.name}</h3>
                     <p className="text-xs sm:text-sm text-slate-300 leading-relaxed line-clamp-3">{serv.shortDesc || serv.longDesc || serv.description}</p>
                   </div>
