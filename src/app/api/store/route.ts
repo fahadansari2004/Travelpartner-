@@ -238,7 +238,7 @@ export async function GET(req: Request) {
           toCode: item.to_code || item.toCode,
           tripType: item.trip_type || item.tripType,
           travelClass: item.travel_class || item.travelClass,
-          farePrice: item.fare_price ?? item.farePrice,
+          farePrice: (item.fare_price !== null && item.fare_price !== undefined && Number(item.fare_price) > 0) ? Number(item.fare_price) : (item.farePrice && Number(item.farePrice) > 0 ? Number(item.farePrice) : undefined),
           offerBadge: item.offer_badge || item.offerBadge,
           seatsAvailable: item.seats_available ?? item.seatsAvailable,
           bookingLink: item.booking_link || item.bookingLink,
@@ -364,6 +364,8 @@ export async function POST(req: Request) {
             }
 
             if (tableName === "flights") {
+              const fpRaw = item.fare_price ?? item.farePrice;
+              const cleanFp = (fpRaw !== undefined && fpRaw !== null && fpRaw !== "" && Number(fpRaw) > 0) ? Number(fpRaw) : null;
               return {
                 id: String(item.id || `flt-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`),
                 airline_name: item.airline_name || item.airlineName || "VIP Airline",
@@ -376,8 +378,8 @@ export async function POST(req: Request) {
                 travel_class: item.travel_class || item.travelClass || "First Class",
                 travel_date: item.travel_date || item.travelDate || "",
                 duration: item.duration || "8h 30m",
-                fare_price: Number(item.fare_price ?? item.farePrice ?? 1000),
-                currency: item.currency || "$",
+                fare_price: cleanFp,
+                currency: item.currency || "₹",
                 offer_badge: item.offer_badge || item.offerBadge || "Special Rate",
                 seats_available: Number(item.seats_available ?? item.seatsAvailable ?? 4),
                 booking_link: item.booking_link || item.bookingLink || "#book-flight",
