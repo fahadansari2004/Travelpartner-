@@ -37,7 +37,7 @@ export default function ContactPage() {
     setEnquiries(updated);
     setSubmitted(true);
 
-    // Direct HTTP post to Supabase PostgreSQL
+    // Direct HTTP post to Supabase PostgreSQL database
     try {
       await fetch("/api/store", {
         method: "POST",
@@ -47,6 +47,18 @@ export default function ContactPage() {
     } catch (err) {
       console.warn("Direct contact post notice:", err);
     }
+
+    // Format WhatsApp message & redirect to WhatsApp chat
+    let rawWa = (contactInfo?.whatsappNumber || "9645185581").replace(/\D/g, "");
+    if (!rawWa || rawWa.includes("7356")) rawWa = "9645185581";
+    if (rawWa.length === 10) rawWa = `91${rawWa}`;
+
+    const waText = `Hi travelPartner! 📩 *New Contact Enquiry*\n\n👤 *Name:* ${name}\n📧 *Email:* ${email}\n📞 *Phone:* ${phone || "Not Provided"}\n📌 *Category:* ${type}\n📝 *Subject:* ${subject}\n💬 *Message:* ${message}`;
+    const waUrl = `https://wa.me/${rawWa}?text=${encodeURIComponent(waText)}`;
+
+    setTimeout(() => {
+      window.open(waUrl, "_blank");
+    }, 300);
   };
 
   return (
@@ -84,9 +96,25 @@ export default function ContactPage() {
           {submitted ? (
             <div className="p-8 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-center space-y-4">
               <ShieldCheck size={48} className="text-emerald-400 mx-auto animate-bounce" />
-              <h3 className="text-xl font-bold text-white">Enquiry Received</h3>
-              <p className="text-xs text-slate-300">Thank you, {name}! Your luxury travel request has been logged in our VIP concierge system.</p>
-              <Button variant="amber" size="sm" onClick={() => setSubmitted(false)}>Send Another Enquiry</Button>
+              <h3 className="text-xl font-bold text-white">Enquiry Stored & Connecting to WhatsApp...</h3>
+              <p className="text-xs text-slate-300">Thank you, {name}! Your luxury travel request has been logged in our database and forwarded to WhatsApp Support (+91 9645185581).</p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
+                <Button 
+                  variant="emerald" 
+                  size="sm" 
+                  leftIcon={<MessageCircle size={16} />}
+                  onClick={() => {
+                    let rawWa = (contactInfo?.whatsappNumber || "9645185581").replace(/\D/g, "");
+                    if (!rawWa || rawWa.includes("7356")) rawWa = "9645185581";
+                    if (rawWa.length === 10) rawWa = `91${rawWa}`;
+                    const waText = `Hi travelPartner! 📩 *New Contact Enquiry*\n\n👤 *Name:* ${name}\n📧 *Email:* ${email}\n📞 *Phone:* ${phone || "Not Provided"}\n📌 *Category:* ${type}\n📝 *Subject:* ${subject}\n💬 *Message:* ${message}`;
+                    window.open(`https://wa.me/${rawWa}?text=${encodeURIComponent(waText)}`, "_blank");
+                  }}
+                >
+                  Open WhatsApp Chat
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => setSubmitted(false)}>Send Another Enquiry</Button>
+              </div>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
