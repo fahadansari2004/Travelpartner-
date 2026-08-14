@@ -41,10 +41,13 @@ export function Preloader({ onComplete }: PreloaderProps) {
     // ── Prevent scrolling during intro ─────────────────────────────────────
     document.body.style.overflow = "hidden";
 
-    // ── Ultra Fast Counter & Step Interval ───────────────────────────────────
+    // ── Smooth Realistic Counter & Step Interval ─────────────────────────────
     let currentProgress = 0;
     const interval = setInterval(() => {
-      currentProgress += Math.floor(Math.random() * 20) + 15;
+      // Simulate realistic loading: fast at first, then slows near the end
+      const remaining = 100 - currentProgress;
+      const increment = Math.max(1, Math.floor(Math.random() * 4) + (remaining > 40 ? 3 : 1));
+      currentProgress += increment;
       if (currentProgress >= 100) {
         currentProgress = 100;
         clearInterval(interval);
@@ -56,7 +59,7 @@ export function Preloader({ onComplete }: PreloaderProps) {
         LOADING_STEPS.length - 1
       );
       setStepText(LOADING_STEPS[stepIndex]);
-    }, 15);
+    }, 80);
 
     return () => clearInterval(interval);
   }, [isFinished, onComplete]);
@@ -85,14 +88,14 @@ export function Preloader({ onComplete }: PreloaderProps) {
           ],
           {
             opacity: 0,
-            y: -10,
-            duration: 0.15,
-            stagger: 0.02,
+            y: -16,
+            duration: 0.5,
+            stagger: 0.06,
             ease: "power2.in",
           }
         ).to(containerRef.current, {
           opacity: 0,
-          duration: 0.2,
+          duration: 0.6,
           ease: "power2.out",
         });
       });

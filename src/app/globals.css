@@ -208,3 +208,33 @@ html.lenis body {
 .animate-shimmer  { animation: shimmer 2.5s linear infinite; background-size: 200% auto; }
 .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
 .animate-fade-in-up { animation: fade-in-up 0.8s ease-out forwards; }
+
+/* ─── Infinite Auto-Scroll Carousel ─────────────────────────────────────────── */
+@keyframes carousel-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.carousel-auto-scroll {
+  animation: carousel-scroll 22s linear infinite;
+  will-change: transform;
+}
+
+.carousel-auto-scroll:hover {
+  animation-play-state: paused;
+}
+
+/* Slower variant for flights section */
+.carousel-auto-scroll.carousel-slow {
+  animation-duration: 30s;
+}
+
+/* Hide scrollbar utility */
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+

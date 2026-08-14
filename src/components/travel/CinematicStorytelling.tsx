@@ -94,63 +94,57 @@ const SECTIONS: SectionItem[] = [
 
 /**
  * Scroll-Driven Smooth Zooming Parallax Background Animation Component
+ * Supports both image URLs and local video files (/videos/*.mp4)
  */
 function AnimatedParallaxBackground({ mediaSrc, imageSrc }: { mediaSrc?: string; imageSrc?: string }) {
-  let rawSrc = mediaSrc || imageSrc || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80";
+  const rawSrc = mediaSrc || imageSrc || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80";
 
-  // Replace video URLs with high-definition luxury travel background imagery
-  if (typeof rawSrc === "string" && (rawSrc.endsWith(".mp4") || rawSrc.endsWith(".webm") || rawSrc.includes("videos/") || rawSrc.includes("video"))) {
-    rawSrc = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80";
-  }
+  // Detect if source is a video file
+  const isVideo = typeof rawSrc === "string" && (
+    rawSrc.endsWith(".mp4") || rawSrc.endsWith(".webm") || rawSrc.endsWith(".ogg")
+  );
 
-  const [mediaUrl, setMediaUrl] = useState(rawSrc);
   const [hasError, setHasError] = useState(false);
+  const [videoError, setVideoError] = useState(false);
 
-  useEffect(() => {
-    let cleanSrc = mediaSrc || imageSrc || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80";
-    if (typeof cleanSrc === "string" && (cleanSrc.endsWith(".mp4") || cleanSrc.endsWith(".webm") || cleanSrc.includes("videos/") || cleanSrc.includes("video"))) {
-      cleanSrc = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80";
-    }
-    setMediaUrl(cleanSrc);
-    setHasError(false);
-  }, [mediaSrc, imageSrc]);
+  const fallbackImg = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80";
 
   return (
     <div className="absolute inset-0 w-full h-full overflow-hidden bg-slate-950 pointer-events-none z-0">
-      {!hasError ? (
+      {isVideo && !videoError ? (
+        <video
+          key={rawSrc}
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="none"
+          onError={() => setVideoError(true)}
+          className="absolute inset-0 w-full h-full object-cover scale-110"
+        >
+          <source src={rawSrc} type="video/mp4" />
+        </video>
+      ) : !hasError ? (
         <motion.img
-          initial={{ scale: 1.05, opacity: 0.5 }}
-          whileInView={{ scale: 1.25, opacity: 0.7 }}
+          initial={{ scale: 1.08, opacity: 0 }}
+          whileInView={{ scale: 1.18, opacity: 0.75 }}
           viewport={{ once: false, amount: 0.1 }}
-          transition={{ duration: 1.8, ease: "easeOut" }}
-          animate={{
-            scale: [1.05, 1.15, 1.05],
-          }}
-          transition-animate={{
-            duration: 15,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-          src={mediaUrl}
+          transition={{ duration: 2.2, ease: "easeOut" }}
+          src={isVideo ? fallbackImg : rawSrc}
           alt=""
           loading="lazy"
           decoding="async"
-          onError={() => {
-            if (!mediaUrl.includes("photo-1507525428034")) {
-              setMediaUrl("https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80");
-            } else {
-              setHasError(true);
-            }
-          }}
-          className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 ease-out"
+          onError={() => setHasError(true)}
+          className="absolute inset-0 w-full h-full object-cover"
         />
       ) : (
         <div className="absolute inset-0 w-full h-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-black opacity-80" />
       )}
-      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/65 to-slate-950/80" />
+      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-slate-950/75" />
     </div>
   );
 }
+
 
 export function CinematicStorytelling() {
   const [activeSectionIndex, setActiveSectionIndex] = useState(0);
@@ -500,20 +494,27 @@ export function CinematicStorytelling() {
         </motion.div>
       </section>
 
-      {/* ── 5. PACKAGES SECTION ────────────────────────────────────────────── */}
-      <section 
+      {/* ── 5. PACKAGES SECTION ─────────────────────────────────────────────── */}
+      <section
         id="packages-section" 
         className="relative w-full min-h-screen flex flex-col justify-center px-4 sm:px-8 lg:px-16 py-16 sm:py-24 overflow-hidden"
       >
         <AnimatedParallaxBackground imageSrc={SECTIONS[4].imageSrc} />
 
+
         <div className="relative z-10 max-w-7xl mx-auto w-full space-y-10">
           <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4">
-            <div className="space-y-2">
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7 }}
+              className="space-y-2"
+            >
               <h2 className="text-3xl sm:text-5xl font-bold font-[family-name:var(--font-playfair)]">
                 Featured <span className="gradient-text">Tour Packages</span>
               </h2>
-            </div>
+            </motion.div>
             <Link href="/packages">
               <Button variant="amber" size="md" rightIcon={<ArrowRight size={16} />}>
                 View All Packages
@@ -521,7 +522,8 @@ export function CinematicStorytelling() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Desktop Grid / Mobile Auto-Scroll Carousel */}
+          <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {(packages || []).slice(0, 3).map((pkg, idx) => (
               <motion.div
                 key={pkg.id}
@@ -529,24 +531,22 @@ export function CinematicStorytelling() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: idx * 0.1 }}
-                className="glass-card rounded-3xl overflow-hidden border border-white/15 bg-slate-900/70 space-y-4 flex flex-col justify-between p-5"
+                className="glass-card rounded-3xl overflow-hidden border border-white/15 bg-slate-900/70 flex flex-col justify-between p-5"
               >
                 <div className="space-y-3">
                   <div className="relative aspect-video rounded-2xl overflow-hidden bg-slate-950">
-                    <img 
-                      src={pkg.image || "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1200&q=80"} 
-                      alt="" 
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1200&q=80";
-                      }}
-                      className="w-full h-full object-cover" 
+                    <img
+                      src={pkg.image || "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=80"}
+                      alt={pkg.name}
+                      onError={(e) => { (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=80"; }}
+                      className="w-full h-full object-cover"
                     />
                     <span className="absolute top-3 right-3 px-3 py-1 rounded-full bg-amber-500 text-slate-950 font-bold text-xs">
                       ₹{(pkg.discountPrice || pkg.price).toLocaleString("en-IN")}
                     </span>
                   </div>
                   <span className="text-xs text-amber-400 font-semibold uppercase">{pkg.destination}</span>
-                  <h3 className="text-xl font-bold font-[family-name:var(--font-playfair)] text-white">{pkg.name}</h3>
+                  <h3 className="text-lg font-bold font-[family-name:var(--font-playfair)] text-white">{pkg.name}</h3>
                   <p className="text-xs text-slate-300 line-clamp-2">{pkg.shortDesc || pkg.description}</p>
                 </div>
                 <button
@@ -554,13 +554,52 @@ export function CinematicStorytelling() {
                     const msg = `Hi! I'm interested in the *${pkg.name}* package to ${pkg.destination}.\n\n📅 Duration: ${pkg.duration}\n💰 Price: ₹${(pkg.discountPrice || pkg.price).toLocaleString("en-IN")}\n\nPlease share more details and availability.`;
                     openWhatsApp(msg);
                   }}
-                  className="w-full mt-2 px-4 py-2.5 rounded-2xl bg-green-600 hover:bg-green-500 text-white text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-green-600/20"
+                  className="w-full mt-3 px-4 py-2.5 rounded-2xl bg-green-600 hover:bg-green-500 text-white text-xs font-bold flex items-center justify-center gap-2 transition-all"
                 >
                   <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
                   Book via WhatsApp
                 </button>
               </motion.div>
             ))}
+          </div>
+
+          {/* Mobile: Infinite Auto-Scroll Carousel */}
+          <div className="md:hidden overflow-hidden relative">
+            <div className="flex gap-5 carousel-auto-scroll" style={{ width: "max-content" }}>
+              {[...(packages || []).slice(0, 6), ...(packages || []).slice(0, 6)].map((pkg, idx) => (
+                <div
+                  key={`pkg-m-${idx}`}
+                  className="glass-card rounded-3xl overflow-hidden border border-white/15 bg-slate-900/70 flex flex-col justify-between p-5 shrink-0 w-[280px]"
+                >
+                  <div className="space-y-3">
+                    <div className="relative aspect-video rounded-2xl overflow-hidden bg-slate-950">
+                      <img
+                        src={pkg.image || "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=80"}
+                        alt={pkg.name}
+                        onError={(e) => { (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=80"; }}
+                        className="w-full h-full object-cover"
+                      />
+                      <span className="absolute top-3 right-3 px-3 py-1 rounded-full bg-amber-500 text-slate-950 font-bold text-xs">
+                        ₹{(pkg.discountPrice || pkg.price).toLocaleString("en-IN")}
+                      </span>
+                    </div>
+                    <span className="text-xs text-amber-400 font-semibold uppercase">{pkg.destination}</span>
+                    <h3 className="text-base font-bold font-[family-name:var(--font-playfair)] text-white">{pkg.name}</h3>
+                    <p className="text-xs text-slate-300 line-clamp-2">{pkg.shortDesc || pkg.description}</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      const msg = `Hi! I'm interested in the *${pkg.name}* package to ${pkg.destination}.\n\n📅 Duration: ${pkg.duration}\n💰 Price: ₹${(pkg.discountPrice || pkg.price).toLocaleString("en-IN")}\n\nPlease share more details.`;
+                      openWhatsApp(msg);
+                    }}
+                    className="w-full mt-3 px-4 py-2.5 rounded-2xl bg-green-600 hover:bg-green-500 text-white text-xs font-bold flex items-center justify-center gap-2 transition-all"
+                  >
+                    <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+                    Book via WhatsApp
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -582,7 +621,7 @@ export function CinematicStorytelling() {
               className="space-y-2"
             >
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-sky-500/10 border border-sky-500/30 text-sky-300 text-xs font-semibold uppercase tracking-widest">
-                <Plane size={14} /> VIP Aviation & Special Fares
+                <Plane size={14} /> VIP Aviation &amp; Special Fares
               </div>
               <h2 className="text-3xl sm:text-5xl font-bold font-[family-name:var(--font-playfair)]">
                 Special <span className="gradient-text">Flight Fares</span>
@@ -595,78 +634,77 @@ export function CinematicStorytelling() {
             </Link>
           </div>
 
+          {/* Desktop Carousel */}
           <div
             ref={flightsCarouselRef}
-            className="flex gap-6 overflow-x-auto snap-x snap-mandatory scrollbar-none pb-4"
+            className="hidden md:flex gap-6 overflow-x-auto snap-x snap-mandatory scrollbar-none pb-4"
           >
             {activeFlights.slice(0, 6).map((flt: any, i: number) => (
               <motion.div
                 key={flt.id}
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
-                className="snap-start shrink-0 w-[300px] sm:w-[380px] glass-card p-6 rounded-3xl border border-white/15 bg-slate-900/70 hover:border-sky-400/40 transition-all group flex flex-col gap-4"
+                transition={{ duration: 0.5, delay: i * 0.08 }}
+                className="snap-start shrink-0 w-[300px] sm:w-[360px] glass-card p-5 rounded-3xl border border-white/15 bg-slate-900/70 hover:border-sky-400/40 transition-all flex flex-col gap-4"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center text-2xl">
-                      {flt.airlineLogo || "✈️"}
-                    </div>
+                    <div className="w-11 h-11 rounded-xl bg-white/10 flex items-center justify-center text-xl">{flt.airlineLogo || "✈️"}</div>
                     <div>
                       <h3 className="font-bold text-white text-sm">{flt.airlineName}</h3>
                       <span className="text-xs text-slate-400">{flt.travelClass} · {flt.tripType}</span>
                     </div>
                   </div>
-                  {flt.offerBadge && (
-                    <span className="px-2 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 text-[10px] font-semibold">
-                      {flt.offerBadge}
-                    </span>
-                  )}
+                  {flt.offerBadge && <span className="px-2 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 text-[10px] font-semibold">{flt.offerBadge}</span>}
                 </div>
-
-                <div className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/10">
-                  <div className="text-center">
-                    <span className="text-xl font-bold text-white">{flt.fromCode}</span>
-                    <p className="text-[10px] text-slate-400">{flt.fromCity}</p>
-                  </div>
-                  <div className="flex flex-col items-center gap-1">
-                    <div className="flex items-center gap-1 text-sky-400">
-                      <div className="w-6 h-0.5 bg-sky-400/40" />
-                      <Plane size={14} />
-                      <div className="w-6 h-0.5 bg-sky-400/40" />
-                    </div>
-                    <span className="text-[9px] text-amber-400 font-semibold">{flt.seatsAvailable} seats left</span>
-                  </div>
-                  <div className="text-center">
-                    <span className="text-xl font-bold text-white">{flt.toCode}</span>
-                    <p className="text-[10px] text-slate-400">{flt.toCity}</p>
-                  </div>
+                <div className="flex items-center justify-between p-3 rounded-2xl bg-white/5 border border-white/10">
+                  <div className="text-center"><span className="text-lg font-bold text-white">{flt.fromCode}</span><p className="text-[10px] text-slate-400">{flt.fromCity}</p></div>
+                  <div className="flex flex-col items-center gap-1"><div className="flex items-center gap-1 text-sky-400"><div className="w-5 h-0.5 bg-sky-400/40" /><Plane size={13} /><div className="w-5 h-0.5 bg-sky-400/40" /></div><span className="text-[9px] text-amber-400 font-semibold">{flt.seatsAvailable} seats</span></div>
+                  <div className="text-center"><span className="text-lg font-bold text-white">{flt.toCode}</span><p className="text-[10px] text-slate-400">{flt.toCity}</p></div>
                 </div>
-
                 <div className="flex items-center justify-between">
-                  <div>
-                    <span className="text-xs text-slate-400 block">Fare Price</span>
-                    <span className="text-2xl font-bold text-amber-400">₹{flt.farePrice.toLocaleString("en-IN")}</span>
-                  </div>
-                  <button
-                    onClick={() => {
-                      const msg = `Hi! I'd like to book a flight.\n\n✈️ *${flt.airlineName}* — ${flt.fromCity} (${flt.fromCode}) → ${flt.toCity} (${flt.toCode})\n📌 Class: ${flt.travelClass} (${flt.tripType})\n💰 Fare: ₹${flt.farePrice.toLocaleString("en-IN")}\n\nPlease confirm availability and next steps.`;
-                      openWhatsApp(msg);
-                    }}
-                    className="px-4 py-2 rounded-2xl bg-green-600 hover:bg-green-500 text-white text-xs font-bold flex items-center gap-2 transition-all shadow-lg shadow-green-600/20"
-                  >
-                    <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
-                    Book
+                  <div><span className="text-xs text-slate-400 block">Fare</span><span className="text-xl font-bold text-amber-400">₹{flt.farePrice.toLocaleString("en-IN")}</span></div>
+                  <button onClick={() => { const msg = `Hi! ✈️ *${flt.airlineName}* — ${flt.fromCity} → ${flt.toCity}\n📌 Class: ${flt.travelClass}\n💰 Fare: ₹${flt.farePrice.toLocaleString("en-IN")}\n\nPlease confirm availability.`; openWhatsApp(msg); }} className="px-3 py-2 rounded-2xl bg-green-600 hover:bg-green-500 text-white text-xs font-bold flex items-center gap-1.5 transition-all">
+                    <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg> Book
                   </button>
                 </div>
               </motion.div>
             ))}
-
             {activeFlights.length === 0 && (
               <div className="w-full text-center py-16 text-slate-400">
                 <Plane size={40} className="mx-auto mb-4 opacity-30" />
                 <p className="text-sm">Special flight fares coming soon. <Link href="/flights" className="text-amber-400 underline">Check all flights</Link></p>
+              </div>
+            )}
+          </div>
+
+          {/* Mobile: Infinite Auto-Scroll Carousel */}
+          <div className="md:hidden overflow-hidden relative">
+            {activeFlights.length > 0 ? (
+              <div className="flex gap-5 carousel-auto-scroll carousel-slow" style={{ width: "max-content" }}>
+                {[...activeFlights, ...activeFlights].map((flt: any, idx: number) => (
+                  <div key={`flt-m-${idx}`} className="snap-start shrink-0 w-[280px] glass-card p-5 rounded-3xl border border-white/15 bg-slate-900/70 flex flex-col gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-lg">{flt.airlineLogo || "✈️"}</div>
+                      <div><h3 className="font-bold text-white text-xs">{flt.airlineName}</h3><span className="text-[10px] text-slate-400">{flt.travelClass}</span></div>
+                    </div>
+                    <div className="flex items-center justify-between px-2 py-2 rounded-xl bg-white/5 border border-white/10">
+                      <div className="text-center"><span className="text-base font-bold text-white">{flt.fromCode}</span><p className="text-[9px] text-slate-400">{flt.fromCity}</p></div>
+                      <Plane size={12} className="text-sky-400" />
+                      <div className="text-center"><span className="text-base font-bold text-white">{flt.toCode}</span><p className="text-[9px] text-slate-400">{flt.toCity}</p></div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-lg font-bold text-amber-400">₹{flt.farePrice.toLocaleString("en-IN")}</span>
+                      <button onClick={() => { const msg = `Hi! ✈️ *${flt.airlineName}* ${flt.fromCode}→${flt.toCode}\n📌 ${flt.travelClass}\n💰 ₹${flt.farePrice.toLocaleString("en-IN")}\nPlease confirm availability.`; openWhatsApp(msg); }} className="px-3 py-1.5 rounded-xl bg-green-600 text-white text-[10px] font-bold">Book</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-10 text-slate-400 text-sm">
+                <Plane size={32} className="mx-auto mb-3 opacity-30" />
+                <Link href="/flights" className="text-amber-400 underline">Check special flights</Link>
               </div>
             )}
           </div>
@@ -676,12 +714,13 @@ export function CinematicStorytelling() {
       {/* ── 7. PHOTO GALLERY & ALBUMS SECTION ──────────────────────────────── */}
       <section 
         id="gallery-section" 
-        className="relative w-full min-h-screen flex items-center justify-center px-4 sm:px-8 lg:px-16 py-16 overflow-hidden bg-slate-950/80"
+        className="relative w-full min-h-[60vh] flex items-center justify-center px-4 sm:px-8 lg:px-16 py-16 overflow-hidden bg-slate-950/80"
       >
         <div className="relative z-10 w-full max-w-7xl">
           <GallerySection />
         </div>
       </section>
+
 
       {/* ── 7. TESTIMONIALS SECTION ────────────────────────────────────────── */}
       <section 
