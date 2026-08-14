@@ -10,7 +10,8 @@ type ButtonVariant =
   | "outline"
   | "ghost"
   | "danger"
-  | "amber";
+  | "amber"
+  | "emerald";
 
 type ButtonSize = "xs" | "sm" | "md" | "lg" | "xl";
 
@@ -38,6 +39,8 @@ const variantStyles: Record<ButtonVariant, string> = {
     "bg-red-600 text-white hover:bg-red-500 active:bg-red-700 shadow-lg shadow-red-600/20",
   amber:
     "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-400 hover:to-orange-400 shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40",
+  emerald:
+    "bg-emerald-600 text-white hover:bg-emerald-500 active:bg-emerald-700 shadow-lg shadow-emerald-600/20",
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
