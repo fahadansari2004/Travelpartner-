@@ -79,7 +79,7 @@ const SECTIONS: SectionItem[] = [
   { 
     id: "services", 
     title: "Services", 
-    imageSrc: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1200&q=75"
+    imageSrc: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=1920&q=80"
   },
   { 
     id: "why-us", 
