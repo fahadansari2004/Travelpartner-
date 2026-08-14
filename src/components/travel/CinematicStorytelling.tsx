@@ -99,48 +99,55 @@ const SECTIONS: SectionItem[] = [
 function AnimatedParallaxBackground({ mediaSrc, imageSrc }: { mediaSrc?: string; imageSrc?: string }) {
   const rawSrc = mediaSrc || imageSrc || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80";
 
-  // Detect if source is a video file
+  // Determine fallback image URL
+  const bgImage = imageSrc && !imageSrc.endsWith(".mp4") 
+    ? imageSrc 
+    : "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80";
+
   const isVideo = typeof rawSrc === "string" && (
     rawSrc.endsWith(".mp4") || rawSrc.endsWith(".webm") || rawSrc.endsWith(".ogg")
   );
 
-  const [hasError, setHasError] = useState(false);
+  const [videoLoaded, setVideoLoaded] = useState(false);
   const [videoError, setVideoError] = useState(false);
-
-  const fallbackImg = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80";
 
   return (
     <div className="absolute inset-0 w-full h-full overflow-hidden bg-slate-950 pointer-events-none z-0">
-      {isVideo && !videoError ? (
+      {/* Base Image Layer (Always visible instantly with animated parallax zoom) */}
+      <motion.img
+        initial={{ scale: 1.08, opacity: 0.8 }}
+        whileInView={{ scale: 1.18, opacity: 0.85 }}
+        viewport={{ once: false, amount: 0.1 }}
+        transition={{ duration: 2.2, ease: "easeOut" }}
+        src={bgImage}
+        alt=""
+        loading="eager"
+        decoding="async"
+        className="absolute inset-0 w-full h-full object-cover"
+      />
+
+      {/* Video Layer (Smoothly fades in over background image when video is buffered/ready) */}
+      {isVideo && !videoError && (
         <video
           key={rawSrc}
           autoPlay
           loop
           muted
           playsInline
-          preload="none"
+          preload="auto"
+          poster={bgImage}
+          onLoadedData={() => setVideoLoaded(true)}
           onError={() => setVideoError(true)}
-          className="absolute inset-0 w-full h-full object-cover scale-110"
+          className={`absolute inset-0 w-full h-full object-cover scale-105 transition-opacity duration-1000 ${
+            videoLoaded ? "opacity-90" : "opacity-0"
+          }`}
         >
           <source src={rawSrc} type="video/mp4" />
         </video>
-      ) : !hasError ? (
-        <motion.img
-          initial={{ scale: 1.08, opacity: 0 }}
-          whileInView={{ scale: 1.18, opacity: 0.75 }}
-          viewport={{ once: false, amount: 0.1 }}
-          transition={{ duration: 2.2, ease: "easeOut" }}
-          src={isVideo ? fallbackImg : rawSrc}
-          alt=""
-          loading="lazy"
-          decoding="async"
-          onError={() => setHasError(true)}
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-      ) : (
-        <div className="absolute inset-0 w-full h-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-black opacity-80" />
       )}
-      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-slate-950/75" />
+
+      {/* Dark Luxury Gradient Overlay */}
+      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/50 to-slate-950/65" />
     </div>
   );
 }

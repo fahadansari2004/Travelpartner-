@@ -388,7 +388,85 @@ export const INITIAL_MAIN_PAGE: MainPageSettings = {
   faqSubtitle: "Everything you need to know about booking and luxury concierge services.",
 };
 
-export const INITIAL_ALBUMS: AlbumItem[] = [];
+export const INITIAL_ALBUMS: AlbumItem[] = [
+  {
+    id: "alb-1",
+    name: "Maldives Luxury Overwater Escape",
+    destination: "Maldives",
+    country: "Maldives",
+    category: "Island & Beach",
+    coverImage: "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&w=1200&q=80",
+    shortDesc: "Private villas, turquoise lagoons, and crystal clear marine life.",
+    longDesc: "An immersive photo memoir from our guest's 7-star private overwater villa stay in Noonu Atoll, Maldives.",
+    travelDate: "2026-02-15",
+    featured: true,
+    active: true,
+    displayOrder: 1,
+    images: [
+      { id: "m1", url: "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&w=1200&q=80", title: "Overwater Haven", caption: "@maldives_expedition", displayOrder: 1 },
+      { id: "m2", url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80", title: "White Sand Lagoon", caption: "@beach_moments", displayOrder: 2 },
+      { id: "m3", url: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1200&q=80", title: "Sunset Horizon", caption: "@luxury_retreats", displayOrder: 3 },
+    ],
+    videos: [],
+  },
+  {
+    id: "alb-2",
+    name: "Swiss Alps & St. Moritz Expedition",
+    destination: "Zermatt",
+    country: "Switzerland",
+    category: "Mountain & Snow",
+    coverImage: "https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?auto=format&fit=crop&w=1200&q=80",
+    shortDesc: "Majestic alpine peaks, glacier train journeys, and private ski chalets.",
+    longDesc: "Exploring Matterhorn views, luxury ski resorts, and scenic railway journeys in the Swiss Alps.",
+    travelDate: "2026-01-20",
+    featured: true,
+    active: true,
+    displayOrder: 2,
+    images: [
+      { id: "s1", url: "https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?auto=format&fit=crop&w=1200&q=80", title: "Matterhorn Peak View", caption: "@swiss_mountains", displayOrder: 1 },
+      { id: "s2", url: "https://images.unsplash.com/photo-1502784444187-359ac186c5bb?auto=format&fit=crop&w=1200&q=80", title: "Glacier Express Trail", caption: "@alpine_expedition", displayOrder: 2 },
+    ],
+    videos: [],
+  },
+  {
+    id: "alb-3",
+    name: "Dubai VIP Desert & Skyline Memoir",
+    destination: "Dubai",
+    country: "UAE",
+    category: "Urban & Luxury",
+    coverImage: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1200&q=80",
+    shortDesc: "Helicopter tours, golden sand dunes, and futuristic architecture.",
+    longDesc: "A VIP luxury tour of Dubai featuring private yacht charters, desert safaris, and 7-star hospitality.",
+    travelDate: "2026-03-01",
+    featured: true,
+    active: true,
+    displayOrder: 3,
+    images: [
+      { id: "d1", url: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1200&q=80", title: "Burj Skyline Sunset", caption: "@dubai_luxury", displayOrder: 1 },
+      { id: "d2", url: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80", title: "Golden Dune Safari", caption: "@desert_expedition", displayOrder: 2 },
+    ],
+    videos: [],
+  },
+  {
+    id: "alb-4",
+    name: "Santorini Aegean Villa Moments",
+    destination: "Santorini",
+    country: "Greece",
+    category: "Mediterranean",
+    coverImage: "https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?auto=format&fit=crop&w=1200&q=80",
+    shortDesc: "Cliffside infinity pools, whitewashed domes, and Aegean Sea sunsets.",
+    longDesc: "Capturing the serene romance of Oia, private catamaran cruises, and cliffside dining in Santorini.",
+    travelDate: "2026-04-10",
+    featured: true,
+    active: true,
+    displayOrder: 4,
+    images: [
+      { id: "g1", url: "https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?auto=format&fit=crop&w=1200&q=80", title: "Oia Caldera View", caption: "@greece_travel", displayOrder: 1 },
+      { id: "g2", url: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=1200&q=80", title: "Aegean Sailing", caption: "@yacht_life", displayOrder: 2 },
+    ],
+    videos: [],
+  }
+];
 
 export const INITIAL_MEDIA_LIBRARY: MediaLibraryItem[] = [];
 
@@ -408,8 +486,8 @@ export const INITIAL_TESTIMONIALS: TestimonialItem[] = [
 ];
 
 // ─── Reactive Store Helper Engine ─────────────────────────────────────────────
-// Bumped to V3 to clear stale V2 cache that had incorrect seeding behavior
-const STORE_KEY = "TRAVEL_PARTNER_STORE_V3";
+// Bumped to V4 to ensure initial luxury albums load cleanly for all visitors
+const STORE_KEY = "TRAVEL_PARTNER_STORE_V4";
 
 /** Returns stored data from localStorage cache layer. */
 export function getStoredData<T>(key: string, defaultValue: T): T {
