@@ -295,7 +295,6 @@ export const INITIAL_FLIGHTS: FlightFare[] = [
     tripType: "Round Trip",
     travelClass: "First Class",
     travelDate: "2026-09-15",
-    farePrice: 4850,
     currency: "₹",
     offerBadge: "VIP Private Suite",
     seatsAvailable: 4,
@@ -486,8 +485,8 @@ export const INITIAL_TESTIMONIALS: TestimonialItem[] = [
 ];
 
 // ─── Reactive Store Helper Engine ─────────────────────────────────────────────
-// Bumped to V4 to ensure initial luxury albums load cleanly for all visitors
-const STORE_KEY = "TRAVEL_PARTNER_STORE_V4";
+// Bumped to V5 to ensure flight fares without rates persist and render cleanly
+const STORE_KEY = "TRAVEL_PARTNER_STORE_V5";
 
 /** Returns stored data from localStorage cache layer. */
 export function getStoredData<T>(key: string, defaultValue: T): T {

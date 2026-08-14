@@ -2083,8 +2083,9 @@ export default function AdminDashboardPage() {
             <div className="flex justify-end gap-3 pt-2">
               <Button variant="ghost" size="sm" onClick={() => setEditingFlight(null)}>Cancel</Button>
               <Button variant="amber" size="sm" onClick={() => {
+                const cleanedFare = editingFlight.farePrice && Number(editingFlight.farePrice) > 0 ? Number(editingFlight.farePrice) : undefined;
                 if (editingFlight.id) {
-                  setFlights(flights.map(f => f.id === editingFlight.id ? (editingFlight as FlightFare) : f));
+                  setFlights(flights.map(f => f.id === editingFlight.id ? { ...(editingFlight as FlightFare), farePrice: cleanedFare } : f));
                 } else {
                   const newFlight: FlightFare = {
                     id: `flt-${Date.now()}`,
@@ -2095,7 +2096,7 @@ export default function AdminDashboardPage() {
                     toCode: editingFlight.toCode || "DXB",
                     tripType: editingFlight.tripType || "Round Trip",
                     travelClass: editingFlight.travelClass || "Economy",
-                    farePrice: editingFlight.farePrice || 850,
+                    farePrice: cleanedFare,
                     active: true,
                   };
                   setFlights([newFlight, ...flights]);
