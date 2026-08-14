@@ -19,12 +19,7 @@ const LOADING_STEPS = [
 export function Preloader({ onComplete }: PreloaderProps) {
   const [progress, setProgress] = useState(0);
   const [stepText, setStepText] = useState(LOADING_STEPS[0]);
-  const [isFinished, setIsFinished] = useState(() => {
-    if (typeof window !== "undefined") {
-      return sessionStorage.getItem("travel_has_seen_preloader") === "true";
-    }
-    return false;
-  });
+  const [isFinished, setIsFinished] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const logoRef = useRef<HTMLDivElement>(null);
@@ -41,12 +36,12 @@ export function Preloader({ onComplete }: PreloaderProps) {
     // ── Prevent scrolling during intro ─────────────────────────────────────
     document.body.style.overflow = "hidden";
 
-    // ── Smooth Realistic Counter & Step Interval ─────────────────────────────
+    // ── Smooth Standard Counter (3.5s - 4s) ──────────────────────────────────
     let currentProgress = 0;
     const interval = setInterval(() => {
-      // Simulate realistic loading: fast at first, then slows near the end
+      // Small smooth increments (1 to 3%) at 100ms intervals
       const remaining = 100 - currentProgress;
-      const increment = Math.max(1, Math.floor(Math.random() * 4) + (remaining > 40 ? 3 : 1));
+      const increment = Math.max(1, Math.floor(Math.random() * 3) + (remaining > 50 ? 2 : 1));
       currentProgress += increment;
       if (currentProgress >= 100) {
         currentProgress = 100;
@@ -59,7 +54,7 @@ export function Preloader({ onComplete }: PreloaderProps) {
         LOADING_STEPS.length - 1
       );
       setStepText(LOADING_STEPS[stepIndex]);
-    }, 80);
+    }, 100);
 
     return () => clearInterval(interval);
   }, [isFinished, onComplete]);
@@ -70,9 +65,6 @@ export function Preloader({ onComplete }: PreloaderProps) {
       const ctx = gsap.context(() => {
         const tl = gsap.timeline({
           onComplete: () => {
-            try {
-              sessionStorage.setItem("travel_has_seen_preloader", "true");
-            } catch (e) {}
             setIsFinished(true);
             document.body.style.overflow = "";
             onComplete?.();
