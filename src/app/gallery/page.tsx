@@ -40,22 +40,48 @@ export default function GalleryPage() {
 
   // All Individual Photos extracted from all active albums
   const allIndividualPhotos = useMemo(() => {
+    const FALLBACK_PICS = [
+      "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?auto=format&fit=crop&w=1200&q=80",
+    ];
+
     const photosList: { id: string; url: string; title: string; caption?: string; albumId: string; albumName: string; category: string; destination: string; country: string }[] = [];
     
-    activeAlbums.forEach((album) => {
-      if (album.images && album.images.length > 0) {
-        album.images.forEach((img, idx) => {
+    activeAlbums.forEach((album, albIdx) => {
+      let addedAny = false;
+      if (album.images && Array.isArray(album.images) && album.images.length > 0) {
+        album.images.forEach((img: any, idx: number) => {
+          const rawUrl = typeof img === "string" ? img : img?.url;
+          const cleanUrl = rawUrl && typeof rawUrl === "string" && rawUrl.trim() !== "" ? rawUrl : FALLBACK_PICS[(albIdx + idx) % FALLBACK_PICS.length];
           photosList.push({
-            id: img.id || `${album.id}-img-${idx}`,
-            url: img.url,
-            title: img.title || album.name,
-            caption: img.caption,
+            id: (typeof img === "object" && img?.id) || `${album.id}-img-${idx}`,
+            url: cleanUrl,
+            title: (typeof img === "object" && img?.title) || album.name,
+            caption: (typeof img === "object" && img?.caption) || undefined,
             albumId: album.id,
             albumName: album.name,
-            category: album.category,
-            destination: album.destination,
-            country: album.country,
+            category: album.category || "Destinations",
+            destination: album.destination || "Global",
+            country: album.country || "Worldwide",
           });
+          addedAny = true;
+        });
+      }
+
+      if (!addedAny) {
+        const cover = album.coverImage && typeof album.coverImage === "string" && album.coverImage.trim() !== "" ? album.coverImage : FALLBACK_PICS[albIdx % FALLBACK_PICS.length];
+        photosList.push({
+          id: `${album.id}-cover`,
+          url: cover,
+          title: album.name,
+          caption: album.shortDesc,
+          albumId: album.id,
+          albumName: album.name,
+          category: album.category || "Destinations",
+          destination: album.destination || "Global",
+          country: album.country || "Worldwide",
         });
       }
     });

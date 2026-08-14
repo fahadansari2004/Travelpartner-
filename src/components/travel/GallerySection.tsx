@@ -2,10 +2,18 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { Maximize2, MapPin, Camera, X, ArrowRight, Folder } from "lucide-react";
 import { Section, SectionHeader } from "@/components/layout/Section";
-import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { useGsapReveal } from "@/hooks/useGsapAnimations";
 import { useStoreData, INITIAL_ALBUMS, AlbumItem } from "@/lib/storage";
+
+const FALLBACK_PICS = [
+  "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&w=1200&q=80",
+  "https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?auto=format&fit=crop&w=1200&q=80",
+  "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1200&q=80",
+  "https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?auto=format&fit=crop&w=1200&q=80",
+  "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1200&q=80",
+  "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80",
+];
 
 export function GallerySection() {
   const [albums] = useStoreData<AlbumItem[]>("albums", INITIAL_ALBUMS);
@@ -20,24 +28,34 @@ export function GallerySection() {
     const aspects = ["aspect-[3/4]", "aspect-[4/3]", "aspect-[16/10]", "aspect-square"];
     
     activeAlbums.forEach((alb, albIdx) => {
-      if (alb.images && alb.images.length > 0) {
-        alb.images.forEach((img, imgIdx) => {
+      let addedAny = false;
+
+      if (alb.images && Array.isArray(alb.images) && alb.images.length > 0) {
+        alb.images.forEach((img: any, imgIdx: number) => {
+          const rawUrl = typeof img === "string" ? img : img?.url;
+          const validUrl = rawUrl && typeof rawUrl === "string" && rawUrl.trim() !== "" ? rawUrl : FALLBACK_PICS[(albIdx + imgIdx) % FALLBACK_PICS.length];
           list.push({
-            id: img.id || `alb-${albIdx}-img-${imgIdx}`,
-            url: img.url,
-            title: img.title || alb.name,
-            location: `${alb.destination || "Expedition"}, ${alb.country || "Global"}`,
-            photographer: img.caption || `@${alb.category.toLowerCase()}_expedition`,
+            id: (typeof img === "object" && img?.id) || `alb-${albIdx}-img-${imgIdx}`,
+            url: validUrl,
+            title: (typeof img === "object" && img?.title) || alb.name || "Expedition Photo",
+            location: `${alb.destination || alb.country || "Expedition"}`,
+            photographer: (typeof img === "object" && img?.caption) || `@${(alb.category || "destinations").toLowerCase()}_expedition`,
             aspect: aspects[(albIdx + imgIdx) % aspects.length],
           });
+          addedAny = true;
         });
-      } else if (alb.coverImage) {
+      }
+
+      if (!addedAny) {
+        const cover = alb.coverImage && typeof alb.coverImage === "string" && alb.coverImage.trim() !== "" 
+          ? alb.coverImage 
+          : FALLBACK_PICS[albIdx % FALLBACK_PICS.length];
         list.push({
-          id: alb.id,
-          url: alb.coverImage,
-          title: alb.name,
-          location: `${alb.destination}, ${alb.country}`,
-          photographer: `@${alb.category.toLowerCase()}_expedition`,
+          id: alb.id || `alb-${albIdx}`,
+          url: cover,
+          title: alb.name || "Luxury Album",
+          location: `${alb.destination || "Destination"}, ${alb.country || "Global"}`,
+          photographer: `@${(alb.category || "destinations").toLowerCase()}_expedition`,
           aspect: aspects[albIdx % aspects.length],
         });
       }
@@ -45,10 +63,10 @@ export function GallerySection() {
 
     if (list.length === 0) {
       return [
-        { id: "f1", url: "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&w=1200&q=80", title: "Maldives Overwater Haven", location: "Maldives", photographer: "@maldives_expedition", aspect: "aspect-[4/3]" },
-        { id: "f2", url: "https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?auto=format&fit=crop&w=1200&q=80", title: "Matterhorn Peak View", location: "Switzerland", photographer: "@swiss_mountains", aspect: "aspect-[3/4]" },
-        { id: "f3", url: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1200&q=80", title: "Dubai Skyline Sunset", location: "UAE", photographer: "@dubai_luxury", aspect: "aspect-[16/10]" },
-        { id: "f4", url: "https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?auto=format&fit=crop&w=1200&q=80", title: "Santorini Oia Caldera", location: "Greece", photographer: "@greece_travel", aspect: "aspect-square" },
+        { id: "f1", url: FALLBACK_PICS[0], title: "Maldives Overwater Haven", location: "Maldives", photographer: "@maldives_expedition", aspect: "aspect-[4/3]" },
+        { id: "f2", url: FALLBACK_PICS[1], title: "Matterhorn Peak View", location: "Switzerland", photographer: "@swiss_mountains", aspect: "aspect-[3/4]" },
+        { id: "f3", url: FALLBACK_PICS[2], title: "Dubai Skyline Sunset", location: "UAE", photographer: "@dubai_luxury", aspect: "aspect-[16/10]" },
+        { id: "f4", url: FALLBACK_PICS[3], title: "Santorini Oia Caldera", location: "Greece", photographer: "@greece_travel", aspect: "aspect-square" },
       ];
     }
 
@@ -97,6 +115,9 @@ export function GallerySection() {
               <img
                 src={item.url}
                 alt={item.title}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = FALLBACK_PICS[0];
+                }}
                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 flex flex-col justify-between p-6">
@@ -130,10 +151,13 @@ export function GallerySection() {
             onClick={() => setSelectedImage(item)}
             className="snap-start shrink-0 w-[270px] glass-card rounded-3xl overflow-hidden cursor-pointer border border-white/15 bg-slate-950 shadow-xl flex flex-col justify-between"
           >
-            <div className="relative aspect-[4/3] w-full overflow-hidden">
+            <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-900">
               <img
                 src={item.url}
                 alt={item.title}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = FALLBACK_PICS[0];
+                }}
                 className="w-full h-full object-cover"
               />
               <div className="absolute top-3 right-3">
@@ -173,10 +197,13 @@ export function GallerySection() {
             >
               <X size={18} />
             </button>
-            <div className="relative aspect-[16/10] w-full rounded-2xl overflow-hidden bg-black">
+            <div className="relative aspect-[4/3] sm:aspect-[16/10] w-full rounded-2xl overflow-hidden bg-black">
               <img
-                src={selectedImage.url}
+                src={selectedImage.url || FALLBACK_PICS[0]}
                 alt={selectedImage.title}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = FALLBACK_PICS[0];
+                }}
                 className="w-full h-full object-cover"
               />
             </div>
@@ -185,7 +212,7 @@ export function GallerySection() {
                 <span className="text-xs text-amber-400 font-semibold flex items-center gap-1">
                   <MapPin size={12} /> {selectedImage.location}
                 </span>
-                <h3 className="text-2xl font-bold text-white font-[family-name:var(--font-playfair)] mt-0.5">
+                <h3 className="text-xl sm:text-2xl font-bold text-white font-[family-name:var(--font-playfair)] mt-0.5">
                   {selectedImage.title}
                 </h3>
               </div>
