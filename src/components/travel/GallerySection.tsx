@@ -59,9 +59,18 @@ export function GallerySection() {
     <Section background="slate-900" padding="xl" borderTop borderBottom glow="cool">
       <SectionHeader
         align="center"
-        eyebrow={<Badge variant="amber" size="lg">✦ Visual Memoirs & Photo Stream</Badge>}
-        title={<>Guest & Expedition <span className="gradient-text">Moments</span></>}
+        eyebrow={
+          <span className="inline-flex items-center px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[11px] sm:text-xs font-semibold tracking-wider uppercase text-center">
+            ✦ Visual Memoirs & Photo Stream
+          </span>
+        }
+        title={
+          <span className="text-2xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight leading-snug block text-center">
+            Guest & Expedition <span className="gradient-text">Moments</span>
+          </span>
+        }
         subtitle="Unfiltered moments captured by our guests across extraordinary travel albums."
+        className="px-2"
       />
 
       <div className="flex justify-center mb-8">

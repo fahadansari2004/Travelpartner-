@@ -171,7 +171,7 @@ export function SectionHeader({
       <div className={cn(align === "between" && "max-w-2xl")}>
         {eyebrow && <div className="mb-3">{eyebrow}</div>}
         {title && (
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight font-[family-name:var(--font-playfair)]">
+          <h2 className="text-2xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight leading-tight font-[family-name:var(--font-playfair)]">
             {typeof title === "string" && gradientTitle ? (
               <span className="gradient-text">{title}</span>
             ) : (
