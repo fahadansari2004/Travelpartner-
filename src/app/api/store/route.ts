@@ -189,64 +189,6 @@ export async function GET(req: Request) {
           };
         }
 
-    // Explicit mapping for services table
-    if (tableName === "services") {
-      let servicesList = (data || [])
-        .filter((item: any) => !item.id?.startsWith("setting_"))
-        .map((item: any) => ({
-          id: String(item.id),
-          name: item.name || item.title || "Travel Service",
-          category: item.category || "Concierge",
-          iconName: item.icon_name || item.iconName || "Compass",
-          image: item.image || "",
-          shortDesc: item.short_desc || item.shortDesc || item.description || "Travel service.",
-          longDesc: item.long_desc || item.longDesc || item.short_desc || "",
-          ctaText: item.cta_text || item.ctaText || "Learn More",
-          displayOrder: Number(item.display_order ?? item.displayOrder ?? 1),
-          active: item.active !== undefined ? Boolean(item.active) : true,
-        }));
-
-      // If database has fewer than 10 services, seed all 10 custom services into Supabase!
-      if (servicesList.length < 10) {
-        const DEFAULT_10_SERVICES = [
-          { id: "srv-1", name: "Visit Visa", category: "Visa & Travel Documents", icon_name: "FileText", image: "", short_desc: "Fast-track tourist & business visit visa processing for major destinations worldwide.", long_desc: "Expert guidance for tourist and business visas with step-by-step document check, appointment scheduling, and high approval rate.", cta_text: "Apply Visa", display_order: 1, active: true },
-          { id: "srv-2", name: "Visa Stamping", category: "Visa & Travel Documents", icon_name: "FileCheck", image: "", short_desc: "Complete consulate & embassy visa stamping services with verified document submission.", long_desc: "Hassle-free visa endorsement and embassy stamping for employment, residence, and family visas.", cta_text: "Get Stamped", display_order: 2, active: true },
-          { id: "srv-3", name: "Flight Tickets", category: "Flight & Travel", icon_name: "Plane", image: "", short_desc: "Exclusive domestic & international flight ticket bookings at best rate guarantee.", long_desc: "Instant ticket issuance across global airlines, seat selection, extra baggage assistance, and 24/7 rebooking support.", cta_text: "Book Flights", display_order: 3, active: true },
-          { id: "srv-4", name: "Hotel Booking", category: "Accommodations", icon_name: "Building", image: "", short_desc: "Premium hotel reservations, luxury resorts, and boutique stay accommodations worldwide.", long_desc: "Curated 3-star to 5-star hotel stays with free breakfast options, early check-in perks, and flexible cancellation policies.", cta_text: "Book Hotel", display_order: 4, active: true },
-          { id: "srv-5", name: "Train Tickets", category: "Transportation", icon_name: "Train", image: "", short_desc: "Seamless IRCTC & international rail ticket reservations with instant confirmation.", long_desc: "Confirmed train seat reservations, sleeper, AC 3-tier, 2-tier, and executive class bookings with express assistance.", cta_text: "Book Train", display_order: 5, active: true },
-          { id: "srv-6", name: "Holiday Packages", category: "Tours & Holidays", icon_name: "Luggage", image: "", short_desc: "Customized domestic & international holiday tour packages crafted for your budget.", long_desc: "All-inclusive tour packages including flights, luxury stays, guided sightseeing, transfers, and custom travel itineraries.", cta_text: "View Packages", display_order: 6, active: true },
-          { id: "srv-7", name: "Emigration Clearance Service", category: "Government Services", icon_name: "ShieldCheck", image: "", short_desc: "Hassle-free ECR/ECNR emigration clearance assistance for overseas employment & travel.", long_desc: "Official Ministry of External Affairs emigration clearance processing for workers and travellers travelling abroad.", cta_text: "Get Clearance", display_order: 7, active: true },
-          { id: "srv-8", name: "Certificate Attestation", category: "Government Services", icon_name: "Award", image: "", short_desc: "HRD, MEA, Apostille & Embassy certificate attestation for educational and commercial documents.", long_desc: "Verified degree, birth, marriage, and commercial certificate attestation from state departments, MEA, and foreign embassies.", cta_text: "Attest Certificate", display_order: 8, active: true },
-          { id: "srv-9", name: "Passport Application", category: "Government Services", icon_name: "BookOpen", image: "", short_desc: "Fresh passport applications, renewal, address change, and tatkal appointment assistance.", long_desc: "End-to-end Passport Seva Kendra application filing, document verification, appointment booking, and tatkal support.", cta_text: "Apply Passport", display_order: 9, active: true },
-          { id: "srv-10", name: "Pancard Service", category: "Government Services", icon_name: "CreditCard", image: "", short_desc: "New PAN card application, correction, and instant e-PAN card processing services.", long_desc: "Fast PAN card processing for resident & NRI applicants, name/address corrections, and physical card delivery.", cta_text: "Apply PAN", display_order: 10, active: true },
-        ];
-        await supabase.from("services").upsert(DEFAULT_10_SERVICES, { onConflict: "id" });
-        const { data: freshRows } = await supabase.from("services").select("*");
-        if (freshRows && freshRows.length > 0) {
-          servicesList = freshRows
-            .filter((item: any) => !item.id?.startsWith("setting_"))
-            .map((item: any) => ({
-              id: String(item.id),
-              name: item.name || item.title || "Travel Service",
-              category: item.category || "Concierge",
-              iconName: item.icon_name || item.iconName || "Compass",
-              image: item.image || "",
-              shortDesc: item.short_desc || item.shortDesc || item.description || "Travel service.",
-              longDesc: item.long_desc || item.longDesc || item.short_desc || "",
-              ctaText: item.cta_text || item.ctaText || "Learn More",
-              displayOrder: Number(item.display_order ?? item.displayOrder ?? 1),
-              active: item.active !== undefined ? Boolean(item.active) : true,
-            }));
-        }
-      }
-
-      apiCache[key] = { timestamp: Date.now(), data: servicesList };
-      return NextResponse.json(
-        { success: true, data: servicesList },
-        { headers: { "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0" } }
-      );
-    }
-
     return NextResponse.json(
       { success: true, data: mappedData },
       { headers: { "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0" } }
