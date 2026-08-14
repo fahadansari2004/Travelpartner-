@@ -403,9 +403,9 @@ export const INITIAL_ALBUMS: AlbumItem[] = [
     active: true,
     displayOrder: 1,
     images: [
-      { id: "m1", url: "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&w=1200&q=80", title: "Overwater Haven", caption: "@maldives_expedition", displayOrder: 1 },
-      { id: "m2", url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80", title: "White Sand Lagoon", caption: "@beach_moments", displayOrder: 2 },
-      { id: "m3", url: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1200&q=80", title: "Sunset Horizon", caption: "@luxury_retreats", displayOrder: 3 },
+      { id: "m1", url: "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&w=1200&q=80", title: "Overwater Haven", caption: "@maldives_expedition", displayOrder: 1, type: "image" },
+      { id: "m2", url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80", title: "White Sand Lagoon", caption: "@beach_moments", displayOrder: 2, type: "image" },
+      { id: "m3", url: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1200&q=80", title: "Sunset Horizon", caption: "@luxury_retreats", displayOrder: 3, type: "image" },
     ],
     videos: [],
   },
@@ -423,8 +423,8 @@ export const INITIAL_ALBUMS: AlbumItem[] = [
     active: true,
     displayOrder: 2,
     images: [
-      { id: "s1", url: "https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?auto=format&fit=crop&w=1200&q=80", title: "Matterhorn Peak View", caption: "@swiss_mountains", displayOrder: 1 },
-      { id: "s2", url: "https://images.unsplash.com/photo-1502784444187-359ac186c5bb?auto=format&fit=crop&w=1200&q=80", title: "Glacier Express Trail", caption: "@alpine_expedition", displayOrder: 2 },
+      { id: "s1", url: "https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?auto=format&fit=crop&w=1200&q=80", title: "Matterhorn Peak View", caption: "@swiss_mountains", displayOrder: 1, type: "image" },
+      { id: "s2", url: "https://images.unsplash.com/photo-1502784444187-359ac186c5bb?auto=format&fit=crop&w=1200&q=80", title: "Glacier Express Trail", caption: "@alpine_expedition", displayOrder: 2, type: "image" },
     ],
     videos: [],
   },
@@ -442,8 +442,8 @@ export const INITIAL_ALBUMS: AlbumItem[] = [
     active: true,
     displayOrder: 3,
     images: [
-      { id: "d1", url: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1200&q=80", title: "Burj Skyline Sunset", caption: "@dubai_luxury", displayOrder: 1 },
-      { id: "d2", url: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80", title: "Golden Dune Safari", caption: "@desert_expedition", displayOrder: 2 },
+      { id: "d1", url: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1200&q=80", title: "Burj Skyline Sunset", caption: "@dubai_luxury", displayOrder: 1, type: "image" },
+      { id: "d2", url: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80", title: "Golden Dune Safari", caption: "@desert_expedition", displayOrder: 2, type: "image" },
     ],
     videos: [],
   },
@@ -461,8 +461,8 @@ export const INITIAL_ALBUMS: AlbumItem[] = [
     active: true,
     displayOrder: 4,
     images: [
-      { id: "g1", url: "https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?auto=format&fit=crop&w=1200&q=80", title: "Oia Caldera View", caption: "@greece_travel", displayOrder: 1 },
-      { id: "g2", url: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=1200&q=80", title: "Aegean Sailing", caption: "@yacht_life", displayOrder: 2 },
+      { id: "g1", url: "https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?auto=format&fit=crop&w=1200&q=80", title: "Oia Caldera View", caption: "@greece_travel", displayOrder: 1, type: "image" },
+      { id: "g2", url: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=1200&q=80", title: "Aegean Sailing", caption: "@yacht_life", displayOrder: 2, type: "image" },
     ],
     videos: [],
   }
