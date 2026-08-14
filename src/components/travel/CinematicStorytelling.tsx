@@ -76,6 +76,11 @@ const SECTIONS: SectionItem[] = [
     imageSrc: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1200&q=75"
   },
   { 
+    id: "flights-section", 
+    title: "Special Flights", 
+    imageSrc: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=1200&q=75"
+  },
+  { 
     id: "testimonials-section", 
     title: "Guest Reviews", 
     imageSrc: "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&w=1200&q=75"
@@ -163,10 +168,20 @@ export function CinematicStorytelling() {
     aboutSubtitle: "Crafting Unforgettable Tailor-Made Expeditions Since 2010"
   });
   const [albums] = useStoreData<any[]>("albums", []);
+  const [contact] = useStoreData<any>("contact", { whatsappNumber: "9645185581" });
+  const [flights] = useStoreData<any[]>("flights", []);
 
   const servicesCarouselRef = useRef<HTMLDivElement>(null);
+  const flightsCarouselRef = useRef<HTMLDivElement>(null);
 
   const activeServices = (services || []).filter((s) => s.active).sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
+  const activeFlights = (flights || []).filter((f: any) => f && (f.active === undefined || f.active));
+
+  const openWhatsApp = (message: string) => {
+    const phone = (contact?.whatsappNumber || "9645185581").replace(/[^0-9]/g, "");
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+    window.open(url, "_blank");
+  };
 
   const scrollToSection = (id: string) => {
     const el = document.getElementById(id);
@@ -527,25 +542,138 @@ export function CinematicStorytelling() {
                       className="w-full h-full object-cover" 
                     />
                     <span className="absolute top-3 right-3 px-3 py-1 rounded-full bg-amber-500 text-slate-950 font-bold text-xs">
-                      ${pkg.discountPrice || pkg.price}
+                      ₹{(pkg.discountPrice || pkg.price).toLocaleString("en-IN")}
                     </span>
                   </div>
                   <span className="text-xs text-amber-400 font-semibold uppercase">{pkg.destination}</span>
                   <h3 className="text-xl font-bold font-[family-name:var(--font-playfair)] text-white">{pkg.name}</h3>
                   <p className="text-xs text-slate-300 line-clamp-2">{pkg.shortDesc || pkg.description}</p>
                 </div>
-                <Link href="/packages" className="pt-2">
-                  <Button variant="outline" size="sm" fullWidth rightIcon={<ArrowRight size={14} />}>
-                    Reserve Package
-                  </Button>
-                </Link>
+                <button
+                  onClick={() => {
+                    const msg = `Hi! I'm interested in the *${pkg.name}* package to ${pkg.destination}.\n\n📅 Duration: ${pkg.duration}\n💰 Price: ₹${(pkg.discountPrice || pkg.price).toLocaleString("en-IN")}\n\nPlease share more details and availability.`;
+                    openWhatsApp(msg);
+                  }}
+                  className="w-full mt-2 px-4 py-2.5 rounded-2xl bg-green-600 hover:bg-green-500 text-white text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-green-600/20"
+                >
+                  <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+                  Book via WhatsApp
+                </button>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── 6. PHOTO GALLERY & ALBUMS SECTION ──────────────────────────────── */}
+      {/* ── 6. FLIGHTS SECTION ─────────────────────────────────────────────── */}
+      <section
+        id="flights-section"
+        className="relative w-full min-h-screen flex flex-col justify-center px-4 sm:px-8 lg:px-16 py-16 sm:py-24 overflow-hidden"
+      >
+        <AnimatedParallaxBackground imageSrc="https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=1200&q=75" />
+
+        <div className="relative z-10 max-w-7xl mx-auto w-full space-y-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4">
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7 }}
+              className="space-y-2"
+            >
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-sky-500/10 border border-sky-500/30 text-sky-300 text-xs font-semibold uppercase tracking-widest">
+                <Plane size={14} /> VIP Aviation & Special Fares
+              </div>
+              <h2 className="text-3xl sm:text-5xl font-bold font-[family-name:var(--font-playfair)]">
+                Special <span className="gradient-text">Flight Fares</span>
+              </h2>
+            </motion.div>
+            <Link href="/flights">
+              <Button variant="amber" size="md" rightIcon={<ArrowRight size={16} />}>
+                View All Flights
+              </Button>
+            </Link>
+          </div>
+
+          <div
+            ref={flightsCarouselRef}
+            className="flex gap-6 overflow-x-auto snap-x snap-mandatory scrollbar-none pb-4"
+          >
+            {activeFlights.slice(0, 6).map((flt: any, i: number) => (
+              <motion.div
+                key={flt.id}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.1 }}
+                className="snap-start shrink-0 w-[300px] sm:w-[380px] glass-card p-6 rounded-3xl border border-white/15 bg-slate-900/70 hover:border-sky-400/40 transition-all group flex flex-col gap-4"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center text-2xl">
+                      {flt.airlineLogo || "✈️"}
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-white text-sm">{flt.airlineName}</h3>
+                      <span className="text-xs text-slate-400">{flt.travelClass} · {flt.tripType}</span>
+                    </div>
+                  </div>
+                  {flt.offerBadge && (
+                    <span className="px-2 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 text-[10px] font-semibold">
+                      {flt.offerBadge}
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/10">
+                  <div className="text-center">
+                    <span className="text-xl font-bold text-white">{flt.fromCode}</span>
+                    <p className="text-[10px] text-slate-400">{flt.fromCity}</p>
+                  </div>
+                  <div className="flex flex-col items-center gap-1">
+                    <div className="flex items-center gap-1 text-sky-400">
+                      <div className="w-6 h-0.5 bg-sky-400/40" />
+                      <Plane size={14} />
+                      <div className="w-6 h-0.5 bg-sky-400/40" />
+                    </div>
+                    <span className="text-[9px] text-amber-400 font-semibold">{flt.seatsAvailable} seats left</span>
+                  </div>
+                  <div className="text-center">
+                    <span className="text-xl font-bold text-white">{flt.toCode}</span>
+                    <p className="text-[10px] text-slate-400">{flt.toCity}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-xs text-slate-400 block">Fare Price</span>
+                    <span className="text-2xl font-bold text-amber-400">₹{flt.farePrice.toLocaleString("en-IN")}</span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      const msg = `Hi! I'd like to book a flight.\n\n✈️ *${flt.airlineName}* — ${flt.fromCity} (${flt.fromCode}) → ${flt.toCity} (${flt.toCode})\n📌 Class: ${flt.travelClass} (${flt.tripType})\n💰 Fare: ₹${flt.farePrice.toLocaleString("en-IN")}\n\nPlease confirm availability and next steps.`;
+                      openWhatsApp(msg);
+                    }}
+                    className="px-4 py-2 rounded-2xl bg-green-600 hover:bg-green-500 text-white text-xs font-bold flex items-center gap-2 transition-all shadow-lg shadow-green-600/20"
+                  >
+                    <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+                    Book
+                  </button>
+                </div>
+              </motion.div>
+            ))}
+
+            {activeFlights.length === 0 && (
+              <div className="w-full text-center py-16 text-slate-400">
+                <Plane size={40} className="mx-auto mb-4 opacity-30" />
+                <p className="text-sm">Special flight fares coming soon. <Link href="/flights" className="text-amber-400 underline">Check all flights</Link></p>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* ── 7. PHOTO GALLERY & ALBUMS SECTION ──────────────────────────────── */}
       <section 
         id="gallery-section" 
         className="relative w-full min-h-screen flex items-center justify-center px-4 sm:px-8 lg:px-16 py-16 overflow-hidden bg-slate-950/80"

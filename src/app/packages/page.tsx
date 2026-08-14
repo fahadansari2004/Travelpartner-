@@ -5,11 +5,12 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/Button";
 import { Search, MapPin, Calendar, Star, Filter, CheckCircle2, ChevronRight, Sparkles } from "lucide-react";
-import { useStoreData, INITIAL_PACKAGES, PackageItem, INITIAL_ENQUIRIES, EnquiryItem } from "@/lib/storage";
+import { useStoreData, INITIAL_PACKAGES, PackageItem, INITIAL_ENQUIRIES, EnquiryItem, INITIAL_CONTACT, ContactSettings } from "@/lib/storage";
 
 export default function PackagesPage() {
   const [packages] = useStoreData<PackageItem[]>("packages", INITIAL_PACKAGES);
   const [enquiries, setEnquiries] = useStoreData<EnquiryItem[]>("enquiries", INITIAL_ENQUIRIES);
+  const [contact] = useStoreData<ContactSettings>("contact", INITIAL_CONTACT);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDestination, setSelectedDestination] = useState("all");
   const [activePackageModal, setActivePackageModal] = useState<PackageItem | null>(null);
@@ -24,6 +25,12 @@ export default function PackagesPage() {
   const [guestsCount, setGuestsCount] = useState(2);
   const [specialNotes, setSpecialNotes] = useState("");
   const [bookingSuccessId, setBookingSuccessId] = useState<string | null>(null);
+
+  const openWhatsApp = (message: string) => {
+    const phone = (contact?.whatsappNumber || "9645185581").replace(/[^0-9]/g, "");
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+    window.open(url, "_blank");
+  };
 
   const activePackages = (packages || []).filter((pkg) => pkg && (pkg.active === undefined || pkg.active));
 
@@ -42,6 +49,12 @@ export default function PackagesPage() {
     if (!activePackageModal) return;
 
     const refId = `ENQ-PKG-${Math.floor(100000 + Math.random() * 900000)}`;
+    const totalPrice = (activePackageModal.discountPrice || activePackageModal.price) * guestsCount;
+    
+    // Open WhatsApp with booking details
+    const msg = `Hi! I'd like to book the following package:\n\n🌍 *${activePackageModal.name}*\n📍 Destination: ${activePackageModal.destination}\n📅 Duration: ${activePackageModal.duration}\n🗓️ Travel Date: ${travelDate || "Flexible"}\n⏰ Preferred Time: ${timeSlot}\n👥 Guests: ${guestsCount}\n💰 Total Price: ₹${totalPrice.toLocaleString("en-IN")}\n\n👤 Guest Name: ${guestName}\n📞 Phone: ${guestPhone}\n📧 Email: ${guestEmail}\n\n📝 Special Requests: ${specialNotes || "None"}\n\nRef ID: ${refId}`;
+    
+    // Save enquiry
     const newReq: EnquiryItem = {
       id: refId,
       name: guestName.trim() || "Guest Explorer",
@@ -56,13 +69,16 @@ export default function PackagesPage() {
       travelDate: travelDate || "Flexible",
       guestsCount: guestsCount,
       packageOrItemName: activePackageModal.name,
-      totalAmount: (activePackageModal.discountPrice || activePackageModal.price) * guestsCount,
+      totalAmount: totalPrice,
       additionalGuests: guestsCount > 1 ? `${guestsCount - 1} guest(s)` : "Solo",
     };
 
     const updated = [newReq, ...(enquiries || [])];
     setEnquiries(updated);
     setBookingSuccessId(refId);
+
+    // Open WhatsApp
+    openWhatsApp(msg);
 
     // Direct HTTP post to Supabase PostgreSQL
     try {
@@ -154,7 +170,7 @@ export default function PackagesPage() {
                   </div>
                   {pkg.discountPrice && (
                     <div className="absolute top-4 right-4 z-20 px-3 py-1 rounded-full bg-red-600 text-white text-xs font-bold">
-                      SAVE ${(pkg.price - pkg.discountPrice).toLocaleString()}
+                      SAVE ₹{(pkg.price - pkg.discountPrice!).toLocaleString("en-IN")}
                     </div>
                   )}
                 </div>
@@ -183,8 +199,8 @@ export default function PackagesPage() {
                 <div>
                   <span className="text-xs text-slate-400 block">Starting From</span>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-2xl font-bold text-white">${(pkg.discountPrice || pkg.price).toLocaleString()}</span>
-                    {pkg.discountPrice && <span className="text-xs text-slate-500 line-through">${pkg.price.toLocaleString()}</span>}
+                    <span className="text-2xl font-bold text-white">₹{(pkg.discountPrice || pkg.price).toLocaleString("en-IN")}</span>
+                    {pkg.discountPrice && <span className="text-xs text-slate-500 line-through">₹{pkg.price.toLocaleString("en-IN")}</span>}
                   </div>
                 </div>
 
@@ -321,7 +337,7 @@ export default function PackagesPage() {
 
                 <div className="flex items-center justify-between pt-4 border-t border-white/10">
                   <Button variant="ghost" size="sm" type="button" onClick={() => setIsBookingMode(false)}>Back to Itinerary</Button>
-                  <Button variant="amber" size="md" type="submit">Submit Request to Admin</Button>
+                  <Button variant="amber" size="md" type="submit" leftIcon={<svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>}>Send via WhatsApp</Button>
                 </div>
               </form>
             ) : (
@@ -382,10 +398,10 @@ export default function PackagesPage() {
                 <div className="flex items-center justify-between pt-4 border-t border-white/10">
                   <div>
                     <span className="text-xs text-slate-400 block">Total Package Price</span>
-                    <span className="text-3xl font-bold text-amber-400">${(activePackageModal.discountPrice || activePackageModal.price).toLocaleString()}</span>
+                    <span className="text-3xl font-bold text-amber-400">₹{(activePackageModal.discountPrice || activePackageModal.price).toLocaleString("en-IN")}</span>
                   </div>
-                  <Button variant="amber" size="lg" onClick={() => setIsBookingMode(true)}>
-                    Book This Package Now
+                  <Button variant="amber" size="lg" onClick={() => setIsBookingMode(true)} leftIcon={<svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>}>
+                    Book via WhatsApp
                   </Button>
                 </div>
               </>

@@ -855,6 +855,28 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
 
+              <div>
+                <label className="block uppercase text-slate-300 font-semibold mb-1">Office Address</label>
+                <textarea 
+                  rows={2} 
+                  value={footer.address || ""} 
+                  onChange={(e) => setFooter({ ...footer, address: e.target.value })} 
+                  placeholder="123 Travel Street, City, State - Pincode"
+                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-amber-400" 
+                />
+                <p className="text-[11px] text-slate-500 mt-1">This address will be displayed in the footer contact section.</p>
+              </div>
+
+              <div>
+                <label className="block uppercase text-slate-300 font-semibold mb-1">Newsletter Heading</label>
+                <input type="text" value={footer.newsletterHeading || ""} onChange={(e) => setFooter({ ...footer, newsletterHeading: e.target.value })} placeholder="Get inspired. Travel smarter." className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-amber-400" />
+              </div>
+
+              <div>
+                <label className="block uppercase text-slate-300 font-semibold mb-1">Copyright Text (optional)</label>
+                <input type="text" value={footer.copyrightText || ""} onChange={(e) => setFooter({ ...footer, copyrightText: e.target.value })} placeholder={`© ${new Date().getFullYear()} TravelPartner. All rights reserved.`} className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-amber-400" />
+              </div>
+
               <div className="p-5 rounded-2xl bg-white/5 border border-white/10 space-y-4">
                 <h4 className="text-sm font-bold text-amber-400 uppercase tracking-wider">Social Media Links</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

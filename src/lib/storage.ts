@@ -296,7 +296,7 @@ export const INITIAL_FLIGHTS: FlightFare[] = [
     travelClass: "First Class",
     travelDate: "2026-09-15",
     farePrice: 4850,
-    currency: "$",
+    currency: "₹",
     offerBadge: "VIP Private Suite",
     seatsAvailable: 4,
     bookingLink: "#book-flight",
