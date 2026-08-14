@@ -43,6 +43,15 @@ export function GallerySection() {
       }
     });
 
+    if (list.length === 0) {
+      return [
+        { id: "f1", url: "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&w=1200&q=80", title: "Maldives Overwater Haven", location: "Maldives", photographer: "@maldives_expedition", aspect: "aspect-[4/3]" },
+        { id: "f2", url: "https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?auto=format&fit=crop&w=1200&q=80", title: "Matterhorn Peak View", location: "Switzerland", photographer: "@swiss_mountains", aspect: "aspect-[3/4]" },
+        { id: "f3", url: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1200&q=80", title: "Dubai Skyline Sunset", location: "UAE", photographer: "@dubai_luxury", aspect: "aspect-[16/10]" },
+        { id: "f4", url: "https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?auto=format&fit=crop&w=1200&q=80", title: "Santorini Oia Caldera", location: "Greece", photographer: "@greece_travel", aspect: "aspect-square" },
+      ];
+    }
+
     return list;
   }, [activeAlbums]);
 
@@ -58,7 +67,7 @@ export function GallerySection() {
       <div className="flex justify-center mb-8">
         <Link href="/gallery">
           <Button variant="amber" size="sm" leftIcon={<Folder size={14} />} rightIcon={<ArrowRight size={14} />}>
-            Explore All Albums & Media Gallery ({activeAlbums.length})
+            Explore All Albums & Media Gallery ({activeAlbums.length || 4})
           </Button>
         </Link>
       </div>
@@ -66,7 +75,7 @@ export function GallerySection() {
       {/* Desktop Pinterest-Style Masonry Grid */}
       <div
         ref={containerRef}
-        className="hidden sm:columns-2 lg:columns-3 gap-6 space-y-6 max-w-7xl mx-auto"
+        className="hidden sm:block sm:columns-2 lg:columns-3 gap-6 space-y-6 max-w-7xl mx-auto"
       >
         {displayPhotos.map((item) => (
           <div
