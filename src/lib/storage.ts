@@ -485,8 +485,8 @@ export const INITIAL_TESTIMONIALS: TestimonialItem[] = [
 ];
 
 // ─── Reactive Store Helper Engine ─────────────────────────────────────────────
-// Bumped to V5 to ensure flight fares without rates persist and render cleanly
-const STORE_KEY = "TRAVEL_PARTNER_STORE_V5";
+// Bumped to V6 to ensure whatsapp number +91 9645185581 is active across all widgets
+const STORE_KEY = "TRAVEL_PARTNER_STORE_V6";
 
 /** Returns stored data from localStorage cache layer. */
 export function getStoredData<T>(key: string, defaultValue: T): T {

@@ -27,7 +27,7 @@ export default function FlightsPage() {
 
   const openWhatsApp = (message: string) => {
     let phone = (contact?.whatsappNumber || "9645185581").replace(/[^0-9]/g, "");
-    if (!phone) phone = "9645185581";
+    if (!phone || phone.includes("7356")) phone = "9645185581";
     if (phone.length === 10) phone = `91${phone}`;
     const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
     window.open(url, "_blank");
@@ -221,9 +221,9 @@ export default function FlightsPage() {
 
               <div className="flex items-center justify-between pt-2">
                 <div>
-                  <span className="text-xs text-slate-400 block">Fare Price</span>
-                  <span className="text-2xl font-bold text-amber-400">
-                    {flt.farePrice ? `₹${flt.farePrice.toLocaleString("en-IN")}` : "Best Rate Guarantee"}
+                  <span className="text-xs text-slate-400 block">Fare Rate</span>
+                  <span className="text-xl font-bold text-amber-400">
+                    {flt.farePrice && flt.farePrice > 0 && flt.farePrice !== 1000 && flt.farePrice !== 800 ? `₹${flt.farePrice.toLocaleString("en-IN")}` : "Best Rate Guarantee"}
                   </span>
                 </div>
 

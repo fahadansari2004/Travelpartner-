@@ -7,11 +7,15 @@ import { useStoreData, INITIAL_CONTACT, ContactSettings } from "@/lib/storage";
 export function WhatsAppButton() {
   const [isOpen, setIsOpen] = useState(false);
 
-  // ── Read WhatsApp number from the same store as packages & flights booking ──
+  // ── Read WhatsApp number from store with 9645185581 fallback override ──
   const [contact] = useStoreData<ContactSettings>("contact", INITIAL_CONTACT);
-  const rawNumber = (contact?.whatsappNumber || "9645185581").replace(/[^0-9]/g, "");
-  const formattedPhone = `+91 ${rawNumber}`;
-  const whatsappUrl = `https://wa.me/91${rawNumber}?text=${encodeURIComponent(
+  let rawNumber = (contact?.whatsappNumber || "9645185581").replace(/[^0-9]/g, "");
+  if (!rawNumber || rawNumber.includes("7356")) rawNumber = "9645185581";
+  if (rawNumber.length === 10) rawNumber = `91${rawNumber}`;
+
+  const displayPhone = "9645185581";
+  const formattedPhone = "+91 9645185581";
+  const whatsappUrl = `https://wa.me/919645185581?text=${encodeURIComponent(
     "Hello travelPartner! I would like to enquire about travel packages and flight bookings."
   )}`;
 
@@ -60,14 +64,14 @@ export function WhatsAppButton() {
         {/* Tooltip on hover when popup is closed */}
         {!isOpen && (
           <span className="hidden sm:inline-flex items-center px-3 py-1.5 rounded-full glass border border-emerald-500/30 bg-slate-950/90 text-emerald-400 text-xs font-semibold tracking-wide shadow-xl backdrop-blur-md transition-all group-hover:scale-105">
-            Chat on WhatsApp ({rawNumber})
+            Chat on WhatsApp ({displayPhone})
           </span>
         )}
 
         <button
           onClick={() => setIsOpen(!isOpen)}
           className="relative flex items-center justify-center w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all duration-300 hover:scale-110 active:scale-95 group border border-emerald-400/50"
-          aria-label={`Chat on WhatsApp ${rawNumber}`}
+          aria-label={`Chat on WhatsApp ${displayPhone}`}
         >
           {/* Animated pulse ring */}
           <span className="absolute -inset-1 rounded-full bg-emerald-500/40 animate-ping pointer-events-none opacity-75" />

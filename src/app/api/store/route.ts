@@ -93,6 +93,14 @@ export async function GET(req: Request) {
       if (settingRow && settingRow.short_desc) {
         try {
           const parsed = JSON.parse(settingRow.short_desc);
+          if (key === "contact" && parsed && typeof parsed === "object") {
+            if (!parsed.whatsappNumber || parsed.whatsappNumber === "7356044637") {
+              parsed.whatsappNumber = "9645185581";
+            }
+            if (!parsed.phone || parsed.phone.includes("7356044637")) {
+              parsed.phone = "+91 9645185581";
+            }
+          }
           apiCache[key] = { timestamp: Date.now(), data: parsed };
           return NextResponse.json({ success: true, data: parsed }, { headers: { "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0" } });
         } catch (e) {}
@@ -238,7 +246,7 @@ export async function GET(req: Request) {
           toCode: item.to_code || item.toCode,
           tripType: item.trip_type || item.tripType,
           travelClass: item.travel_class || item.travelClass,
-          farePrice: (item.fare_price !== null && item.fare_price !== undefined && Number(item.fare_price) > 0) ? Number(item.fare_price) : (item.farePrice && Number(item.farePrice) > 0 ? Number(item.farePrice) : undefined),
+          farePrice: Number(item.fare_price ?? item.farePrice ?? 0),
           offerBadge: item.offer_badge || item.offerBadge,
           seatsAvailable: item.seats_available ?? item.seatsAvailable,
           bookingLink: item.booking_link || item.bookingLink,
@@ -365,7 +373,7 @@ export async function POST(req: Request) {
 
             if (tableName === "flights") {
               const fpRaw = item.fare_price ?? item.farePrice;
-              const cleanFp = (fpRaw !== undefined && fpRaw !== null && fpRaw !== "" && Number(fpRaw) > 0) ? Number(fpRaw) : null;
+              const cleanFp = (fpRaw !== undefined && fpRaw !== null && fpRaw !== "" && Number(fpRaw) > 0) ? Number(fpRaw) : 0;
               return {
                 id: String(item.id || `flt-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`),
                 airline_name: item.airline_name || item.airlineName || "VIP Airline",

@@ -218,22 +218,29 @@ export default function ContactPage() {
               </a>
 
               {/* WhatsApp Direct */}
-              <a
-                href={`https://wa.me/91${(contactInfo.whatsappNumber || "9645185581").replace(/\D/g, "")}?text=Hello!%20I%20would%20like%20to%20enquire%20about%20travel%20packages.`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-4 p-4 rounded-2xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 transition-all group active:scale-[0.99]"
-              >
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                  <MessageCircle size={20} />
-                </div>
-                <div>
-                  <span className="text-[10px] text-emerald-300 uppercase font-semibold tracking-wider block">Instant WhatsApp Chat</span>
-                  <span className="text-base sm:text-lg font-bold text-emerald-400 group-hover:underline">
-                    +{contactInfo.whatsappNumber || "91 9645185581"}
-                  </span>
-                </div>
-              </a>
+              {(() => {
+                const rawWa = (contactInfo.whatsappNumber || "9645185581").replace(/\D/g, "");
+                const waNumber = rawWa.length === 10 ? `91${rawWa}` : (rawWa || "919645185581");
+                const displayWa = waNumber.startsWith("91") && waNumber.length === 12 ? waNumber.slice(2) : waNumber;
+                return (
+                  <a
+                    href={`https://wa.me/${waNumber}?text=Hello!%20I%20would%20like%20to%20enquire%20about%20travel%20packages.`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-4 p-4 rounded-2xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 transition-all group active:scale-[0.99]"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                      <MessageCircle size={20} />
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-emerald-300 uppercase font-semibold tracking-wider block">Instant WhatsApp Chat</span>
+                      <span className="text-base sm:text-lg font-bold text-emerald-400 group-hover:underline">
+                        +91 {displayWa}
+                      </span>
+                    </div>
+                  </a>
+                );
+              })()}
 
               {/* Email Direct */}
               <a
