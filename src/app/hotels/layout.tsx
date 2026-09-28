@@ -5,13 +5,13 @@ export const metadata: Metadata = {
   description:
     "Discover world-class resorts, boutique heritage hotels, and luxury suites vetted by TravelPartner Tours and Travels.",
   alternates: {
-    canonical: "https://travelpartnerktm.in/hotels",
+    canonical: "/hotels",
   },
   openGraph: {
     title: "Luxury Hotels & Boutique Stays | TravelPartner",
     description:
       "Handpicked 5-star properties, private villas, and serene retreats worldwide.",
-    url: "https://travelpartnerktm.in/hotels",
+    url: "/hotels",
   },
 };
 

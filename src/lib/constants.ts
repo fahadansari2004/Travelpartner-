@@ -6,7 +6,7 @@ export const SITE_CONFIG = {
   tagline: "PLAN A BETTER THRILL...",
   description:
     "TravelPartner Tours & Travels - Premier bespoke travel agency in Kottayam, Kerala. Curated international & domestic holiday packages, flight bookings, luxury stays, and tailor-made expeditions.",
-  url: "https://travelpartnerktm.in",
+  url: "https://www.travelpartnerktm.in",
   contact: {
     email: "info@travelpartnerktm.in",
     phone: "+91 9645185581",

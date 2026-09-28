@@ -452,7 +452,7 @@ export const INITIAL_SEO: SeoSettings = {
   metaTitle: "TravelPartner | Ultra-Luxury Bespoke Travel Agency",
   metaDescription: "Experience the world's most extraordinary destinations with TravelPartner.",
   keywords: "luxury travel, first class flights, 5 star hotels, travel agency",
-  ogImage: "https://travelpartnerktm.in/images/og-luxury.jpg",
+  ogImage: "https://www.travelpartnerktm.in/images/og-luxury.jpg",
   twitterCard: "summary_large_image",
 };
 

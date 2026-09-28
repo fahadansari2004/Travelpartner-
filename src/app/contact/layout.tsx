@@ -5,13 +5,13 @@ export const metadata: Metadata = {
   description:
     "Get in touch with TravelPartner Tours and Travels in Kottayam, Kerala. WhatsApp concierge, custom itinerary requests, and 24/7 client support.",
   alternates: {
-    canonical: "https://travelpartnerktm.in/contact",
+    canonical: "/contact",
   },
   openGraph: {
     title: "Contact TravelPartner Tours & Travels | Kottayam",
     description:
       "Direct line to VIP travel specialists for personalized bookings, visa inquiries, and honeymoon planning.",
-    url: "https://travelpartnerktm.in/contact",
+    url: "/contact",
   },
 };
 

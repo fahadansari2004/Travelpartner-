@@ -5,13 +5,13 @@ export const metadata: Metadata = {
   description:
     "Immerse yourself in breathtaking destinations, client expeditions, and visual travel diaries curated by TravelPartner.",
   alternates: {
-    canonical: "https://travelpartnerktm.in/gallery",
+    canonical: "/gallery",
   },
   openGraph: {
     title: "Travel Memories & Photo Gallery | TravelPartner",
     description:
       "Explore curated travel albums, client expeditions, and exotic landscapes with TravelPartner.",
-    url: "https://travelpartnerktm.in/gallery",
+    url: "/gallery",
   },
 };
 
