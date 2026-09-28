@@ -137,7 +137,7 @@ export default function ContactPage() {
                     required 
                     value={email} 
                     onChange={(e) => setEmail(e.target.value)} 
-                    placeholder="vip@travelpartner.com" 
+                    placeholder="vip@travelpartnerktm.in" 
                     className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-amber-400" 
                   />
                 </div>

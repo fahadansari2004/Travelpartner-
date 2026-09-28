@@ -431,7 +431,7 @@ export const INITIAL_ABOUT: AboutSettings = {
 };
 
 export const INITIAL_CONTACT: ContactSettings = {
-  email: "info@travelpartner.com",
+  email: "info@travelpartnerktm.in",
   phone: "+91 9645185581",
   address: "123 Explorer Way, San Francisco, CA 94105",
   openingHours: "Mon - Sat: 9:00 AM - 8:00 PM EST",
@@ -452,13 +452,13 @@ export const INITIAL_SEO: SeoSettings = {
   metaTitle: "TravelPartner | Ultra-Luxury Bespoke Travel Agency",
   metaDescription: "Experience the world's most extraordinary destinations with TravelPartner.",
   keywords: "luxury travel, first class flights, 5 star hotels, travel agency",
-  ogImage: "https://travelpartner.com/images/og-luxury.jpg",
+  ogImage: "https://travelpartnerktm.in/images/og-luxury.jpg",
   twitterCard: "summary_large_image",
 };
 
 export const INITIAL_FOOTER: FooterSettings = {
   brandDescription: "Premium travel experiences curated for the modern explorer.",
-  email: "info@travelpartner.com",
+  email: "info@travelpartnerktm.in",
   phone: "+1 (800) 555-TRAVEL",
   address: "123 Explorer Way, San Francisco, CA 94105",
   newsletterHeading: "Get inspired. Travel smarter.",

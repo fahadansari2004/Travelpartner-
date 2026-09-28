@@ -921,7 +921,7 @@ export default function AdminDashboardPage() {
                     required
                     value={contact.email || ""} 
                     onChange={(e) => setContact({ ...contact, email: e.target.value })} 
-                    placeholder="info@travelpartner.com"
+                    placeholder="info@travelpartnerktm.in"
                     className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-amber-400" 
                   />
                 </div>

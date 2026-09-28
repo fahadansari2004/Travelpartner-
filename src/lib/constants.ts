@@ -5,12 +5,12 @@ export const SITE_CONFIG = {
   name: "travelPartner TOURS AND TRAVELS",
   tagline: "PLAN A BETTER THRILL...",
   description:
-    "Premium travel experiences curated for the modern explorer. Breathtaking destinations, seamless booking, unforgettable memories.",
-  url: "https://travelpartner.com",
+    "TravelPartner Tours & Travels - Premier bespoke travel agency in Kottayam, Kerala. Curated international & domestic holiday packages, flight bookings, luxury stays, and tailor-made expeditions.",
+  url: "https://travelpartnerktm.in",
   contact: {
-    email: "info@travelpartner.com",
+    email: "info@travelpartnerktm.in",
     phone: "+91 9645185581",
-    address: "123 Explorer Way, San Francisco, CA 94105",
+    address: "Kottayam, Kerala, India - 686001",
   },
   social: {
     instagram: "https://instagram.com/travelpartner",
