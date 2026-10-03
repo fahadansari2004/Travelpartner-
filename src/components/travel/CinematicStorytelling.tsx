@@ -111,6 +111,10 @@ const SECTIONS: SectionItem[] = [
 /**
  * Scroll-Driven Smooth Zooming Parallax Background Animation Component
  * Supports both image URLs and local video files (/videos/*.mp4)
+ *
+ * MOBILE FIX: Uses static CSS scale + GPU promotion (translateZ/will-change)
+ * instead of Framer Motion whileInView (once:false) which caused continuous
+ * repaint/flicker on iOS & Android during scroll.
  */
 function AnimatedParallaxBackground({ mediaSrc, imageSrc }: { mediaSrc?: string; imageSrc?: string }) {
   const rawSrc = mediaSrc || imageSrc || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80";
@@ -128,18 +132,22 @@ function AnimatedParallaxBackground({ mediaSrc, imageSrc }: { mediaSrc?: string;
   const [videoError, setVideoError] = useState(false);
 
   return (
-    <div className="absolute inset-0 w-full h-full overflow-hidden bg-slate-950 pointer-events-none z-0">
-      {/* Base Image Layer (Always visible instantly with animated parallax zoom) */}
-      <motion.img
-        initial={{ scale: 1.08, opacity: 0.8 }}
-        whileInView={{ scale: 1.18, opacity: 0.85 }}
-        viewport={{ once: false, amount: 0.1 }}
-        transition={{ duration: 2.2, ease: "easeOut" }}
+    <div
+      className="absolute inset-0 w-full h-full overflow-hidden bg-slate-950 pointer-events-none z-0"
+      style={{ contain: "layout paint" }}
+    >
+      {/* Base Image Layer — GPU-promoted static scale, no JS-driven re-animation on scroll */}
+      <img
         src={bgImage}
         alt=""
         loading="eager"
         decoding="async"
         className="absolute inset-0 w-full h-full object-cover"
+        style={{
+          transform: "translateZ(0) scale(1.12)",
+          willChange: "transform",
+          opacity: 0.85,
+        }}
       />
 
       {/* Video Layer (Smoothly fades in over background image when video is buffered/ready) */}
@@ -157,6 +165,7 @@ function AnimatedParallaxBackground({ mediaSrc, imageSrc }: { mediaSrc?: string;
           className={`absolute inset-0 w-full h-full object-cover scale-105 transition-opacity duration-1000 ${
             videoLoaded ? "opacity-90" : "opacity-0"
           }`}
+          style={{ transform: "translateZ(0)", willChange: "transform" }}
         >
           <source src={rawSrc} type="video/mp4" />
         </video>

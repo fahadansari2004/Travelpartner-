@@ -86,7 +86,8 @@ export function SpecialFaresSection() {
                 src={offer.imageUrl}
                 alt={offer.title}
                 fill
-                className="object-cover group-hover:scale-105 transition-transform duration-700"
+                className="object-cover transition-transform duration-700"
+                style={{ transform: "translateZ(0) scale(1)", willChange: "transform" }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent z-10" />
             </div>
